@@ -1,0 +1,114 @@
+:root {
+    --primary-red: #dc3545;
+    --pokemon-blue: #007bff;
+    --pokemon-gold: #ffc107;
+    --border-radius: 12px;
+    --shadow: 0 4px 12px rgba(0,0,0,0.1);
+    --transition: all 0.3s ease;
+}
+
+/* Layout chung */
+.main-layout { min-height: 80vh; padding: 40px 0; }
+.section-title { font-weight: 800; border-bottom: 3px solid var(--primary-red); display: inline-block; margin-bottom: 30px; }
+
+/* Thẻ bài & Sản phẩm */
+.tcg-card {
+    border: none !important;
+    border-radius: var(--border-radius) !important;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    overflow: hidden;
+}
+.tcg-card:hover { transform: translateY(-8px); }
+.product-img-box {
+    background: #fff;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 250px;
+}
+.product-img-box img { max-height: 100%; object-fit: contain; }
+
+.cart-product-img {
+  width: 100px;         /* Độ rộng cố định */
+  height: 100px;        /* Chiều cao cố định */
+  object-fit: contain;  /* Giữ nguyên tỉ lệ hình ảnh, không bị méo */
+  border-radius: 8px;   /* Bo góc cho giống phong cách thẻ bài */
+  background: #f8f9fa;  /* Nền nhạt để làm nổi bật thẻ bài */
+}
+
+/* Form & Button */
+.tcg-input { border-radius: 8px !important; padding: 12px !important; border: 1px solid #ddd !important; }
+.tcg-btn { border-radius: 8px !important; font-weight: 700 !important; padding: 10px 20px !important; text-transform: uppercase; }
+
+/* Admin Dashboard */
+.admin-stat-card { text-align: center; padding: 25px; border-radius: var(--border-radius); background: #fff; }
+.icon-circle {
+    width: 70px; height: 70px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%; margin-bottom: 15px;
+}
+/* Style dành riêng cho bảng quản lý sản phẩm */
+.admin-table img {
+    width: 60px; /* Khống chế ảnh nhỏ lại */
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.admin-table img:hover {
+    transform: scale(2.5); /* Di chuột vào thì ảnh to ra để xem cho rõ */
+    z-index: 10;
+    position: relative;
+}
+
+.admin-table th {
+    background-color: #f8f9fa !important;
+    color: #333 !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.admin-table td {
+    vertical-align: middle !important;
+}
+
+/* Card Dashboard */
+.admin-stat-card {
+    border: none !important;
+    padding: 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #ffffff;
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Vòng tròn chứa icon */
+.icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+/* Hiệu ứng màu nền nhẹ cho icon (bg-opacity-10) */
+.bg-opacity-10 {
+    background-color: rgba(var(--bs-primary-rgb), 0.1); /* Mặc định */
+}
+
+/* Chatbot */
+.chat-window {
+    background: #fff; border: 1px solid #eee; border-radius: var(--border-radius);
+    padding: 25px; box-shadow: var(--shadow);
+}
+.chat-msg { background: #f8f9fa; border-radius: 8px; padding: 15px; margin-top: 15px; border-left: 4px solid var(--primary-red); }
