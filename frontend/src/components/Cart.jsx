@@ -15,11 +15,12 @@ const Cart = () => {
 
   const updateQty = (id, newQty, stock) => {
     if (newQty < 1 || newQty > stock) return;
-    const newCart = cartItems.map(item => item._id === id ? { ...item, qty: newQty } : item);
+    // 🌟 ĐỒNG BỘ: Chuyển hoàn toàn item._id sang item.id
+    const newCart = cartItems.map(item => item.id === id ? { ...item, qty: newQty } : item);
     saveCart(newCart);
   };
 
-  const removeItem = (id) => saveCart(cartItems.filter(item => item._id !== id));
+  const removeItem = (id) => saveCart(cartItems.filter(item => item.id !== id));
 
   const saveCart = (data) => {
     setCartItems(data);
@@ -46,22 +47,28 @@ const Cart = () => {
               </thead>
               <tbody>
                 {cartItems.map(item => (
-                  <tr key={item._id}>
+                  // 🌟 ĐỒNG BỘ: key={item.id}
+                  <tr key={item.id}>
                     <td>
                       <img 
                         src={item.image} 
                         className="cart-product-img" 
                         alt={item.name} 
                       />
-                      <span className="fw-bold">{item.name}</span>
+                      <div className="d-inline-block align-middle ms-2">
+                        <span className="fw-bold d-block">{item.name}</span>
+                        {item.RarityData?.name && (
+                          <small className="text-muted">Độ hiếm: {item.RarityData.name}</small>
+                        )}
+                      </div>
                     </td>
                     <td className="text-center">
-                      <Button variant="light" size="sm" onClick={() => updateQty(item._id, item.qty - 1, item.countInStock)}><FaMinus/></Button>
+                      <Button variant="light" size="sm" onClick={() => updateQty(item.id, item.qty - 1, item.countInStock)}><FaMinus/></Button>
                       <b className="mx-2">{item.qty}</b>
-                      <Button variant="light" size="sm" onClick={() => updateQty(item._id, item.qty + 1, item.countInStock)}><FaPlus/></Button>
+                      <Button variant="light" size="sm" onClick={() => updateQty(item.id, item.qty + 1, item.countInStock)}><FaPlus/></Button>
                     </td>
                     <td className="text-end fw-bold text-danger">{(item.price * item.qty).toLocaleString()}đ</td>
-                    <td className="text-center"><Button variant="link" className="text-danger" onClick={() => removeItem(item._id)}><FaTrash/></Button></td>
+                    <td className="text-center"><Button variant="link" className="text-danger" onClick={() => removeItem(item.id)}><FaTrash/></Button></td>
                   </tr>
                 ))}
               </tbody>

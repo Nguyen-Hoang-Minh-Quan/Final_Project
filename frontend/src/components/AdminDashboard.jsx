@@ -1,14 +1,15 @@
 import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaBoxOpen, FaTools, FaChartLine } from 'react-icons/fa';
+import { FaBoxOpen, FaTools, FaChartLine, FaComment } from 'react-icons/fa';
 import '../styles/TCGStyles.css';
 
 const AdminDashboard = () => {
     const adminActions = [
         { title: "QUẢN LÝ ĐƠN HÀNG", icon: <FaBoxOpen />, color: "bg-primary", link: "/admin/orders" },
         { title: "QUẢN LÝ SẢN PHẨM", icon: <FaTools />, color: "bg-danger", link: "/admin/products" },
-        { title: "THỐNG KÊ DOANH THU", icon: <FaChartLine />, color: "bg-success", link: "/admin/stats" }
+        { title: "THỐNG KÊ DOANH THU", icon: <FaChartLine />, color: "bg-success", link: "/admin/stats" },
+        { title: "QUẢN LÝ ĐÁNH GIÁ", icon: <FaComment />, color: "bg-info", link: "/admin/reviews" }
     ];
 
     return (

@@ -1,18 +1,28 @@
-const mongoose = require('mongoose');
+const { Sequelize } = require('sequelize');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+// Khởi tạo thực thể Sequelize kết nối PostgreSQL
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  logging: false, // Tắt log câu lệnh SQL thô cho sạch terminal
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false, // Bắt buộc phải có khi kết nối Cloud Neon
+    },
+  },
+});
 
 const connectDB = async () => {
   try {
-    // Kiểm tra xem biến có tồn tại không trước khi kết nối
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI không tồn tại trong file .env");
-    }
-
-    const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`--- [SUCCESS] MongoDB Connected: ${conn.connection.host} ---`);
+    await sequelize.authenticate();
+    console.log(`--- [SUCCESS] PostgreSQL Connected (Neon Cloud) ---`);
   } catch (error) {
-    console.error(`--- [ERROR] MongoDB Connection Failed: ${error.message} ---`);
+    console.error(`--- [ERROR] PostgreSQL Connection Failed: ${error.message} ---`);
     process.exit(1);
   }
 };
 
-module.exports = connectDB;
+module.exports = { connectDB, sequelize };

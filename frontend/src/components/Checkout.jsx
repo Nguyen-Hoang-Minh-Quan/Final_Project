@@ -1,80 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Card, ListGroup, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { FaTruck, FaQrcode, FaCreditCard, FaMapMarkerAlt } from 'react-icons/fa';
+import axiosClient from '../api/axiosClient';
+import { FaTruck, FaQrcode, FaCreditCard, FaMapMarkerAlt, FaTicketAlt } from 'react-icons/fa';
 import '../styles/TCGStyles.css';
 
 const Checkout = () => {
     const navigate = useNavigate();
     
-    // Khởi tạo dữ liệu từ LocalStorage
     const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
-    // State quản lý thông tin giao hàng và lỗi
-    const [shipping, setShipping] = useState({ 
-        address: '', 
-        city: '', 
-        phone: '' 
-    });
+    // Bỏ trường city, giữ lại address và phone
+    const [shipping, setShipping] = useState({ address: '', phone: '' });
     const [method, setMethod] = useState('COD');
     const [error, setError] = useState(null);
 
-    // Tính tổng tiền
+    // 🌟 State mới phục vụ cho tính năng Giftcode tương lai
+    const [couponCode, setCouponCode] = useState('');
+
     const total = cartItems.reduce((acc, item) => acc + item.qty * item.price, 0);
 
-    // Kiểm tra nếu giỏ hàng trống hoặc chưa đăng nhập thì đẩy về trang tương ứng
+    // Tự động đổ dữ liệu mặc định từ hồ sơ cá nhân
     useEffect(() => {
         if (!userInfo) {
             navigate('/login?redirect=checkout');
-        }
-        if (cartItems.length === 0) {
+        } else if (cartItems.length === 0) {
             navigate('/cart');
+        } else {
+            setShipping({
+                address: userInfo.address || '',
+                phone: userInfo.phone || ''
+            });
         }
     }, [userInfo, navigate, cartItems.length]);
 
+    // Hàm giả lập xử lý áp dụng mã giảm giá (Dành cho phát triển tương lai)
+    const handleApplyCoupon = (e) => {
+        e.preventDefault();
+        if (!couponCode.trim()) return;
+        alert(`Mã giảm giá "${couponCode.toUpperCase()}" sẽ được tích hợp xử lý ở giai đoạn sau!`);
+    };
+
     const placeOrder = async () => {
-        // Kiểm tra validation cơ bản trước khi gửi
         if (!shipping.address || !shipping.phone) {
             return setError("Vui lòng nhập đầy đủ địa chỉ và số điện thoại giao hàng!");
         }
 
         try {
-            // Cấu hình Header với Token để vượt qua middleware 'protect' ở Backend
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-
-            // Chuẩn bị object dữ liệu gửi lên (Body)
             const orderData = {
                 orderItems: cartItems.map(item => ({
-                    name: item.name,
-                    qty: item.qty,
-                    image: item.image,
-                    price: item.price,
-                    product: item._id // Đảm bảo field này là ID sản phẩm để Backend trừ kho
+                    productId: item.id, 
+                    qty: item.qty
                 })),
                 address: shipping.address,
-                city: shipping.city || "Vietnam",
+                city: "Vietnam", // Giữ giá trị mặc định gửi lên backend nếu DB bắt buộc trường này
                 phone: shipping.phone,
                 paymentMethod: method,
-                totalPrice: total
+                coupon: couponCode || null // Sẵn sàng gửi mã giảm giá lên API nếu cần
             };
 
-            // Gửi request POST đến Backend
-            await axios.post('http://localhost:5000/api/orders', orderData, config);
+            await axiosClient.post('/orders', orderData);
 
-            // Xóa giỏ hàng sau khi đặt thành công
             localStorage.removeItem('cartItems');
-            
-            // Thông báo cho Header cập nhật lại số lượng giỏ hàng (nếu Quân có dùng event này)
             window.dispatchEvent(new Event("cartUpdated"));
 
-            // Chuyển hướng về trang lịch sử đơn hàng
+            alert("Đặt hàng thành công! 🎉");
             navigate('/order-history');
         } catch (err) {
             console.error("Lỗi đặt hàng:", err);
@@ -91,7 +82,6 @@ const Checkout = () => {
             {error && <Alert variant="danger">{error}</Alert>}
 
             <Row>
-                {/* CỘT TRÁI: THÔNG TIN GIAO HÀNG */}
                 <Col md={7}>
                     <Card className="tcg-card p-4 mb-4 border-0 shadow-sm">
                         <h5 className="fw-bold mb-4 border-bottom pb-2">
@@ -109,6 +99,7 @@ const Checkout = () => {
                         </Form.Group>
 
                         <Row>
+                            {/* Ô bên trái: Số điện thoại */}
                             <Col md={6}>
                                 <Form.Group className="mb-3">
                                     <Form.Label className="small fw-bold">SỐ ĐIỆN THOẠI</Form.Label>
@@ -120,15 +111,27 @@ const Checkout = () => {
                                     />
                                 </Form.Group>
                             </Col>
+                            
+                            {/* Ô bên phải: Thay thế Tỉnh/Thành phố bằng Giftcode tương lai 🌟 */}
                             <Col md={6}>
                                 <Form.Group className="mb-3">
-                                    <Form.Label className="small fw-bold">TỈNH / THÀNH PHỐ</Form.Label>
-                                    <Form.Control 
-                                        className="tcg-input" 
-                                        placeholder="Nhập tỉnh thành..."
-                                        value={shipping.city}
-                                        onChange={e => setShipping({...shipping, city: e.target.value})} 
-                                    />
+                                    <Form.Label className="small fw-bold">MÃ GIẢM GIÁ / GIFTCODE (NẾU CÓ)</Form.Label>
+                                    <div className="d-flex gap-2">
+                                        <Form.Control 
+                                            className="tcg-input mb-0" 
+                                            placeholder="Ví dụ: TCGSHOP50"
+                                            value={couponCode}
+                                            onChange={e => setCouponCode(e.target.value)}
+                                        />
+                                        <Button 
+                                            variant="dark" 
+                                            className="px-3 fw-bold small text-nowrap"
+                                            onClick={handleApplyCoupon}
+                                            style={{ borderRadius: '6px', fontSize: '13px' }}
+                                        >
+                                            ÁP DỤNG
+                                        </Button>
+                                    </div>
                                 </Form.Group>
                             </Col>
                         </Row>
@@ -184,7 +187,6 @@ const Checkout = () => {
                     </Card>
                 </Col>
 
-                {/* CỘT PHẢI: TÓM TẮT ĐƠN HÀNG */}
                 <Col md={5}>
                     <Card className="tcg-card p-3 shadow-sm border-0 sticky-top" style={{ top: '100px' }}>
                         <h5 className="fw-bold mb-3">TÓM TẮT ĐƠN HÀNG ({cartItems.length})</h5>
@@ -216,6 +218,15 @@ const Checkout = () => {
                                     <span>Phí vận chuyển:</span>
                                     <span className="text-success fw-bold">Miễn phí</span>
                                 </div>
+                                
+                                {/* UI mẫu hiển thị giảm giá từ coupon trong tương lai */}
+                                {couponCode && (
+                                    <div className="d-flex justify-content-between mb-2 text-success fw-bold small">
+                                        <span><FaTicketAlt className="me-1"/> Mã giảm giá:</span>
+                                        <span>-0đ</span>
+                                    </div>
+                                )}
+
                                 <div className="d-flex justify-content-between fw-bold fs-4 text-danger mt-2">
                                     <span>TỔNG CỘNG:</span>
                                     <span>{total.toLocaleString()}đ</span>

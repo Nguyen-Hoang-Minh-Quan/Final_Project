@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Form, FormControl, Button, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaUserShield, FaHistory, FaUserCircle, FaSignOutAlt, FaSearch, FaShoppingCart } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import '../styles/TCGStyles.css';
 
 const Header = () => {
@@ -12,32 +13,33 @@ const Header = () => {
   const location = useLocation();
 
   const updateStatus = () => {
-    // Cập nhật giỏ hàng từ localStorage
     const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
     setCartCount(cartItems.reduce((acc, item) => acc + Number(item.qty), 0));
     
-    // Cập nhật thông tin user từ localStorage
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     setUser(userInfo);
   };
 
   useEffect(() => {
     updateStatus();
-    // Lắng nghe sự kiện cập nhật giỏ hàng từ các component khác
     window.addEventListener('cartUpdated', updateStatus);
     return () => window.removeEventListener('cartUpdated', updateStatus);
   }, [location]);
 
+  // 🌟 ĐÃ SỬA: Hàm gửi từ khóa tìm kiếm trực tiếp qua trang Shop bằng Query Parameter
   const submitHandler = (e) => {
     e.preventDefault();
-    navigate(keyword.trim() ? `/search/${keyword}` : '/');
+    if (keyword.trim()) {
+      navigate(`/shop?keyword=${encodeURIComponent(keyword.trim())}`);
+    } else {
+      navigate('/shop');
+    }
   };
 
   const logoutHandler = () => {
     localStorage.removeItem('userInfo');
-    setUser(null);
+    toast.warn("Đã đăng xuất khỏi tài khoản!");
     navigate('/login');
-    window.location.reload(); // Reload để làm sạch trạng thái app
   };
 
   return (
@@ -66,7 +68,6 @@ const Header = () => {
           </Form>
 
           <Nav className="align-items-center">
-            {/* CHỈ HIỆN GIỎ HÀNG NẾU KHÔNG PHẢI ADMIN */}
             {(!user || !user.isAdmin) && (
               <Nav.Link as={Link} to="/cart" className="position-relative me-3">
                 <FaShoppingCart className="fs-4 text-dark" />
@@ -78,7 +79,6 @@ const Header = () => {
               </Nav.Link>
             )}
 
-            {/* PHẦN HIỂN THỊ USER / LOGIN */}
             {user ? (
               <NavDropdown 
                 title={
@@ -87,7 +87,7 @@ const Header = () => {
                   </span>
                 } 
               >
-               <NavDropdown.Item as={Link} to="/profile">
+                <NavDropdown.Item as={Link} to="/profile">
                   <FaUserCircle className="me-2 text-primary"/>Hồ sơ cá nhân
                 </NavDropdown.Item>
                  
