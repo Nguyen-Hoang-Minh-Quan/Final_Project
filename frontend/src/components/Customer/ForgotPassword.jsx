@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/TCGStyles.css';
+import '../../styles/TCGStyles.css';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Container, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { toast } from 'react-toastify'; // 🌟 IMPORT TOAST
-import '../styles/TCGStyles.css';
+import { toast } from 'react-toastify';
+import '../../styles/TCGStyles.css';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -17,7 +17,6 @@ const Login = () => {
             
             localStorage.setItem('userInfo', JSON.stringify(data));
             
-            // 🌟 HIỂN THỊ CHÀO MỪNG TRỰC QUAN
             toast.success(`Chào mừng ${data.name || 'bạn'} quay trở lại TCG Shop! ✨`);
             
             if (data.isAdmin) {
@@ -26,7 +25,7 @@ const Login = () => {
                 navigate('/');
             }
         } catch (err) { 
-            // 🌟 THÔNG BÁO LỖI ĐĂNG NHẬP
+            
             toast.error(err.response?.data?.message || "Sai tài khoản hoặc mật khẩu rồi!"); 
         }
     };

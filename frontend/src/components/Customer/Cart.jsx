@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Button, Card } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
-import '../styles/TCGStyles.css';
+import '../../styles/TCGStyles.css';
 
 const Cart = () => {
   const navigate = useNavigate();

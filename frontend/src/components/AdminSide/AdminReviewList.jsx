@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Card, Row, Col, Form } from 'react-bootstrap';
-import axiosClient from '../api/axiosClient'; 
+import axiosClient from '../../api/axiosClient'; 
 import { FaTrash, FaStar, FaRegStar, FaComments, FaFilter, FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom'; 
 import { toast } from 'react-toastify';
-import '../styles/TCGStyles.css';
+import '../../styles/TCGStyles.css';
 
 const AdminReviewList = () => {
   const navigate = useNavigate();
@@ -78,8 +78,8 @@ const AdminReviewList = () => {
           <Col>
             <h2 className="fw-bold mb-0 text-info">
               <FaComments className="me-2"/>QUẢN LÝ ĐÁNH GIÁ HỆ THỐNG
-                      <Button variant="outline-secondary" className="border-0" onClick={() => navigate('/admin/dashboard')}>
-                       <FaArrowLeft className="me-2"/> Quay lại Dashboard
+                      <Button variant="outline-secondary" className="border-0" onClick={() => navigate('/admin/')}>
+                       <FaArrowLeft className="me-2"/> Quay lại
                       </Button>
             </h2>
             <small className="text-muted">Xem, lọc và dọn dẹp các bình luận từ khách hàng</small>

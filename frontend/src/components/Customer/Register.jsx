@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Container, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { toast } from 'react-toastify'; // 🌟 IMPORT TOAST
-import '../styles/TCGStyles.css';
+import { toast } from 'react-toastify';
+import '../../styles/TCGStyles.css';
 
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });

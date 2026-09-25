@@ -3,14 +3,14 @@ import { Container, Row, Col, Card, Button, Carousel, Badge, Spinner } from 'rea
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaFire, FaRegClock, FaLayerGroup } from 'react-icons/fa';
-import axiosClient from '../api/axiosClient'; 
-import '../styles/TCGStyles.css';
+import axiosClient from '../../api/axiosClient'; 
+import '../../styles/TCGStyles.css';
 
 const CATEGORY_IMAGES = {
   "Single Cards": "https://assets.pokemon.com/static-assets/content-assets/cms2/img/cards/web/ME04/ME04_EN_91.png",
   "Elite Trainer Box": "https://www.pokemoncenter.com/images/DAMRoot/High/10035/P11220_10-10416-112_01.jpg",
   "Booster Box": "https://www.pokemoncenter.com/images/DAMRoot/High/10030/P11219_10-10407-119_02.jpg",
-  "Sleeves Cards": "https://www.pokemoncenter.com/images/DAMRoot/High/10035/P11220_10-10416-112_01.jpg",
+  "Sleeves Cards": "https://tcgplayer-cdn.tcgplayer.com/product/614504_in_1000x1000.jpg",
   "Pack": "https://www.pokemoncenter.com/images/DAMRoot/High/10030/P11219_10-10407-119_03.jpg",
   "Other accessories": "https://www.pokemoncenter.com/images/DAMRoot/High/10034/P11638_10-10626-101_02.jpg"
 };

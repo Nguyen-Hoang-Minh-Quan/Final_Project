@@ -25,10 +25,11 @@ const registerUser = async (req, res) => {
             name: user.name,
             email: user.email,
             isAdmin: user.isAdmin,
-            phone: user.phone,       // 🌟 Bổ sung trả về
-            address: user.address,   // 🌟 Bổ sung trả về
-            birthday: user.birthday, // 🌟 Bổ sung trả về
-            gender: user.gender,     // 🌟 Bổ sung trả về
+            role: user.role || (user.isAdmin ? 'Admin' : 'Customer'),
+            phone: user.phone,
+            address: user.address,
+            birthday: user.birthday,
+            gender: user.gender,
             token: generateToken(user.id),
         });
     } catch (error) {
@@ -50,10 +51,11 @@ const loginUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 isAdmin: user.isAdmin,
-                phone: user.phone,       // 🌟 Đồng bộ xuống localStorage khi login
-                address: user.address,   // 🌟 Đồng bộ xuống localStorage khi login
-                birthday: user.birthday, // 🌟 Đồng bộ xuống localStorage khi login
-                gender: user.gender,     // 🌟 Đồng bộ xuống localStorage khi login
+                role: user.role || (user.isAdmin ? 'Admin' : 'Customer'),
+                phone: user.phone,
+                address: user.address,
+                birthday: user.birthday,
+                gender: user.gender,
                 token: generateToken(user.id),
             });
         } else {
@@ -69,13 +71,10 @@ const loginUser = async (req, res) => {
 // @access  Private
 const updateUserProfile = async (req, res) => {
     try {
-        // req.user được đính kèm từ middleware checkToken/protect của bạn
         const user = await User.findByPk(req.user.id);
 
         if (user) {
             user.name = req.body.name || user.name;
-            
-            // Cập nhật các thông tin cá nhân mới
             user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
             user.address = req.body.address !== undefined ? req.body.address : user.address;
             user.birthday = req.body.birthday !== undefined ? req.body.birthday : user.birthday;
@@ -83,17 +82,17 @@ const updateUserProfile = async (req, res) => {
 
             const updatedUser = await user.save();
 
-            // Phản hồi dữ liệu mới để Frontend lưu đè vào localStorage
             res.json({
                 id: updatedUser.id,
                 name: updatedUser.name,
                 email: updatedUser.email,
                 isAdmin: updatedUser.isAdmin,
+                role: updatedUser.role || (updatedUser.isAdmin ? 'Admin' : 'Customer'),
                 phone: updatedUser.phone,
                 address: updatedUser.address,
                 birthday: updatedUser.birthday,
                 gender: updatedUser.gender,
-                token: generateToken(updatedUser.id) // Cấp lại token nếu cần duy trì phiên
+                token: generateToken(updatedUser.id)
             });
         } else {
             res.status(404).json({ message: 'Không tìm thấy thông tin người dùng!' });
@@ -103,7 +102,7 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
-// @desc    Lấy thông tin profile cá nhân (Dùng để test Token bảo mật)
+// @desc    Lấy thông tin profile cá nhân
 // @route   GET /api/auth/profile
 const getUserProfile = async (req, res) => {
     if (req.user) {
@@ -112,6 +111,7 @@ const getUserProfile = async (req, res) => {
             name: req.user.name,
             email: req.user.email,
             isAdmin: req.user.isAdmin,
+            role: req.user.role || (req.user.isAdmin ? 'Admin' : 'Customer'),
             phone: req.user.phone,
             address: req.user.address,
             birthday: req.user.birthday,
@@ -163,4 +163,35 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, forgotPassword, resetPassword };
+const getUsers = async (req, res) => {
+    try {
+        const users = await User.findAll({
+            attributes: { exclude: ['password'] },
+            order: [['id', 'ASC']]
+        });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi lấy danh sách user: ' + error.message });
+    }
+};
+
+const updateUserRole = async (req, res) => {
+    try {
+        const { role } = req.body;
+        const user = await User.findByPk(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'Không tìm thấy người dùng này!' });
+        }
+
+        user.role = role;
+        user.isAdmin = (role === 'Admin');
+        await user.save();
+
+        res.json({ message: `Đã cập nhật vai trò của ${user.name} thành ${role}`, user });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi cập nhật vai trò: ' + error.message });
+    }
+};
+
+module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, forgotPassword, resetPassword, getUsers, updateUserRole };

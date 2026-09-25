@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Badge, Form, Card, Row, Col, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import axiosClient from '../api/axiosClient'; 
+import axiosClient from '../../api/axiosClient'; 
 import { FaChevronLeft, FaClipboardList, FaRegMoneyBillAlt } from 'react-icons/fa';
-import '../styles/TCGStyles.css';
+import '../../styles/TCGStyles.css';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);

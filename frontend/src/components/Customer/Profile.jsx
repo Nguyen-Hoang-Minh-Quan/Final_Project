@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Container, Card, Form, Button, Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify'; 
-import axiosClient from '../api/axiosClient'; 
-import '../styles/TCGStyles.css';
+import axiosClient from '../../api/axiosClient'; 
+import '../../styles/TCGStyles.css';
 
 const Profile = () => {
   const user = JSON.parse(localStorage.getItem('userInfo'));

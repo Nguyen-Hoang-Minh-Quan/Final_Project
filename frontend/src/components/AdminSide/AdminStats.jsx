@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import axiosClient from '../api/axiosClient'; 
+import axiosClient from '../../api/axiosClient'; 
 import { FaChevronLeft, FaMoneyBillWave, FaCheckCircle, FaFire } from 'react-icons/fa';
 import { 
   XAxis, 
@@ -12,7 +12,7 @@ import {
   AreaChart, 
   Area 
 } from 'recharts';
-import '../styles/TCGStyles.css';
+import '../../styles/TCGStyles.css';
 
 const AdminStats = () => {
   const [stats, setStats] = useState({ totalRevenue: 0, orderCount: 0, dailySales: [] });

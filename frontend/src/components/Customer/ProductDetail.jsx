@@ -1,16 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Card, Form, ListGroup } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaStar, FaRegStar, FaShoppingBag, FaArrowLeft, FaCommentDots } from 'react-icons/fa';
-import axiosClient from '../api/axiosClient'; 
-import '../styles/TCGStyles.css';
+import axiosClient from '../../api/axiosClient'; 
+import ProductCardItem from './ProductCardItem';
+import QuickViewModal from './QuickViewModal';
+import '../../styles/TCGStyles.css';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   
+  // State phục vụ việc gợi ý sản phẩm liên quan và wishlist
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [wishlistIds, setWishlistIds] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
   // State phục vụ việc gửi Review mới
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
@@ -19,43 +27,92 @@ const ProductDetail = () => {
   // Đọc thông tin đăng nhập từ LocalStorage để kiểm tra quyền viết review
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
+  // Hàm đồng bộ danh sách ID sản phẩm đang nằm trong Wishlist từ LocalStorage
+  const loadWishlistIds = () => {
+    const items = JSON.parse(localStorage.getItem('wishlistItems')) || [];
+    setWishlistIds(items.map(x => x.id));
+  };
+
   // Hàm lấy chi tiết sản phẩm và các review liên quan từ Backend
-  const fetchProductDetail = async () => {
+  const fetchProductDetail = useCallback(async () => {
     try {
       setLoading(true);
       const { data } = await axiosClient.get(`/products/${id}`);
       setProduct(data);
+      loadWishlistIds();
+
+      if (data.categoryId) {
+        const prodRes = await axiosClient.get('/products');
+        
+        // 1. Lọc các sản phẩm cùng categoryId và loại trừ sản phẩm hiện tại đang xem
+        const filtered = prodRes.data.filter(
+          p => Number(p.categoryId) === Number(data.categoryId) && p.id !== data.id
+        );
+
+        // 2. Thuật toán Fisher-Yates Shuffle để xáo trộn ngẫu nhiên mảng filtered
+        for (let i = filtered.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [filtered[i], filtered[j]] = [filtered[j], filtered[i]]; // Đổi chỗ 2 phần tử ngẫu nhiên
+        }
+
+        // 3. Cắt lấy tối đa 4 sản phẩm đầu tiên sau khi đã trộn ngẫu nhiên
+        const randomRelated = filtered.slice(0, 4);
+        
+        setRelatedProducts(randomRelated);
+      }
     } catch (error) {
       console.error("Lỗi lấy chi tiết sản phẩm:", error);
       toast.error("Không thể tải thông tin sản phẩm này!");
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchProductDetail();
   }, [id]);
+    useEffect(() => {
+    fetchProductDetail();
+  }, [fetchProductDetail]);
 
-  // Hàm xử lý Thêm vào giỏ hàng (Đồng bộ cấu hình ID khóa chính tự tăng của Postgres)
+  // Hàm xử lý Thêm vào giỏ hàng sản phẩm hiện tại
   const addToCart = () => {
     if (!product) return;
+    handleAddToCartLogic(product);
+  };
+
+  // Hàm xử lý logic thêm vào giỏ hàng dùng chung (áp dụng cho cả sản phẩm chính và hàng liên quan)
+  const handleAddToCartLogic = (prod) => {
     let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-    const existItem = cartItems.find(x => x.id === product.id);
+    const existItem = cartItems.find(x => x.id === prod.id);
     
     if (existItem) {
-      if (existItem.qty < product.countInStock) {
+      if (existItem.qty < prod.countInStock) {
         existItem.qty += 1;
       } else {
-        return toast.error(`Sản phẩm "${product.name}" trong kho không đủ số lượng!`);
+        return toast.error(`Sản phẩm "${prod.name}" trong kho không đủ số lượng!`);
       }
     } else {
-      cartItems.push({ ...product, qty: 1 });
+      cartItems.push({ ...prod, qty: 1 });
     }
     
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
     window.dispatchEvent(new Event("cartUpdated"));
-    toast.success(`Đã thêm "${product.name}" vào giỏ hàng! 🛒`);
+    toast.success(`Đã thêm "${prod.name}" vào giỏ hàng! 🛒`);
+  };
+
+  // Hàm xử lý thêm/xóa sản phẩm khỏi danh sách yêu thích (Wishlist)
+  const handleToggleWishlist = (p) => {
+    let items = JSON.parse(localStorage.getItem('wishlistItems')) || [];
+    const isExist = items.find(x => x.id === p.id);
+    
+    if (isExist) {
+      items = items.filter(x => x.id !== p.id);
+      toast.info("Đã xóa khỏi danh sách yêu thích!");
+    } else {
+      items.push(p);
+      toast.success("Đã thêm vào danh sách yêu thích! ❤️");
+    }
+    
+    localStorage.setItem('wishlistItems', JSON.stringify(items));
+    setWishlistIds(items.map(x => x.id));
+    window.dispatchEvent(new Event("wishlistUpdated"));
   };
 
   // Hàm xử lý khi người dùng ấn Submit Review
@@ -123,7 +180,16 @@ const ProductDetail = () => {
       <Row className="mb-5">
         {/* Khung ảnh lớn bên trái */}
         <Col md={5} className="mb-4">
-          <Card className="tcg-card border-0 p-3 shadow-sm bg-white text-center">
+          <Card className="tcg-card border-0 p-3 shadow-sm bg-white text-center position-relative">
+            {/* Nút Trái tim Wishlist cho sản phẩm chính ngay góc ảnh */}
+            <button
+              onClick={() => handleToggleWishlist(product)}
+              className="position-absolute top-0 end-0 m-3 z-1 bg-light border-0 rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2"
+              style={{ width: '40px', height: '40px' }}
+            >
+              {wishlistIds.includes(product.id) ? <FaStar className="text-danger" size={20} /> : <FaRegStar className="text-muted" size={20} />}
+            </button>
+            
             <div className="detail-img-box" style={{ overflow: 'hidden', borderRadius: '8px' }}>
               <img 
                 src={product.image} 
@@ -183,6 +249,26 @@ const ProductDetail = () => {
           </div>
         </Col>
       </Row>
+      
+      {/* DANH SÁCH SẢN PHẨM LIÊN QUAN (Related Products) */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-5 pt-4 border-top">
+          <h3 className="fw-bold text-dark mb-4 text-uppercase fs-4">Sản phẩm liên quan</h3>
+          <Row xs={1} sm={2} md={4} className="g-4">
+            {relatedProducts.map(card => (
+              <Col key={card.id}>
+                <ProductCardItem 
+                  card={card}
+                  addToCart={() => handleAddToCartLogic(card)}
+                  onQuickView={(p) => { setSelectedProduct(p); setShowModal(true); }}
+                  isWishlist={wishlistIds.includes(card.id)}
+                  onToggleWishlist={handleToggleWishlist}
+                />
+              </Col>
+            ))}
+          </Row>
+        </div>
+      )}
 
       {/* HỆ THỐNG REVIEWS BÊN DƯỚI SẢN PHẨM */}
       <Row className="mt-5 pt-3">
@@ -240,9 +326,7 @@ const ProductDetail = () => {
             )}
           </Card>
 
-          {/* Hiển thị danh sách các review cũ */}
           <div className="review-list">
-            {/* 🌟 ĐỒNG BỘ FIX: Đổi từ product.ReviewsData thành product.reviews khớp với alias Backend */}
             {!product.reviews || product.reviews.length === 0 ? (
               <p className="text-muted text-center py-4 bg-light rounded-3">Chưa có lượt đánh giá nào cho sản phẩm này. Hãy là người đầu tiên nhận xét!</p>
             ) : (
@@ -250,7 +334,6 @@ const ProductDetail = () => {
                 {product.reviews.map((review) => (
                   <ListGroup.Item key={review.id} className="p-3 bg-white border-bottom">
                     <div className="d-flex justify-content-between align-items-center mb-2">
-                      {/* Tên khách hàng (Được Eager Load từ UserData ở backend) */}
                       <strong className="text-dark">{review.UserData?.name || "Khách hàng ẩn danh"}</strong>
                       <small className="text-muted">
                         {new Date(review.createdAt).toLocaleDateString('vi-VN')}
@@ -269,6 +352,13 @@ const ProductDetail = () => {
           </div>
         </Col>
       </Row>
+
+      <QuickViewModal 
+        show={showModal} 
+        handleClose={() => setShowModal(false)} 
+        product={selectedProduct} 
+        addToCart={handleAddToCartLogic} 
+      />
     </Container>
   );
 };

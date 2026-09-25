@@ -1,38 +1,63 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import './styles/TCGStyles.css';
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Bắt buộc phải có dòng này để hiển thị đúng giao diện
+import 'react-toastify/dist/ReactToastify.css';
 
-import Header from './components/Header';
-import Footer from './components/Footer';
-import Home from './components/Home';
-import Login from './components/Login';
-import Register from './components/Register';
-import Cart from './components/Cart';
-import Profile from './components/Profile';
-import Checkout from './components/Checkout';
-import OrderHistory from './components/OrderHistory';
-import AdminDashboard from './components/AdminDashboard';
-import AdminOrders from './components/AdminOrders';
-import AdminProductList from './components/AdminProductList';
-import AdminReviewList from './components/AdminReviewList';
-import AdminStats from './components/AdminStats';
-import ForgotPassword from './components/ForgotPassword';
-import ResetPassword from './components/ResetPassword';
-import ProductDetail from './components/ProductDetail';
-import Shop from './components/Shop';
-import Chatbot from './components/Chatbot';
-import ScrollToTop from './components/ScrollToTop';
+// --- CUSTOMER & COMMON COMPONENTS ---
+import Header from './components/Component/Header';
+import Footer from './components/Component/Footer';
+import Home from './components/Customer/Home';
+import Login from './components/Customer/Login';
+import Register from './components/Customer/Register';
+import Cart from './components/Customer/Cart';
+import Profile from './components/Customer/Profile';
+import Checkout from './components/Customer/Checkout';
+import OrderHistory from './components/Customer/OrderHistory';
+import ForgotPassword from './components/Customer/ForgotPassword';
+import ResetPassword from './components/Customer/ResetPassword';
+import ProductDetail from './components/Customer/ProductDetail';
+import Shop from './components/Customer/Shop';
+import Chatbot from './components/Component/Chatbot';
+import ScrollToTop from './components/Component/ScrollToTop';
+import Wishlist from './components/Customer/Wishlist';
 
-// --- HÀM BẢO VỆ ROUTE ADMIN ---
-const ProtectedAdmin = ({ children }) => {
+// --- ADMIN COMPONENTS ---
+import AdminDashboard from './components/AdminSide/AdminDashboard';
+import AdminOrders from './components/AdminSide/AdminOrders';
+import AdminProductList from './components/AdminSide/AdminProductList';
+import AdminStats from './components/AdminSide/AdminStats';
+import AdminStaffLogs from './components/AdminSide/AdminStaffLogs';
+import AdminUserManagement from './components/AdminSide/AdminUserManagement';
+
+// --- STAFF COMPONENTS ---
+import StaffDashboard from './components/StaffSide/StaffDashboard';
+import StaffBlogManagement from './components/StaffSide/StaffBlogManagement';
+import StaffReviewList from './components/StaffSide/StaffReviewList';
+
+const ProtectedRoute = ({ allowedRoles }) => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+
+  if (!userInfo || !userInfo.token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const userRole = userInfo.role || (userInfo.isAdmin ? 'Admin' : 'Customer');
+
+  if (allowedRoles && allowedRoles.includes(userRole)) {
+    return <Outlet />;
+  }
+
+  return <Navigate to="/" replace />;
+};
+
+const AdminOrStaffDashboard = () => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
+  const userRole = userInfo.role || (userInfo.isAdmin ? 'Admin' : 'Customer');
   
-  // Kiểm tra isAdmin để khớp với cơ sở dữ liệu của bạn
-  return userInfo && userInfo.isAdmin === true ? children : <Navigate to="/" />;
+  return userRole === 'Staff' ? <StaffDashboard /> : <AdminDashboard />;
 };
 
 function App() {
@@ -48,10 +73,9 @@ function App() {
         <ScrollToTop />
         <div className="d-flex flex-column min-vh-100 bg-light">
           <Header />
-          <Chatbot />
           <main className="flex-grow-1">
             <Routes>
-              {/* CÁC ROUTE CƠ BẢN */}
+              {/* PUBLIC / CUSTOMER ROUTES */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -62,40 +86,32 @@ function App() {
               <Route path="/search/:keyword" element={<Shop />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/shop" element={<Shop />} />
+              <Route path="/wishlist" element={<Wishlist />} />
 
-              {/* HỆ THỐNG ADMIN CHUYÊN NGHIỆP (ĐÃ ĐƯỢC BẢO VỆ) */}
-              <Route 
-                path="/admin" 
-                element={<ProtectedAdmin><AdminDashboard /></ProtectedAdmin>} 
-              />
-              <Route 
-                path="/admin/orders" 
-                element={<ProtectedAdmin><AdminOrders /></ProtectedAdmin>} 
-              />
-              <Route 
-                path="/admin/products" 
-                element={<ProtectedAdmin><AdminProductList /></ProtectedAdmin>} 
-              />
-              <Route 
-                path="/admin/stats" 
-                element={<ProtectedAdmin><AdminStats /></ProtectedAdmin>} 
-              />
-              <Route 
-                path="/admin/reviews" 
-                element={<ProtectedAdmin><AdminReviewList /></ProtectedAdmin>} 
-              />
+              {/* ROUTE DÙNG CHUNG CẢ ADMIN VÀ STAFF */}
+              <Route element={<ProtectedRoute allowedRoles={['Admin', 'Staff']} />}>
+                <Route path="/admin" element={<AdminOrStaffDashboard />} />
+                <Route path="/admin/orders" element={<AdminOrders />} />
+                <Route path="/admin/products" element={<AdminProductList />} />
+                <Route path="/admin/reviews" element={<StaffReviewList />} />
+                <Route path="/admin/blogs" element={<StaffBlogManagement />} />
+              </Route>
 
-              {/* ROUTE QUÊN MẬT KHẨU */}
+              {/* ROUTE DÀNH RIÊNG CHO ADMIN */}
+              <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+                <Route path="/admin/stats" element={<AdminStats />} />
+                <Route path="/admin/staff-logs" element={<AdminStaffLogs />} />
+                <Route path="/admin/users" element={<AdminUserManagement />} />
+              </Route>
+
               <Route path="/forgot-password" element={<ForgotPassword />} />  
               <Route path="/reset-password/:token" element={<ResetPassword />} />
               
-              {/* CHUYỂN HƯỚNG NẾU SAI ĐƯỜNG DẪN */}
-              <Route path="*" element={<Navigate to="/" />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
 
           <Chatbot />
-          
           <Footer />
         </div>
       </Router>

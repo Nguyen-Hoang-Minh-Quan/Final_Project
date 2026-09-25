@@ -4,8 +4,8 @@ import { Container, Row, Col, Card, Button, Badge, Form, Spinner } from 'react-b
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaFilter } from 'react-icons/fa';
-import axiosClient from '../api/axiosClient';
-import '../styles/TCGStyles.css';
+import axiosClient from '../../api/axiosClient';
+import '../../styles/TCGStyles.css';
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -15,7 +15,6 @@ const Shop = () => {
   
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryIdFromUrl = searchParams.get('categoryId');
-  // 🌟 ĐÃ THÊM: Lấy từ khóa tìm kiếm trực tiếp từ URL query params (?keyword=...)
   const keywordFromUrl = searchParams.get('keyword'); 
 
   const [categoryFilter, setCategoryFilter] = useState('all'); 
@@ -65,7 +64,7 @@ const Shop = () => {
   useEffect(() => {
     let result = [...products];
 
-    // 🌟 ĐÃ THÊM: Lọc sản phẩm theo từ khóa tìm kiếm (Không phân biệt chữ hoa, chữ thường)
+    // Lọc sản phẩm theo từ khóa tìm kiếm (Không phân biệt chữ hoa, chữ thường)
     if (keywordFromUrl) {
       result = result.filter(p => 
         p.name.toLowerCase().includes(keywordFromUrl.toLowerCase())
@@ -170,7 +169,7 @@ const Shop = () => {
               </Form.Select>
             </Form.Group>
 
-            {/* 🌟 ĐÃ THÊM: Nút xóa nhanh trạng thái tìm kiếm nếu đang hiển thị kết quả search */}
+            {/* Nút xóa nhanh trạng thái tìm kiếm nếu đang hiển thị kết quả search */}
             {keywordFromUrl && (
               <Button 
                 variant="outline-secondary" 
@@ -186,7 +185,7 @@ const Shop = () => {
 
         {/* LƯỚI HIỂN THỊ SẢN PHẨM BÊN PHẢI */}
         <Col lg={9} md={8}>
-          {/* 🌟 ĐÃ SỬA: Tiêu đề động hiển thị rõ từ khóa tìm kiếm nếu có */}
+          {/* Tiêu đề động hiển thị rõ từ khóa tìm kiếm nếu có */}
           <h3 className="fw-bold mb-4 text-uppercase fs-4 border-bottom pb-2">
             {keywordFromUrl ? `Kết quả tìm kiếm cho: "${keywordFromUrl}"` : "Cửa hàng thẻ bài"} ({filteredProducts.length})
           </h3>

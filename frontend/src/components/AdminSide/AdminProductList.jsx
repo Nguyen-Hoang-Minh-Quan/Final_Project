@@ -1,29 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, Table, Button, Modal, Form, Card, Row, Col } from 'react-bootstrap';
-import axiosClient from '../api/axiosClient'; 
-import { FaPlus, FaTrash, FaEdit, FaBox } from 'react-icons/fa';
-import '../styles/TCGStyles.css';
+import axiosClient from '../../api/axiosClient'; 
+import { FaPlus, FaTrash, FaEdit, FaBox, FaChevronLeft } from 'react-icons/fa';
+import '../../styles/TCGStyles.css';
 
 const AdminProductList = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
-  const [rarities, setRarities] = useState([]); // 🌟 Thêm State lưu danh sách độ hiếm đổ vào Dropdown
+  const [rarities, setRarities] = useState([]);
   const [show, setShow] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   
-  // 🌟 ĐỒNG BỘ BACKEND: Thay thế trường String cũ thành mã ID liên kết khóa ngoại và thêm description
   const [form, setForm] = useState({ 
     name: '', 
     price: 0, 
     image: '', 
     countInStock: 0, 
-    categoryId: '', // Khóa ngoại danh mục (Ví dụ: 1 cho Single Cards)
+    categoryId: '',
     gameType: 'Pokémon',     
-    rarityId: '',    // Khóa ngoại độ hiếm (Ví dụ: 5 cho SAR)
-    description: ''  // 🌟 Đã thêm trường mô tả sản phẩm vào Form State
+    rarityId: '',
+    description: '',
+    changeReason: ''
   });
 
-  // Lấy danh sách sản phẩm
   const getProducts = async () => {
     try {
       const { data } = await axiosClient.get('/products');
@@ -33,7 +34,6 @@ const AdminProductList = () => {
     }
   };
 
-  // Lấy danh sách độ hiếm động từ API Backend mới
   const getRaritiesData = async () => {
     try {
       const { data } = await axiosClient.get('/products/rarities');
@@ -55,10 +55,11 @@ const AdminProductList = () => {
       price: 0, 
       image: '', 
       countInStock: 0, 
-      categoryId: '1', // Gán giá trị id mặc định tùy thuộc bảng Categories trong DB của bạn
+      categoryId: '1', 
       gameType: 'Pokémon',
       rarityId: rarities[0]?.id || '',
-      description: '' // 🌟 Reset chuỗi rỗng khi tạo mới sản phẩm
+      description: '',
+      changeReason: 'Nhập hàng mới vào kho'
     });
     setShow(true);
   };
@@ -74,7 +75,8 @@ const AdminProductList = () => {
       categoryId: product.categoryId || '',
       gameType: product.gameType || 'Pokémon',
       rarityId: product.rarityId || '',
-      description: product.description || '' // 🌟 SỬA LỖI: Đổ dữ liệu text cũ ra form khi bấm Sửa
+      description: product.description || '',
+      changeReason: 'Cập nhật thông tin sản phẩm'
     });
     setShow(true);
   };
@@ -119,7 +121,10 @@ const AdminProductList = () => {
       <Card className="border-0 shadow-sm p-4">
         <Row className="align-items-center mb-4">
           <Col>
-            <h2 className="fw-bold mb-0"><FaBox className="text-danger me-2"/>KHO SẢN PHẨM</h2>
+            <h2 className="fw-bold mb-2"><FaBox className="text-danger me-2"/>KHO SẢN PHẨM</h2>
+            <Button variant="outline-secondary" size="sm" className="me-3 border-0 tcg-btn" onClick={() => navigate('/admin')}>
+              <FaChevronLeft className="me-1"/> QUAY LẠI
+            </Button>
           </Col>
           <Col className="text-end">
             <Button className="tcg-btn px-4" variant="danger" onClick={handleAdd}>
@@ -176,7 +181,6 @@ const AdminProductList = () => {
         </Table>
       </Card>
 
-      {/* MODAL THÊM / SỬA SẢN PHẨM */}
       <Modal show={show} onHide={() => setShow(false)} centered>
         <Form onSubmit={saveProduct}>
           <Modal.Header closeButton className="border-0">
@@ -271,7 +275,6 @@ const AdminProductList = () => {
               </Form.Select>
             </Form.Group>
 
-            {/* 🌟 ĐỒNG BỘ: Thêm trường nhập Textarea cho thông tin Description */}
             <Form.Group className="mb-3">
               <Form.Label className="small fw-bold">Mô tả sản phẩm (Description)</Form.Label>
               <Form.Control 
@@ -281,6 +284,17 @@ const AdminProductList = () => {
                 placeholder="Nhập thông tin chi tiết về thẻ bài/hộp bài (ví dụ: Tình trạng card, ngôn ngữ, năm phát hành...)"
                 value={form.description} 
                 onChange={e => setForm({...form, description: e.target.value})} 
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label className="small fw-bold text-danger">Lý do thay đổi kho hàng / Ghi chú Log</Form.Label>
+              <Form.Control 
+                className="tcg-input" 
+                value={form.changeReason} 
+                placeholder="Nhập lý do (ví dụ: Nhập hàng mới, Hàng bị hỏng, Điều chỉnh kiểm kê...)"
+                onChange={e => setForm({...form, changeReason: e.target.value})} 
+                required
               />
             </Form.Group>
 

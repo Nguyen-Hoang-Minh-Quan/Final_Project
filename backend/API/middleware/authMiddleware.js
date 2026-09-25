@@ -41,5 +41,13 @@ const admin = (req, res, next) => {
         res.status(403).json({ message: 'Yêu cầu quyền Quản trị viên (Admin)!' });
     }
 };
+// Kiểm tra xem tài khoản có phải là Nhân viên (Staff) hoặc Quản trị viên (Admin) không
+const staffOrAdmin = (req, res, next) => {
+    if (req.user && (req.user.role === 'Staff' || req.user.role === 'Admin' || req.user.isAdmin)) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Yêu cầu quyền Nhân viên (Staff) hoặc Quản trị viên!' });
+    }
+};
 
-module.exports = { protect, admin };
+module.exports = { protect, admin, staffOrAdmin };

@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Form, FormControl, Button, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaUserShield, FaHistory, FaUserCircle, FaSignOutAlt, FaSearch, FaShoppingCart } from 'react-icons/fa';
+import { FaUserShield, FaHistory, FaUserCircle, FaSignOutAlt, FaSearch, FaShoppingCart, FaHeart, FaUserCog } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import '../styles/TCGStyles.css';
+import '../../styles/TCGStyles.css';
 
 const Header = () => {
   const [keyword, setKeyword] = useState('');
   const [cartCount, setCartCount] = useState(0);
   const [user, setUser] = useState(null);
+  const [wishlistCount, setWishlistCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
   const updateStatus = () => {
     const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
     setCartCount(cartItems.reduce((acc, item) => acc + Number(item.qty), 0));
+
+    const wishlistItems = JSON.parse(localStorage.getItem('wishlistItems')) || [];
+    setWishlistCount(wishlistItems.length);
     
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     setUser(userInfo);
@@ -23,10 +27,13 @@ const Header = () => {
   useEffect(() => {
     updateStatus();
     window.addEventListener('cartUpdated', updateStatus);
-    return () => window.removeEventListener('cartUpdated', updateStatus);
+    window.addEventListener('wishlistUpdated', updateStatus);
+    return () => {
+      window.removeEventListener('cartUpdated', updateStatus);
+      window.removeEventListener('wishlistUpdated', updateStatus);
+    };
   }, [location]);
 
-  // 🌟 ĐÃ SỬA: Hàm gửi từ khóa tìm kiếm trực tiếp qua trang Shop bằng Query Parameter
   const submitHandler = (e) => {
     e.preventDefault();
     if (keyword.trim()) {
@@ -42,8 +49,12 @@ const Header = () => {
     navigate('/login');
   };
 
+  // Xác định vai trò của người dùng
+  const userRole = user?.role || (user?.isAdmin ? 'Admin' : 'Customer');
+  const isStaffOrAdmin = userRole === 'Admin' || userRole === 'Staff' || user?.isAdmin;
+
   return (
-    <Navbar bg="white" expand="lg" className="shadow-sm sticky-top py-2">
+    <Navbar expand="lg" className="custom-header sticky-top py-2">
       <Container>
         <Navbar.Brand as={Link} to="/" className="fw-bold text-danger fs-3">TCG SHOP</Navbar.Brand>
         
@@ -68,15 +79,26 @@ const Header = () => {
           </Form>
 
           <Nav className="align-items-center">
-            {(!user || !user.isAdmin) && (
-              <Nav.Link as={Link} to="/cart" className="position-relative me-3">
-                <FaShoppingCart className="fs-4 text-dark" />
-                {cartCount > 0 && (
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {cartCount}
-                  </span>
-                )}
-              </Nav.Link>
+            {/* Chỉ hiển thị Yêu thích & Giỏ hàng cho Khách hàng */}
+            {!isStaffOrAdmin && (
+              <>
+                <Nav.Link as={Link} to="/wishlist" className="position-relative me-3">
+                  <FaHeart className="fs-4 text-danger" />
+                  {wishlistCount > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark fw-bold">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Nav.Link>
+                <Nav.Link as={Link} to="/cart" className="position-relative me-3">
+                  <FaShoppingCart className="fs-4 text-light" />
+                  {cartCount > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                      {cartCount}
+                    </span>
+                  )}
+                </Nav.Link>
+              </>
             )}
 
             {user ? (
@@ -90,10 +112,15 @@ const Header = () => {
                 <NavDropdown.Item as={Link} to="/profile">
                   <FaUserCircle className="me-2 text-primary"/>Hồ sơ cá nhân
                 </NavDropdown.Item>
-                 
-                {user.isAdmin ? (
-                  <NavDropdown.Item as={Link} to="/admin">
-                    <FaUserShield className="me-2 text-primary"/>Quản trị hệ thống
+
+                {/* KIỂM TRA QUYỀN ADMIN / STAFF ĐỂ HIỆN NÚT TRUY CẬP TRANG QUẢN TRỊ */}
+                {isStaffOrAdmin ? (
+                  <NavDropdown.Item as={Link} to="/admin" className="fw-bold text-danger">
+                    {userRole === 'Staff' ? (
+                      <><FaUserCog className="me-2 text-warning"/>Bảng điều khiển Staff</>
+                    ) : (
+                      <><FaUserShield className="me-2 text-danger"/>Quản trị hệ thống</>
+                    )}
                   </NavDropdown.Item>
                 ) : (
                   <NavDropdown.Item as={Link} to="/order-history">

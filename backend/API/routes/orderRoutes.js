@@ -9,19 +9,22 @@ const {
     getOrderStats,
     getTopProducts
 } = require('../controllers/orderController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, staffOrAdmin } = require('../middleware/authMiddleware');
 
-// 1. Các cổng thông thường không có tham số biến động
+// 1. Cổng tạo đơn & xem đơn cá nhân
 router.post('/', protect, addOrderItems);
 router.get('/myorders', protect, getMyOrders);
-router.get('/all', protect, getAllOrders); 
 
-// 2. ĐẶT CÁC CỔNG THỐNG KÊ LÊN TRÊN cổng /:id để tránh Express nhận nhầm định tuyến
-router.get('/stats', protect, getOrderStats);
-router.get('/top-products', protect, getTopProducts);
+// 2. CỔNG LẤY TẤT CẢ ĐƠN HÀNG (Hỗ trợ cả / và /all cho Staff/Admin)
+router.get('/', protect, staffOrAdmin, getAllOrders);
+router.get('/all', protect, staffOrAdmin, getAllOrders); 
 
-// 3. Các cổng dùng biến động :id ĐẰNG SAU luôn đặt ở DƯỚI CÙNG
+// 3. Đặt các cổng thống kê lên trên cổng /:id
+router.get('/stats', protect, staffOrAdmin, getOrderStats);
+router.get('/top-products', protect, staffOrAdmin, getTopProducts);
+
+// 4. Các cổng dùng biến động :id đặt dưới cùng
 router.get('/:id', protect, getOrderById);
-router.put('/:id/status', protect, updateOrderStatus); 
+router.put('/:id/status', protect, staffOrAdmin, updateOrderStatus); 
 
 module.exports = router;

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Card, ListGroup, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import axiosClient from '../api/axiosClient';
-import { FaTruck, FaQrcode, FaCreditCard, FaMapMarkerAlt, FaTicketAlt } from 'react-icons/fa';
-import '../styles/TCGStyles.css';
+import axiosClient from '../../api/axiosClient';
+import { FaTruck, FaQrcode, FaCreditCard, FaTicketAlt } from 'react-icons/fa';
+import CheckoutAddressSection from './CheckoutAddressSection';
+import '../../styles/TCGStyles.css';
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -11,54 +12,54 @@ const Checkout = () => {
     const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
-    // Bỏ trường city, giữ lại address và phone
-    const [shipping, setShipping] = useState({ address: '', phone: '' });
+    // State lưu địa chỉ được lựa chọn từ sổ địa chỉ
+    const [selectedAddress, setSelectedAddress] = useState(null);
     const [method, setMethod] = useState('COD');
     const [error, setError] = useState(null);
 
-    // 🌟 State mới phục vụ cho tính năng Giftcode tương lai
+    // State phục vụ cho tính năng Giftcode tương lai
     const [couponCode, setCouponCode] = useState('');
 
     const total = cartItems.reduce((acc, item) => acc + item.qty * item.price, 0);
 
-    // Tự động đổ dữ liệu mặc định từ hồ sơ cá nhân
+    // Kiểm tra quyền truy cập hợp lệ
     useEffect(() => {
         if (!userInfo) {
             navigate('/login?redirect=checkout');
         } else if (cartItems.length === 0) {
             navigate('/cart');
-        } else {
-            setShipping({
-                address: userInfo.address || '',
-                phone: userInfo.phone || ''
-            });
         }
     }, [userInfo, navigate, cartItems.length]);
 
-    // Hàm giả lập xử lý áp dụng mã giảm giá (Dành cho phát triển tương lai)
     const handleApplyCoupon = (e) => {
         e.preventDefault();
         if (!couponCode.trim()) return;
         alert(`Mã giảm giá "${couponCode.toUpperCase()}" sẽ được tích hợp xử lý ở giai đoạn sau!`);
     };
 
+    // Hàm nhận dữ liệu địa chỉ được click chọn từ component con
+    const handleAddressSelect = (addr) => {
+        setSelectedAddress(addr);
+    };
+
     const placeOrder = async () => {
-        if (!shipping.address || !shipping.phone) {
-            return setError("Vui lòng nhập đầy đủ địa chỉ và số điện thoại giao hàng!");
+        if (!selectedAddress || !selectedAddress.details || !selectedAddress.phone) {
+            return setError("Vui lòng bổ sung hoặc lựa chọn một địa chỉ nhận hàng từ sổ địa chỉ!");
         }
 
         try {
-            const orderData = {
-                orderItems: cartItems.map(item => ({
-                    productId: item.id, 
-                    qty: item.qty
-                })),
-                address: shipping.address,
-                city: "Vietnam", // Giữ giá trị mặc định gửi lên backend nếu DB bắt buộc trường này
-                phone: shipping.phone,
-                paymentMethod: method,
-                coupon: couponCode || null // Sẵn sàng gửi mã giảm giá lên API nếu cần
-            };
+        const orderData = {
+            orderItems: cartItems.map(item => ({
+                productId: item.id, 
+                qty: item.qty
+            })),
+            address: selectedAddress.details, // Sửa từ addressDetails -> details thành công!
+            city: "Vietnam", 
+            phone: selectedAddress.phone,
+            paymentMethod: method,
+            coupon: couponCode || null,
+            status: 0
+        };
 
             await axiosClient.post('/orders', orderData);
 
@@ -83,37 +84,13 @@ const Checkout = () => {
 
             <Row>
                 <Col md={7}>
-                    <Card className="tcg-card p-4 mb-4 border-0 shadow-sm">
-                        <h5 className="fw-bold mb-4 border-bottom pb-2">
-                            <FaMapMarkerAlt className="me-2 text-primary"/> THÔNG TIN GIAO HÀNG
-                        </h5>
-                        
-                        <Form.Group className="mb-3">
-                            <Form.Label className="small fw-bold">ĐỊA CHỈ NHẬN HÀNG</Form.Label>
-                            <Form.Control 
-                                className="tcg-input" 
-                                placeholder="Số nhà, tên đường, phường/xã..." 
-                                value={shipping.address}
-                                onChange={e => setShipping({...shipping, address: e.target.value})} 
-                            />
-                        </Form.Group>
+                    {/* 🌟 1. TÍCH HỢP KHỐI CHỌN NHIỀU ĐỊA CHỈ THAY THẾ CHO THÀNH PHẦN INPUT CŨ */}
+                    <CheckoutAddressSection onAddressSelect={handleAddressSelect} />
 
+                    <Card className="tcg-card p-4 mb-4 border-0 shadow-sm">
                         <Row>
-                            {/* Ô bên trái: Số điện thoại */}
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label className="small fw-bold">SỐ ĐIỆN THOẠI</Form.Label>
-                                    <Form.Control 
-                                        className="tcg-input" 
-                                        placeholder="Nhập số điện thoại..."
-                                        value={shipping.phone}
-                                        onChange={e => setShipping({...shipping, phone: e.target.value})} 
-                                    />
-                                </Form.Group>
-                            </Col>
-                            
-                            {/* Ô bên phải: Thay thế Tỉnh/Thành phố bằng Giftcode tương lai 🌟 */}
-                            <Col md={6}>
+                            {/* Khối nhập mã giảm giá tinh chỉnh hạ xuống dưới */}
+                            <Col md={12}>
                                 <Form.Group className="mb-3">
                                     <Form.Label className="small fw-bold">MÃ GIẢM GIÁ / GIFTCODE (NẾU CÓ)</Form.Label>
                                     <div className="d-flex gap-2">
@@ -219,10 +196,9 @@ const Checkout = () => {
                                     <span className="text-success fw-bold">Miễn phí</span>
                                 </div>
                                 
-                                {/* UI mẫu hiển thị giảm giá từ coupon trong tương lai */}
                                 {couponCode && (
                                     <div className="d-flex justify-content-between mb-2 text-success fw-bold small">
-                                        <span><FaTicketAlt className="me-1"/> Mã giảm giá:</span>
+                                        <span> Mã giảm giá:</span>
                                         <span>-0đ</span>
                                     </div>
                                 )}

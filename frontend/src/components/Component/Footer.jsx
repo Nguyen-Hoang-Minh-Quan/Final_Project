@@ -1,10 +1,10 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { FaFacebook, FaInstagram, FaTiktok, FaYoutube, FaPhoneAlt } from 'react-icons/fa';
-import '../styles/TCGStyles.css';
+import '../../styles/TCGStyles.css';
 
 const Footer = () => (
-  <footer className="bg-dark text-white pt-5 pb-3 mt-5">
+  <footer className="custom-footer pt-5 pb-3 mt-5">
     <Container>
       <Row className="mb-4 text-center border-bottom border-secondary pb-4">
         <Col md={3}>🚚 GIAO HÀNG SIÊU TỐC</Col>
@@ -22,7 +22,7 @@ const Footer = () => (
         </Col>
         <Col md={4} className="mb-4">
           <h6 className="fw-bold mb-3">Cam kết</h6>
-          <ul className="list-unstyled text-secondary smalel">
+          <ul className="list-unstyled text-secondary small"> 
             <li>Chính hãng 100%</li>
             <li>Nói không với reseal</li>
             <li>Hàng giao tận tay</li>
@@ -31,11 +31,43 @@ const Footer = () => (
         <Col md={4} className="mb-4 text-md-end">
           <h6 className="fw-bold mb-3">THEO DÕI CHÚNG TÔI</h6>
           <div className="d-flex gap-3 fs-3 justify-content-md-end">
-            <FaFacebook className="text-primary" /><FaInstagram className="text-danger" /><FaTiktok /><FaYoutube className="text-danger" />
+            <a 
+              href="https://www.facebook.com/alex.alon.347" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-white hover-danger"
+            >
+              <FaFacebook />
+            </a>
+            <a 
+              href="https://www.instagram.com/venti.09/?__pwa=1" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-white hover-danger"
+            >
+              <FaInstagram />
+            </a>
+            <a 
+              href="https://www.tiktok.com/@hsr_player_pokemontcg?is_from_webapp=1&sender_device=pc" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-white hover-danger"
+            >
+              <FaTiktok />
+            </a>
+            <a 
+              href="https://www.youtube.com/@QuanMinh-fc8ue " 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-white hover-danger"
+            >
+              <FaYoutube />
+            </a>
           </div>
         </Col>
       </Row>
     </Container>
   </footer>
 );
+
 export default Footer;
