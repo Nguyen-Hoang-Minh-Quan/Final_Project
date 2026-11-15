@@ -107,95 +107,186 @@ const getAllChatRooms = async (req, res) => {
   }
 };
 
-// 5. Thuật toán AI Chatbot (Tokenization + Stop-word Removal + Multi-keyword Matching)
+// 5. Thuật toán AI Chatbot (Tokenization + Stop-word Removal + Smart Multi-Field & Category Matching)
 const handleAIChat = async (req, res) => {
   try {
     const { message } = req.body;
     if (!message || !message.trim()) {
-      return res.status(400).json({ reply: 'Please enter your question!' });
+      return res.status(400).json({ reply: 'Please enter your question / Vui lòng nhập câu hỏi của bạn!' });
     }
 
-    const lowerMsg = message.toLowerCase();
-    let reply = "";
+    const lowerMsg = message.toLowerCase().trim();
 
-    // INTENT 1: Product search or price lookup
-    if (lowerMsg.includes('find') || lowerMsg.includes('price') || lowerMsg.includes('card') || lowerMsg.includes('buy') || lowerMsg.includes('search') || lowerMsg.includes('box') || lowerMsg.includes('sleeves') || lowerMsg.includes('want') || lowerMsg.includes('have')) {
-      
-      // English Stopwords to filter out
-      const stopWords = ['i', 'want', 'to', 'find', 'card', 'cards', 'box', 'sleeves', 'please', 'help', 'me', 'show', 'is', 'are', 'the', 'a', 'an', 'price', 'buy', 'shop', 'for', 'do', 'you', 'have', 'any', 'looking', 'at'];
+    // 1. Nhận diện ngôn ngữ người dùng (Tiếng Việt hay Tiếng Anh)
+    const isVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(message) ||
+      /\b(tìm|thẻ|bài|giá|bao nhiêu|mua|bán|có|hộp|gói|bọc|không|ko|ạ|ơi|cho mình|hỏi|xem|cần)\b/i.test(lowerMsg);
 
-      // Tokenization: Split sentence into words and remove stop-words
-      const keywords = lowerMsg
-        .replace(/[^\w\s]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length > 1 && !stopWords.includes(w));
+    // 2. INTENT: Shipping / Delivery
+    const isShipping = /\b(ship|shipping|delivery|giao hàng|vận chuyển|van chuyen|phi ship|phí ship|bao lâu)\b/i.test(lowerMsg);
+    if (isShipping) {
+      const reply = isVietnamese
+        ? `TCG Shop hỗ trợ giao hàng toàn quốc qua J&T Express. Thời gian giao từ 1-2 ngày đối với nội thành và 2-4 ngày đối với các tỉnh thành khác!`
+        : `TCG Shop supports nationwide shipping via Express delivery. It takes 1-2 business days for inner cities and 2-4 days for other regions!`;
+      return res.status(200).json({ reply });
+    }
 
-      let products = [];
+    // 3. INTENT: Authenticity / Genuine
+    const isAuthenticity = /\b(authentic|auth|genuine|original|real|fake|chính hãng|chinh hang|thật|that|uy tín|uy tin)\b/i.test(lowerMsg);
+    if (isAuthenticity) {
+      const reply = isVietnamese
+        ? `Toàn bộ thẻ bài và sản phẩm tại TCG Shop cam kết 100% chính hãng (Authentic). Shop đền bù 200% nếu phát hiện hàng giả, hàng nhái!`
+        : `All cards and products at TCG Shop are 100% Authentic/Original with factory seals intact. We offer a 200% refund if any fake card is detected!`;
+      return res.status(200).json({ reply });
+    }
+
+    // 4. INTENT: Pure Greeting (Chỉ chào hỏi đơn thuần, không kèm tên thẻ bài)
+    const cleanedGreeting = lowerMsg.replace(/[’']/g, '').replace(/[^\w\s\u00C0-\u1EF9]/g, '').trim();
+    const isPureGreeting = /^(hi|hello|hey|yo|sup|greetings|good morning|good afternoon|good evening|chào|xin chào|chao|chào shop|hello shop|hi shop|alo|alo shop|shop ơi|shop oi)$/i.test(cleanedGreeting);
+    if (isPureGreeting) {
+      const reply = isVietnamese
+        ? `Xin chào! Tôi là Trợ lý AI của TCG Shop. Tôi có thể hỗ trợ bạn tra cứu giá thẻ bài, kiểm tra tồn kho (Single Card, Booster Box, Sleeves, Pack...), hoặc giải đáp chính sách giao hàng. Bạn đang quan tâm đến sản phẩm nào ạ?`
+        : `Hello! I'm the TCG Shop AI Assistant. I can help you look up card prices, check stock, or view store policies. What card, set, or product are you looking for?`;
+      return res.status(200).json({ reply });
+    }
+
+    // 5. INTENT: TẤT CẢ CÁC CÂU HỎI CÒN LẠI ĐỀU ĐƯỢC XỬ LÝ LÀ TÌM KIẾM SẢN PHẨM / THẺ BÀI
+    // (Bao gồm "I'm looking for a Dawn", "looking for Charizard", "Dawn", "thẻ pikachu", "giá pack 151"...)
+
+    // Stopwords tiếng Anh & tiếng Việt loại bỏ đại từ và từ phụ (giữ lại từ chỉ category: box, sleeves, pack, booster, single)
+    const stopWords = new Set([
+      // English
+      'i', 'im', 'me', 'my', 'mine', 'we', 'us', 'our', 'you', 'your', 'he', 'she', 'it', 'they',
+      'want', 'wants', 'wanted', 'looking', 'look', 'looks', 'for', 'find', 'finds', 'finding',
+      'search', 'searching', 'show', 'need', 'needs', 'get', 'getting', 'buy', 'buying', 'have', 'has', 'had',
+      'a', 'an', 'the', 'any', 'some', 'is', 'are', 'was', 'were', 'be', 'been', 'do', 'does', 'did',
+      'can', 'could', 'would', 'will', 'please', 'help', 'price', 'cost', 'how', 'much', 'what', 'where',
+      'at', 'in', 'on', 'to', 'of', 'about', 'shop', 'store', 'card', 'cards',
+      // Vietnamese
+      'tôi', 'toi', 'em', 'mình', 'minh', 'bạn', 'ban', 'muon', 'muốn', 'tim', 'tìm', 'kiem', 'kiếm', 
+      'co', 'có', 'khong', 'không', 'ko', 'k', 'ban', 'bán', 'mua', 'gia', 'giá', 'bao', 'nhieu', 'nhiêu', 
+      'tien', 'tiền', 'shop', 'ad', 'admin', 'cho', 'hoi', 'hỏi', 'xem', 'can', 'cần', 'voi', 'với', 
+      'la', 'là', 'gi', 'gì', 'nao', 'nào', 'ạ', 'nhe', 'nhé', 'oi', 'ơi', 'the', 'thẻ', 'bai', 'bài', 
+      'san', 'pham', 'sản', 'phẩm', 'chút', 'được', 'lá', 'la'
+    ]);
+
+    // Nhận diện category cụ thể nếu câu hỏi có nhắc tới
+    let detectedCategory = null;
+    if (lowerMsg.includes('elite trainer') || lowerMsg.includes('etb')) {
+      detectedCategory = 'Elite Trainer Box';
+    } else if (lowerMsg.includes('booster box') || (lowerMsg.includes('booster') && lowerMsg.includes('box'))) {
+      detectedCategory = 'Booster Box';
+    } else if (lowerMsg.includes('single') || lowerMsg.includes('thẻ lẻ') || lowerMsg.includes('the le') || lowerMsg.includes('card lẻ')) {
+      detectedCategory = 'Single Card';
+    } else if (lowerMsg.includes('pack') || lowerMsg.includes('gói')) {
+      detectedCategory = 'Pack';
+    } else if (lowerMsg.includes('sleeve') || lowerMsg.includes('sleeves') || lowerMsg.includes('bọc thẻ') || lowerMsg.includes('bọc bài')) {
+      detectedCategory = 'Sleeves';
+    } else if (lowerMsg.includes('phụ kiện') || lowerMsg.includes('accessory') || lowerMsg.includes('accessories')) {
+      detectedCategory = 'Other accessories';
+    }
+
+    // Tách từ khóa sau khi chuẩn hóa dấu nháy (I’m -> im)
+    const normalizedText = lowerMsg
+      .replace(/[’']/g, '')
+      .replace(/[^\w\s\u00C0-\u1EF9]/g, ' ');
+
+    const keywords = normalizedText
+      .split(/\s+/)
+      .filter(w => w.length > 1 && !stopWords.has(w));
+
+    let products = [];
+
+    // 5.1. Nếu có nhận diện category cụ thể (vd: Single Card, Booster Box...)
+    if (detectedCategory) {
       if (keywords.length > 0) {
-        // Build dynamic SQL query for multi-keyword AND matching
-        let whereClauses = [];
-        let replacements = {};
-
+        let whereKw = [];
+        let replacements = { cat: `%${detectedCategory}%` };
         keywords.forEach((kw, index) => {
-          whereClauses.push(`LOWER(name) LIKE LOWER(:kw${index})`);
+          whereKw.push(`LOWER(name) LIKE LOWER(:kw${index})`);
           replacements[`kw${index}`] = `%${kw}%`;
         });
 
-        const dynamicQuery = `SELECT name, price, "countInStock" FROM "Products" WHERE ` + whereClauses.join(' AND ') + ` LIMIT 3`;
-
-        products = await sequelize.query(dynamicQuery, {
-          replacements,
-          type: QueryTypes.SELECT
-        });
-      }
-
-      // Fallback: If multi-keyword returns nothing, try the longest core keyword
-      if ((!products || products.length === 0) && keywords.length > 0) {
-        const mainKeyword = keywords.reduce((a, b) => a.length > b.length ? a : b);
         products = await sequelize.query(
-          `SELECT name, price, "countInStock" FROM "Products" WHERE LOWER(name) LIKE LOWER(:keyword) LIMIT 3`,
-          {
-            replacements: { keyword: `%${mainKeyword}%` },
-            type: QueryTypes.SELECT
-          }
+          `SELECT name, price, "countInStock", category FROM "Products" 
+           WHERE LOWER(CAST(category AS TEXT)) LIKE LOWER(:cat) AND (${whereKw.join(' OR ')}) 
+           LIMIT 4`,
+          { replacements, type: QueryTypes.SELECT }
         );
       }
 
-      if (products && products.length > 0) {
-        const productListStr = products.map(p => 
-          `• ${p.name}: ${Number(p.price).toLocaleString('en-US')}đ (Stock: ${p.countInStock})`
+      if (!products || products.length === 0) {
+        products = await sequelize.query(
+          `SELECT name, price, "countInStock", category FROM "Products" 
+           WHERE LOWER(CAST(category AS TEXT)) LIKE LOWER(:cat) 
+           LIMIT 4`,
+          { replacements: { cat: `%${detectedCategory}%` }, type: QueryTypes.SELECT }
+        );
+      }
+    }
+
+    // 5.2. Tìm kiếm theo từ khóa linh hoạt trên cả name và category
+    if ((!products || products.length === 0) && keywords.length > 0) {
+      let whereClauses = [];
+      let replacements = {};
+
+      keywords.forEach((kw, index) => {
+        whereClauses.push(`(LOWER(name) LIKE LOWER(:kw${index}) OR LOWER(CAST(category AS TEXT)) LIKE LOWER(:kw${index}))`);
+        replacements[`kw${index}`] = `%${kw}%`;
+      });
+
+      // Thử tìm khớp tất cả từ khóa (AND)
+      products = await sequelize.query(
+        `SELECT name, price, "countInStock", category FROM "Products" WHERE ` + whereClauses.join(' AND ') + ` LIMIT 4`,
+        { replacements, type: QueryTypes.SELECT }
+      );
+
+      // Nếu AND không có, thử tìm khớp từng từ khóa (OR)
+      if (!products || products.length === 0) {
+        products = await sequelize.query(
+          `SELECT name, price, "countInStock", category FROM "Products" WHERE ` + whereClauses.join(' OR ') + ` LIMIT 4`,
+          { replacements, type: QueryTypes.SELECT }
+        );
+      }
+    }
+
+    // 5.3. Trả về kết quả
+    if (products && products.length > 0) {
+      const productListStr = products.map(p => 
+        `• [${p.category || 'TCG'}] ${p.name}: ${Number(p.price).toLocaleString('en-US')}đ (${isVietnamese ? 'Còn' : 'Stock'}: ${p.countInStock})`
+      ).join('\n');
+
+      const reply = isVietnamese
+        ? `Dưới đây là các sản phẩm phù hợp tại TCG Shop:\n${productListStr}\n\nBạn có thể gõ tên sản phẩm lên thanh tìm kiếm của shop để xem chi tiết nhé!`
+        : `Here are the matching products found at TCG Shop:\n${productListStr}\n\nYou can type the product name in the search bar above for more details!`;
+
+      return res.status(200).json({ reply });
+    } else {
+      // Khi không tìm thấy sản phẩm trùng khớp: Lấy ngẫu nhiên các sản phẩm nổi bật
+      const sampleProducts = await sequelize.query(
+        `SELECT name, price, "countInStock", category FROM "Products" ORDER BY RANDOM() LIMIT 3`,
+        { type: QueryTypes.SELECT }
+      );
+
+      const searchedTerm = keywords.length > 0 ? keywords.join(' ') : message;
+
+      if (sampleProducts && sampleProducts.length > 0) {
+        const sampleStr = sampleProducts.map(p => 
+          `• [${p.category || 'TCG'}] ${p.name}: ${Number(p.price).toLocaleString('en-US')}đ (${isVietnamese ? 'Còn' : 'Stock'}: ${p.countInStock})`
         ).join('\n');
 
-        reply = `Here are the matching products found in TCG Shop:\n${productListStr}\n\nYou can type the full name in the search bar above for more details!`;
+        const reply = isVietnamese
+          ? `Dạ hiện tại shop chưa tìm thấy sản phẩm "${searchedTerm}" trong kho. Bạn hãy tham khảo thử một số sản phẩm nổi bật đang có sẵn tại shop nhé:\n${sampleStr}`
+          : `Sorry, we currently couldn't find any products matching "${searchedTerm}" in stock. Here are some featured items available at TCG Shop:\n${sampleStr}`;
+
+        return res.status(200).json({ reply });
       } else {
-        // Fallback to sample products if nothing matches
-        const sampleProducts = await sequelize.query(
-          `SELECT name, price, "countInStock" FROM "Products" LIMIT 3`,
-          { type: QueryTypes.SELECT }
-        );
+        const reply = isVietnamese
+          ? `Dạ hiện tại sản phẩm này tạm hết hàng. Bạn có thể để lại tin nhắn để nhân viên hỗ trợ bạn sớm nhất nhé!`
+          : `Sorry, this item is currently out of stock. Please leave a message and our staff will assist you shortly!`;
 
-        if (sampleProducts && sampleProducts.length > 0) {
-          const sampleStr = sampleProducts.map(p => `• ${p.name}: ${Number(p.price).toLocaleString('en-US')}đ (Stock: ${p.countInStock})`).join('\n');
-          reply = `Sorry, we couldn't find the exact card. Please check out some featured items available in stock:\n${sampleStr}`;
-        } else {
-          reply = `Sorry, we currently don't have this item in stock. Feel free to leave a message for our support team!`;
-        }
+        return res.status(200).json({ reply });
       }
-    } 
-    // INTENT 2: Shipping / Delivery
-    else if (lowerMsg.includes('ship') || lowerMsg.includes('delivery') || lowerMsg.includes('long') || lowerMsg.includes('shipping')) {
-      reply = `TCG Shop supports nationwide shipping via J&T Express. Delivery takes 1-2 business days for inner city and 2-4 days for other provinces!`;
     }
-    // INTENT 3: Authenticity / Trust
-    else if (lowerMsg.includes('real') || lowerMsg.includes('auth') || lowerMsg.includes('original') || lowerMsg.includes('genuine')) {
-      reply = `All cards at TCG Shop are 100% Authentic/Original. We offer a 200% refund if any fake card is detected!`;
-    }
-    // DEFAULT INTENT (Greeting / Fallback)
-    else {
-      reply = `Hello! I'm the TCG Shop AI Assistant. I can help you look up card prices, check stock, or view shipping policies. What card are you looking for?`;
-    }
-
-    return res.status(200).json({ reply });
 
   } catch (error) {
     console.error('Detailed error in handleAIChat:', error);
