@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:5000/api', // Trỏ thẳng cổng vào Backend Node.js
+  baseURL: 'https://final-project-u4an.onrender.com/api', // Trỏ thẳng cổng vào Backend Node.js
   headers: {
     'Content-Type': 'application/json',
   },
