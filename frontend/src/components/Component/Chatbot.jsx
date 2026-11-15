@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaCommentDots, FaPaperPlane, FaTimes, FaRobot } from 'react-icons/fa';
-import axios from 'axios';
+import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
 
 const Chatbot = () => {
@@ -26,11 +26,11 @@ const Chatbot = () => {
     if (isOpen && userId) {
       const initChatRoom = async () => {
         try {
-          const roomResponse = await axios.post('http://localhost:5000/api/chat/room', { userId });
+          const roomResponse = await axiosClient.post('/chat/room', { userId });
           const room = roomResponse.data;
           setActiveRoom(room);
 
-          const messagesResponse = await axios.get(`http://localhost:5000/api/chat/messages/${room.id}`);
+          const messagesResponse = await axiosClient.get(`/chat/messages/${room.id}`);
           setMessages(messagesResponse.data);
         } catch (error) {
           console.error('Lỗi khởi tạo hệ thống chat:', error);
@@ -61,7 +61,7 @@ const Chatbot = () => {
 
     try {
       // 1. Lưu tin nhắn của User xuống Database Neon
-      const response = await axios.post('http://localhost:5000/api/chat/message', {
+      const response = await axiosClient.post('/chat/message', {
         room_id: activeRoom.id,
         sender_id: userId,
         message_text: currentText,
@@ -75,12 +75,12 @@ const Chatbot = () => {
       // 3. Gọi thuật toán AI xử lý câu hỏi
       setTimeout(async () => {
         try {
-          const aiRes = await axios.post('http://localhost:5000/api/chat/ai', {
+          const aiRes = await axiosClient.post('/chat/ai', {
             message: currentText
           });
 
           // Lưu câu trả lời của AI vào Database (Sender ID: 1 đại diện cho Bot/System)
-          const botMessageRecord = await axios.post('http://localhost:5000/api/chat/message', {
+          const botMessageRecord = await axiosClient.post('/chat/message', {
             room_id: activeRoom.id,
             sender_id: 1,
             message_text: aiRes.data.reply,

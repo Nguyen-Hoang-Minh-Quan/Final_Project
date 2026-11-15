@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
 import '../../styles/TCGStyles.css';
 
@@ -12,7 +12,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/auth/register', formData);
+      await axiosClient.post('/auth/register', formData);
       
       //THÔNG BÁO TOAST THÀNH CÔNG VÀ CHUYỂN TRANG
       toast.success("Account registered successfully! Please log in now."); 

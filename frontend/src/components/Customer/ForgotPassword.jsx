@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import axiosClient from '../../api/axiosClient';
 import '../../styles/TCGStyles.css';
 
 const ForgotPassword = () => {
@@ -18,7 +18,7 @@ const ForgotPassword = () => {
 
         try {
             // Gọi API gửi yêu cầu khôi phục đến Backend
-            const { data } = await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
+            const { data } = await axiosClient.post('/auth/forgot-password', { email });
             setMessage(data.message || "The system has sent a password reset link to your email!");
         } catch (err) {
             setError(err.response?.data?.message || "The email does not exist in the system or an error occurred!");

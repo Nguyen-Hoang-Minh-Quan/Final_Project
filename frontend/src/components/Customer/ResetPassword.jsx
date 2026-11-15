@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Card, Form, Button } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
 import '../../styles/TCGStyles.css';
 
@@ -23,7 +23,7 @@ const ResetPassword = () => {
 
         setLoading(true);
         try {
-            const { data } = await axios.post(`http://localhost:5000/api/auth/reset-password/${token}`, { password });
+            const { data } = await axiosClient.post(`/auth/reset-password/${token}`, { password });
             
             //THÔNG BÁO ĐỔI MẬT KHẨU THÀNH CÔNG
             toast.success(data.message || 'Password reset successfully!');

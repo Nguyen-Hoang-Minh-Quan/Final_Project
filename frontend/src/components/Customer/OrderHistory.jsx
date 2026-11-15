@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Table, Badge, Card, Button, Row, Col } from 'react-bootstrap';
-import axios from 'axios';
+import axiosClient from '../../api/axiosClient';
 import { FaHistory, FaBoxOpen, FaTrashAlt, FaReceipt, FaCalendarAlt, FaMoneyBillWave } from 'react-icons/fa';
 import OrderTimeline from './OrderTimeline';
 import '../../styles/TCGStyles.css';
@@ -20,12 +20,12 @@ const OrderHistory = () => {
       };
       
       // 1. Tải lại danh sách đơn hàng mới nhất
-      const { data } = await axios.get('http://localhost:5000/api/orders/myorders', currentConfig);
+      const { data } = await axiosClient.get('/orders/myorders', currentConfig);
       setOrders(data);
       
       // 2. Tải lại chi tiết của đơn vừa thao tác để cập nhật trạng thái mới nhất
       setLoadingDetail(true);
-      const detailRes = await axios.get(`http://localhost:5000/api/orders/${orderId}`, currentConfig);
+      const detailRes = await axiosClient.get(`/orders/${orderId}`, currentConfig);
       setActiveTrackOrder(detailRes.data);
     } catch (error) {
       console.error("Error while re-syncing order data:", error);
@@ -44,13 +44,13 @@ const OrderHistory = () => {
           };
           
           // Lấy danh sách tổng quan lịch sử đơn hàng
-          const { data } = await axios.get('http://localhost:5000/api/orders/myorders', innerConfig);
+          const { data } = await axiosClient.get('/orders/myorders', innerConfig);
           setOrders(data);
           
           // Mặc định nạp chi tiết đơn hàng đầu tiên (đơn mới nhất) để hiển thị danh sách sản phẩm
           if (data && data.length > 0) {
             setLoadingDetail(true);
-            const detailRes = await axios.get(`http://localhost:5000/api/orders/${data[0].id}`, innerConfig);
+            const detailRes = await axiosClient.get(`/orders/${data[0].id}`, innerConfig);
             setActiveTrackOrder(detailRes.data);
           }
         } catch (error) {
@@ -72,7 +72,7 @@ const OrderHistory = () => {
       const innerConfig = {
         headers: { Authorization: `Bearer ${userInfo.token}` },
       };
-      const { data } = await axios.get(`http://localhost:5000/api/orders/${orderId}`, innerConfig);
+      const { data } = await axiosClient.get(`/orders/${orderId}`, innerConfig);
       setActiveTrackOrder(data);
     } catch (error) {
       console.error("Error fetching selected order details:", error);
@@ -89,7 +89,7 @@ const OrderHistory = () => {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         };
         // Gửi trạng thái "Đã hủy" tương thích với logic xử lý hoàn kho ở Backend của bạn
-        await axios.put(`http://localhost:5000/api/orders/${orderId}/status`, { status: "Cancelled" }, innerConfig);
+        await axiosClient.put(`/orders/${orderId}/status`, { status: "Cancelled" }, innerConfig);
         alert("Order cancelled successfully!");
         
         // Gọi hàm reload để đồng bộ lại giao diện

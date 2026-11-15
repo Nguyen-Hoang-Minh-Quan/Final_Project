@@ -33,7 +33,7 @@ const Profile = () => {
 
       // Gọi API PUT cập nhật thông tin cá nhân lên endpoint auth/profile
       const { data } = await axiosClient.put(
-        'http://localhost:5000/api/auth/profile', // Điều chỉnh lại đúng URL backend của bạn
+        '/auth/profile',
         { name, phone, address, birthday, gender },
         config
       );
