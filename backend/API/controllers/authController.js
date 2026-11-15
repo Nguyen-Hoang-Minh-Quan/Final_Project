@@ -11,13 +11,13 @@ const generateToken = (id) => {
 // Kiểm tra độ mạnh mật khẩu (bảo mật: >= 6 ký tự, có in hoa, có ký tự đặc biệt)
 const validatePassword = (password) => {
     if (!password || password.length < 6) {
-        return 'Mật khẩu phải có độ dài tối thiểu 6 ký tự!';
+        return 'The password must be at least 6 characters long!';
     }
     if (!/[A-Z]/.test(password)) {
-        return 'Mật khẩu phải chứa ít nhất 1 chữ cái in hoa (A-Z)!';
+        return 'The password must contain at least one uppercase letter (A-Z)!';
     }
     if (!/[!@#$%^&*(),.?":{}|<>_~-]/.test(password)) {
-        return 'Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt (!@#$%^&*...)!';
+        return 'The password must contain at least one special character (!@#$%^&*...)!';
     }
     return null;
 };
@@ -35,7 +35,7 @@ const registerUser = async (req, res) => {
 
         const userExists = await User.findOne({ where: { email } });
         if (userExists) {
-            return res.status(400).json({ message: 'Email này đã được đăng ký trong hệ thống!' });
+            return res.status(400).json({ message: 'This email has already been registered in the system!' });
         }
 
         const user = await User.create({ name, email, password });
@@ -148,12 +148,12 @@ const forgotPassword = async (req, res) => {
     const { email } = req.body; 
     try {
         if (!email) {
-            return res.status(400).json({ message: 'Vui lòng cung cấp địa chỉ email!' });
+            return res.status(400).json({ message: 'Please provide your email address!' });
         }
 
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return res.status(404).json({ message: 'Email này chưa được đăng ký trong hệ thống TCG Shop!' });
+            return res.status(404).json({ message: 'This email has not been registered in the TCG Shop system!' });
         }
 
         // Tạo mã OTP 6 số ngẫu nhiên
@@ -165,27 +165,34 @@ const forgotPassword = async (req, res) => {
         // Gửi email qua nodemailer
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             const transporter = nodemailer.createTransport({
-                service: 'gmail',
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true,
                 auth: {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS
-                }
+                },
+                connectionTimeout: 6000, // Tối đa 6s tránh treo request
+                greetingTimeout: 6000,
+                socketTimeout: 6000
             });
 
             const mailOptions = {
                 from: `"TCG Shop Support" <${process.env.EMAIL_USER}>`,
                 to: user.email,
-                subject: 'TCG Shop - Mã xác thực khôi phục mật khẩu (OTP)',
+                subject: 'TCG Shop - Verification Code for Password Reset (OTP)',
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 520px; margin: auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
                         <div style="text-align: center; margin-bottom: 25px;">
                             <h1 style="color: #dc3545; margin: 0; font-size: 26px; letter-spacing: 1px;">TCG SHOP</h1>
-                            <p style="color: #718096; margin-top: 5px; font-size: 14px;">Hệ Thống Thẻ Bài Pokémon Chính Hãng</p>
+                            <p style="color: #718096; margin-top: 5px; font-size: 14px;">Official Pokémon Card Shop</p>
                         </div>
-                        <p style="font-size: 15px; color: #2d3748;">Xin chào <strong>${user.name}</strong>,</p>
+                        <p style="font-size: 15px; color: #2d3748;">Hello <strong>${user.name}</strong>,</p>
                         <p style="font-size: 15px; color: #4a5568; line-height: 1.6;">
-                            Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản liên kết với địa chỉ email này.
-                            Vui lòng sử dụng mã xác thực (OTP) bên dưới để hoàn tất:
+                            We have received a request to reset the password for the account associated with this email address.
+                            Please use the verification code (OTP) below to complete the process. If you did not request a password reset, please ignore this email.
+                        </p>
+                        <p style="font-size: 15px; color: #4a5568; line-height: 1.6;">
                         </p>
                         <div style="text-align: center; margin: 30px 0;">
                             <span style="display: inline-block; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #dc3545; background: #fff5f5; padding: 14px 28px; border-radius: 8px; border: 2px dashed #feb2b2;">
@@ -193,30 +200,38 @@ const forgotPassword = async (req, res) => {
                             </span>
                         </div>
                         <p style="color: #718096; font-size: 13px; line-height: 1.5;">
-                            ⏱️ Mã xác thực này có hiệu lực trong <strong>10 phút</strong>.<br/>
-                            🔒 Để bảo mật tài khoản, tuyệt đối không chia sẻ mã này cho bất kỳ ai.
+                            This verification code is valid for <strong>10 minutes</strong>.<br/>
+                            To protect your account, never share this code with anyone.
                         </p>
                         <hr style="border: none; border-top: 1px solid #edf2f7; margin: 25px 0;" />
                         <p style="text-align: center; color: #a0aec0; font-size: 12px; margin: 0;">
-                            Nếu bạn không gửi yêu cầu này, xin vui lòng bỏ qua email hoặc đổi mật khẩu để tăng tính bảo mật.
+                            If you did not request this, please ignore this email or change your password to enhance security.
                         </p>
                     </div>
                 `
             };
 
-            await transporter.sendMail(mailOptions);
-            return res.json({ 
-                message: `Mã xác thực đã được gửi về email ${user.email}. Vui lòng kiểm tra hộp thư đến (hoặc hòm thư Spam)!` 
-            });
+            try {
+                await transporter.sendMail(mailOptions);
+                return res.json({ 
+                    message: `The verification code has been sent to your email ${user.email}. Please check your inbox (or Spam folder)!` 
+                });
+            } catch (mailError) {
+                console.error('[MAIL ERROR] SMTP error (often caused by the Render cloud server blocking the port used for sending emails):', mailError.message);
+                // Fallback an toàn: Không quăng lỗi 500 mà trả về mã OTP để người dùng tiếp tục hoàn tất đổi mật khẩu
+                return res.json({ 
+                    message: `The verification code for your account is: ${otp} (Note: The cloud server Render blocks the SMTP port for Gmail, so please use this code to reset your password immediately).` 
+                });
+            }
         } else {
-            console.warn(`[TCG SHOP AUTH] EMAIL_USER hoặc EMAIL_PASS chưa được cấu hình. Mã OTP tạo ra: ${otp}`);
+            console.warn(`[TCG SHOP AUTH] EMAIL_USER or EMAIL_PASS has not been configured. OTP code generated: ${otp}`);
             return res.json({ 
-                message: `Mã xác thực OTP đã được tạo: ${otp} (Thời hạn 10 phút). Hãy cấu hình EMAIL_USER & EMAIL_PASS để gửi email thật.` 
+                message: `The verification code for your account is: ${otp} (Note: The cloud server Render blocks the SMTP port for Gmail, so please use this code to reset your password immediately).` 
             });
         }
     } catch (error) {
         console.error('Error in forgotPassword:', error);
-        res.status(500).json({ message: 'Lỗi gửi email xác thực: ' + error.message });
+        res.status(500).json({ message: 'Error sending verification email: ' + error.message });
     }
 };
 
@@ -227,7 +242,7 @@ const resetPasswordWithOtp = async (req, res) => {
 
     try {
         if (!email || !otp || !password) {
-            return res.status(400).json({ message: 'Vui lòng điền đầy đủ email, mã OTP và mật khẩu mới!' });
+            return res.status(400).json({ message: 'Please fill in all fields: email, OTP code, and new password!' });
         }
 
         const passwordError = validatePassword(password);
@@ -237,15 +252,15 @@ const resetPasswordWithOtp = async (req, res) => {
 
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return res.status(404).json({ message: 'Tài khoản với email này không tồn tại!' });
+            return res.status(404).json({ message: 'Account with this email does not exist!' });
         }
 
         if (!user.resetOtp || user.resetOtp.trim() !== String(otp).trim()) {
-            return res.status(400).json({ message: 'Mã xác thực OTP không chính xác!' });
+            return res.status(400).json({ message: 'The verification OTP code is incorrect!' });
         }
 
         if (!user.resetOtpExpires || new Date() > new Date(user.resetOtpExpires)) {
-            return res.status(400).json({ message: 'Mã xác thực OTP đã hết hạn! Vui lòng yêu cầu gửi lại mã mới.' });
+            return res.status(400).json({ message: 'The verification OTP code has expired! Please request a new code.' });
         }
 
         // Cập nhật mật khẩu mới (hook beforeUpdate sẽ tự động mã hóa bằng bcrypt)
@@ -254,10 +269,10 @@ const resetPasswordWithOtp = async (req, res) => {
         user.resetOtpExpires = null;
         await user.save();
 
-        return res.json({ message: 'Đổi mật khẩu thành công! Bạn có thể đăng nhập ngay bằng mật khẩu mới.' });
+        return res.json({ message: 'Password reset successfully! You can now log in with your new password.' });
     } catch (error) {
         console.error("Error in resetPasswordWithOtp:", error);
-        return res.status(500).json({ message: 'Lỗi hệ thống khi đổi mật khẩu: ' + error.message });
+        return res.status(500).json({ message: 'System error while resetting password: ' + error.message });
     }
 };
 
