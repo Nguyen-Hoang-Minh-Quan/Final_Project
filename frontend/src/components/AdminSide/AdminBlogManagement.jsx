@@ -17,7 +17,7 @@ const AdminBlogManagement = () => {
       const { data } = await axiosClient.get('/blogs');
       setBlogs(data);
     } catch (error) {
-      toast.error("Lỗi tải danh sách tin tức!");
+      toast.error("Error loading the news list!");
     }
   };
 
@@ -27,23 +27,23 @@ const AdminBlogManagement = () => {
     e.preventDefault();
     try {
       await axiosClient.post('/blogs', form);
-      toast.success("Đăng bài viết mới thành công!");
+      toast.success("New post published successfully!");
       setShow(false);
       setForm({ title: '', summary: '', content: '', image: '' });
       fetchBlogs();
     } catch (error) {
-      toast.error("Lỗi khi đăng bài!");
+      toast.error("Error publishing the post!");
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa bài viết này?")) {
+    if (window.confirm("Are you sure you want to delete this post?")) {
       try {
         await axiosClient.delete(`/blogs/${id}`);
-        toast.success("Đã xóa bài viết!");
+        toast.success("Post deleted successfully!");
         fetchBlogs();
       } catch (error) {
-        toast.error("Lỗi xóa bài!");
+        toast.error("Error deleting the post!");
       }
     }
   };
@@ -53,14 +53,14 @@ const AdminBlogManagement = () => {
       <Card className="border-0 shadow-sm p-4">
         <Row className="align-items-center mb-4">
           <Col>
-            <h2 className="fw-bold mb-2"><FaNewspaper className="text-danger me-2" />QUẢN LÝ TIN TỨC & CẨM NANG</h2>
+            <h2 className="fw-bold mb-2"><FaNewspaper className="text-danger me-2" />BLOG MANAGEMENT</h2>
             <Button variant="outline-secondary" size="sm" className="border-0 tcg-btn" onClick={() => navigate('/admin')}>
-              <FaChevronLeft className="me-1" /> QUAY LẠI
+              <FaChevronLeft className="me-1" /> GO BACK
             </Button>
           </Col>
           <Col className="text-end">
             <Button variant="danger" className="tcg-btn px-4" onClick={() => setShow(true)}>
-              <FaPlus className="me-2" /> ĐĂNG BÀI MỚI
+              <FaPlus className="me-2" /> CREATE NEW POST
             </Button>
           </Col>
         </Row>
@@ -68,11 +68,11 @@ const AdminBlogManagement = () => {
         <Table responsive hover className="admin-table border-top">
           <thead>
             <tr>
-              <th style={{ width: '80px' }}>HÌNH</th>
-              <th>TIÊU ĐỀ BÀI VIẾT</th>
-              <th>TÁC GIẢ</th>
-              <th>NGÀY ĐĂNG</th>
-              <th className="text-end">THAO TÁC</th>
+              <th style={{ width: '80px' }}>IMAGE</th>
+              <th>POST TITLE</th>
+              <th>AUTHOR</th>
+              <th>POST DATE</th>
+              <th className="text-end">ACTIONS</th>
             </tr>
           </thead>
           <tbody>
@@ -96,28 +96,28 @@ const AdminBlogManagement = () => {
 
       <Modal show={show} onHide={() => setShow(false)} size="lg" centered>
         <Form onSubmit={handleCreate}>
-          <Modal.Header closeButton><Modal.Title className="fw-bold">ĐĂNG BÀI VIẾT TCG MỚI</Modal.Title></Modal.Header>
+          <Modal.Header closeButton><Modal.Title className="fw-bold">CREATE NEW POST</Modal.Title></Modal.Header>
           <Modal.Body>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-bold small">Tiêu đề bài viết</Form.Label>
+              <Form.Label className="fw-bold small">Post Title</Form.Label>
               <Form.Control value={form.title} onChange={e => setForm({...form, title: e.target.value})} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-bold small">Tóm tắt ngắn</Form.Label>
+              <Form.Label className="fw-bold small">Short Summary</Form.Label>
               <Form.Control value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-bold small">Link Ảnh ảnh bài viết</Form.Label>
+              <Form.Label className="fw-bold small">Image Link</Form.Label>
               <Form.Control value={form.image} onChange={e => setForm({...form, image: e.target.value})} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-bold small">Nội dung chi tiết</Form.Label>
+              <Form.Label className="fw-bold small">Detailed Content</Form.Label>
               <Form.Control as="textarea" rows={6} value={form.content} onChange={e => setForm({...form, content: e.target.value})} required />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="light" onClick={() => setShow(false)}>Hủy</Button>
-            <Button type="submit" variant="danger" className="px-4">ĐĂNG BÀI</Button>
+            <Button variant="light" onClick={() => setShow(false)}>Cancel</Button>
+            <Button type="submit" variant="danger" className="px-4">CREATE POST</Button>
           </Modal.Footer>
         </Form>
       </Modal>

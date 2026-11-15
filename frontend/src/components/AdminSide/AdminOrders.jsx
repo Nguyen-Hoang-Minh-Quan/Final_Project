@@ -14,10 +14,8 @@ const AdminOrders = () => {
     try {
       const { data } = await axiosClient.get('/orders/all');
       
-      // 💡 DEBUG: Giúp Quân check nhanh trên F12 Console xem cấu trúc thực tế Server trả về
-      console.log("DỮ LIỆU ĐƠN HÀNG ADMIN NHẬN ĐƯỢC:", data);
+      console.log("ORDER DATA RECEIVED BY ADMIN:", data);
       
-      // Phòng hờ trường hợp Backend bọc mảng trong 1 object (ví dụ: { success: true, orders: [...] })
       if (Array.isArray(data)) {
         setOrders(data);
       } else if (data && Array.isArray(data.orders)) {
@@ -28,7 +26,7 @@ const AdminOrders = () => {
         setOrders([]);
       }
     } catch (err) {
-      console.error("Lỗi tải đơn hàng:", err);
+      console.error("Error loading orders:", err);
       if (err.response && (err.response.status === 401 || err.response.status === 403)) {
         alert("Phiên đăng nhập hết hạn hoặc bạn không có quyền truy cập Admin!");
       }
@@ -45,8 +43,8 @@ const AdminOrders = () => {
       await axiosClient.put(`/orders/${id}/status`, { status });
       getOrders(); // Reload lại danh sách sau khi cập nhật thành công
     } catch (err) {
-      console.error("Lỗi cập nhật:", err);
-      alert("Lỗi cập nhật trạng thái đơn hàng!");
+      console.error("Error updating status:", err);
+      alert("Error updating order status!");
     }
   };
 
@@ -62,13 +60,13 @@ const AdminOrders = () => {
                 className="me-3 border-0 tcg-btn" 
                 onClick={() => navigate('/admin')}
               >
-                <FaChevronLeft className="me-1"/> QUAY LẠI
+                <FaChevronLeft className="me-1"/> GO BACK
               </Button>
               <div>
                 <h2 className="fw-bold mb-0">
-                  <FaClipboardList className="text-danger me-2"/>QUẢN LÝ ĐƠN HÀNG
+                  <FaClipboardList className="text-danger me-2"/>ORDER MANAGEMENT
                 </h2>
-                <small className="text-muted">Theo dõi và cập nhật trạng thái vận chuyển</small>
+                <small className="text-muted">Track and update shipping status</small>
               </div>
             </div>
           </Col>
@@ -77,12 +75,12 @@ const AdminOrders = () => {
         <Table responsive hover className="admin-table border-top">
           <thead>
             <tr>
-              <th>MÃ ĐƠN</th>
-              <th>KHÁCH HÀNG</th>
-              <th className="text-center">TỔNG TIỀN</th>
-              <th className="text-center"><FaRegMoneyBillAlt className="me-1"/>PHƯƠNG THỨC</th>
-              <th className="text-center">TRẠNG THÁI</th>
-              <th className="text-end" style={{ width: '200px' }}>THAO TÁC</th>
+              <th>ORDER ID</th>
+              <th>CUSTOMER</th>
+              <th className="text-center">TOTAL</th>
+              <th className="text-center"><FaRegMoneyBillAlt className="me-1"/>PAYMENT METHOD</th>
+              <th className="text-center">STATUS</th>
+              <th className="text-end" style={{ width: '200px' }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
@@ -92,7 +90,7 @@ const AdminOrders = () => {
                 <tr key={orderId}>
                   <td className="fw-bold">#{String(orderId).slice(-6).toUpperCase()}</td>
                   <td>
-                    <div className="fw-bold text-dark">{o.user?.name || o.userName || "Khách hàng"}</div>
+                    <div className="fw-bold text-dark">{o.user?.name || o.userName || "Customer"}</div>
                     <small className="text-muted">{o.phone}</small>
                   </td>
                   <td className="text-center fw-bold text-danger">
@@ -105,10 +103,14 @@ const AdminOrders = () => {
                   </td>
                   <td className="text-center">
                     <Badge 
-                      bg={o.status === 'Đã giao' ? 'success' : o.status === 'Đang giao' ? 'warning' : 'danger'}
+                      bg={
+                        o.status === 'Delivered' ? 'success' : 
+                        o.status === 'In Transit' ? 'warning' : 
+                        o.status === 'Pending' ? 'info' : 'danger'
+                      }
                       className="px-3 py-2"
                     >
-                      {o.status || 'Chờ xử lý'}
+                      {o.status || 'Pending'}
                     </Badge>
                   </td>
                   <td className="text-end">
@@ -118,11 +120,11 @@ const AdminOrders = () => {
                       value={o.status || ''}
                       onChange={(e) => updateStatus(orderId, e.target.value)}
                     >
-                      <option value="" disabled>Cập nhật trạng thái...</option>
-                      <option value="Chờ xử lý">Chờ xử lý</option>
-                      <option value="Đang giao">Đang giao</option>
-                      <option value="Đã giao">Đã giao</option>
-                      <option value="Đã hủy">Hủy đơn</option>
+                      <option value="" disabled>Update status...</option>
+                      <option value="Pending">Pending</option>
+                      <option value="In Transit">In Transit</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -133,7 +135,7 @@ const AdminOrders = () => {
         
         {orders.length === 0 && (
           <div className="text-center py-5 text-muted">
-            Chưa có đơn hàng nào trong hệ thống.
+            No orders found in the system.
           </div>
         )}
       </Card>

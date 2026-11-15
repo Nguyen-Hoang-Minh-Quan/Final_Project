@@ -17,7 +17,7 @@ const AdminUserManagement = () => {
       const { data } = await axiosClient.get('/auth/users');
       setUsers(data);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Không thể tải danh sách tài khoản!");
+      toast.error(error.response?.data?.message || "Unable to load the list of accounts!");
     } finally {
       setLoading(false);
     }
@@ -28,13 +28,13 @@ const AdminUserManagement = () => {
   }, []);
 
   const handleRoleChange = async (userId, newRole, userName) => {
-    if (window.confirm(`Bạn có chắc muốn đổi vai trò của ${userName} thành "${newRole}"?`)) {
+    if (window.confirm(`Are you sure you want to change the role of ${userName} to "${newRole}"?`)) {
       try {
         await axiosClient.put(`/auth/users/${userId}/role`, { role: newRole });
-        toast.success(`Đã cập nhật quyền của ${userName} thành ${newRole}!`);
+        toast.success(`Successfully updated the role of ${userName} to ${newRole}!`);
         fetchUsers();
       } catch (error) {
-        toast.error(error.response?.data?.message || "Lỗi khi cập nhật vai trò!");
+        toast.error(error.response?.data?.message || "Error occurred while updating the role!");
       }
     }
   };
@@ -46,7 +46,7 @@ const AdminUserManagement = () => {
           <Col>
             <h2 className="fw-bold mb-2">
               <FaUserShield className="text-danger me-2" />
-              QUẢN LÝ TÀI KHOẢN & PHÂN QUYỀN
+              USER MANAGEMENT & ROLE ASSIGNMENT
             </h2>
             <Button 
               variant="outline-secondary" 
@@ -54,7 +54,7 @@ const AdminUserManagement = () => {
               className="border-0 tcg-btn" 
               onClick={() => navigate('/admin')}
             >
-              <FaChevronLeft className="me-1" /> QUAY LẠI DASHBOARD
+              <FaChevronLeft className="me-1" /> BACK TO DASHBOARD
             </Button>
           </Col>
         </Row>
@@ -63,16 +63,16 @@ const AdminUserManagement = () => {
           <thead>
             <tr>
               <th style={{ width: '60px' }}>ID</th>
-              <th>HỌ VÀ TÊN</th>
+              <th>NAME</th>
               <th>EMAIL</th>
-              <th className="text-center">VAI TRÒ HIỆN TẠI</th>
-              <th className="text-end" style={{ width: '220px' }}>THAY ĐỔI QUYỀN HẠN</th>
+              <th className="text-center">CURRENT ROLE</th>
+              <th className="text-end" style={{ width: '220px' }}>CHANGE PERMISSION</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="5" className="text-center py-4">Đang tải dữ liệu người dùng...</td>
+                <td colSpan="5" className="text-center py-4">Loading user data...</td>
               </tr>
             ) : (
               users.map((u) => (
@@ -92,9 +92,9 @@ const AdminUserManagement = () => {
                       onChange={(e) => handleRoleChange(u.id, e.target.value, u.name)}
                       className="tcg-input d-inline-block w-auto fw-bold"
                     >
-                      <option value="Customer">Khách hàng</option>
-                      <option value="Staff">Nhân viên (Staff)</option>
-                      <option value="Admin">Quản trị viên (Admin)</option>
+                      <option value="Customer">Customer</option>
+                      <option value="Staff">Staff</option>
+                      <option value="Admin">Admin</option>
                     </Form.Select>
                   </td>
                 </tr>

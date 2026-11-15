@@ -19,9 +19,9 @@ const ForgotPassword = () => {
         try {
             // Gọi API gửi yêu cầu khôi phục đến Backend
             const { data } = await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
-            setMessage(data.message || "Hệ thống đã gửi liên kết đặt lại mật khẩu vào Email của bạn!");
+            setMessage(data.message || "The system has sent a password reset link to your email!");
         } catch (err) {
-            setError(err.response?.data?.message || "Email không tồn tại trong hệ thống hoặc có lỗi xảy ra!");
+            setError(err.response?.data?.message || "The email does not exist in the system or an error occurred!");
         } finally {
             setLoading(false);
         }
@@ -30,9 +30,9 @@ const ForgotPassword = () => {
     return (
         <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '70vh' }}>
             <Card className="tcg-card p-4 shadow" style={{ width: '400px' }}>
-                <h3 className="text-center fw-bold text-danger mb-3">QUÊN MẬT KHẨU</h3>
+                <h3 className="text-center fw-bold text-danger mb-3">FORGOT PASSWORD</h3>
                 <p className="text-muted text-center small mb-4">
-                    Vui lòng nhập Email đã đăng ký tài khoản. Chúng tôi sẽ gửi liên kết khôi phục mật khẩu đến hòm thư của bạn.
+                    Please enter the email address associated with your account. We will send a password reset link to your inbox.
                 </p>
 
                 {error && <Alert variant="danger">{error}</Alert>}
@@ -40,11 +40,11 @@ const ForgotPassword = () => {
 
                 <Form onSubmit={submitHandler}>
                     <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold">Địa chỉ Email</Form.Label>
+                        <Form.Label className="fw-bold">Email Address</Form.Label>
                         <Form.Control 
                             className="tcg-input" 
                             type="email" 
-                            placeholder="Nhập email của bạn..."
+                            placeholder="Enter your email..."
                             value={email}
                             onChange={e => setEmail(e.target.value)} 
                             required 
@@ -58,12 +58,12 @@ const ForgotPassword = () => {
                         type="submit"
                         disabled={loading}
                     >
-                        {loading ? "ĐANG XỬ LÝ..." : "GỬI YÊU CẦU"}
+                        {loading ? "PROCESSING..." : "SEND REQUEST"}
                     </Button>
                     
                     <div className='py-3 text-center small'>
                         <Link to='/login' style={{ color: '#6c757d', textDecoration: 'none', fontWeight: 'bold' }}>
-                             Quay lại đăng nhập
+                             Back to Login
                         </Link>
                     </div>
                 </Form>

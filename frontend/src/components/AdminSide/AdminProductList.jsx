@@ -30,7 +30,7 @@ const AdminProductList = () => {
       const { data } = await axiosClient.get('/products');
       setProducts(data);
     } catch (err) { 
-      console.error("Lỗi tải dữ liệu sản phẩm:", err); 
+      console.error("Error loading product data:", err); 
     }
   };
 
@@ -39,7 +39,7 @@ const AdminProductList = () => {
       const { data } = await axiosClient.get('/products/rarities');
       setRarities(data);
     } catch (err) {
-      console.error("Lỗi tải danh sách độ hiếm:", err);
+      console.error("Error loading rarity data:", err);
     }
   };
 
@@ -59,7 +59,7 @@ const AdminProductList = () => {
       gameType: 'Pokémon',
       rarityId: rarities[0]?.id || '',
       description: '',
-      changeReason: 'Nhập hàng mới vào kho'
+      changeReason: 'New inventory entry'
     });
     setShow(true);
   };
@@ -76,7 +76,7 @@ const AdminProductList = () => {
       gameType: product.gameType || 'Pokémon',
       rarityId: product.rarityId || '',
       description: product.description || '',
-      changeReason: 'Cập nhật thông tin sản phẩm'
+      changeReason: 'Update product information'
     });
     setShow(true);
   };
@@ -100,18 +100,18 @@ const AdminProductList = () => {
       setShow(false);
       getProducts();
     } catch (err) {
-      console.error("Chi tiết lỗi từ Server:", err.response?.data);
-      alert("Có lỗi xảy ra: " + (err.response?.data?.message || "Vui lòng kiểm tra lại dữ liệu!"));
+      console.error("Error details from Server:", err.response?.data);
+      alert("An error occurred: " + (err.response?.data?.message || "Please check your data!"));
     }
   };
 
   const deleteProduct = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')) {
+    if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         await axiosClient.delete(`/products/${id}`);
         getProducts();
       } catch (err) {
-        alert("Lỗi khi xóa sản phẩm!");
+        alert("Error occurred while deleting the product!");
       }
     }
   };
@@ -121,14 +121,14 @@ const AdminProductList = () => {
       <Card className="border-0 shadow-sm p-4">
         <Row className="align-items-center mb-4">
           <Col>
-            <h2 className="fw-bold mb-2"><FaBox className="text-danger me-2"/>KHO SẢN PHẨM</h2>
+            <h2 className="fw-bold mb-2"><FaBox className="text-danger me-2"/>PRODUCT INVENTORY</h2>
             <Button variant="outline-secondary" size="sm" className="me-3 border-0 tcg-btn" onClick={() => navigate('/admin')}>
-              <FaChevronLeft className="me-1"/> QUAY LẠI
+              <FaChevronLeft className="me-1"/> GO BACK
             </Button>
           </Col>
           <Col className="text-end">
             <Button className="tcg-btn px-4" variant="danger" onClick={handleAdd}>
-              <FaPlus className="me-2"/> THÊM SẢN PHẨM MỚI
+              <FaPlus className="me-2"/> ADD NEW PRODUCT
             </Button>
           </Col>
         </Row>
@@ -136,13 +136,13 @@ const AdminProductList = () => {
         <Table responsive hover className="admin-table border-top">
           <thead>
             <tr>
-              <th className="text-center" style={{width: '100px'}}>HÌNH</th>
-              <th>TÊN SẢN PHẨM</th>
-              <th>THỂ LOẠI GAME</th> 
-              <th>LOẠI HÀNG</th> 
-              <th className="text-center">GIÁ</th>
-              <th className="text-center">KHO</th>
-              <th className="text-end">HÀNH ĐỘNG</th>
+              <th className="text-center" style={{width: '100px'}}>IMAGE</th>
+              <th>PRODUCT NAME</th>
+              <th>GAME TYPE</th> 
+              <th>CATEGORY</th> 
+              <th className="text-center">PRICE</th>
+              <th className="text-center">STOCK</th>
+              <th className="text-end">ACTIONS</th>
             </tr>
           </thead>
           <tbody>
@@ -184,11 +184,11 @@ const AdminProductList = () => {
       <Modal show={show} onHide={() => setShow(false)} centered>
         <Form onSubmit={saveProduct}>
           <Modal.Header closeButton className="border-0">
-            <Modal.Title className="fw-bold">{isEdit ? 'CHỈNH SỬA SẢN PHẨM' : 'THÊM SẢN PHẨM MỚI'}</Modal.Title>
+            <Modal.Title className="fw-bold">{isEdit ? 'EDIT PRODUCT' : 'ADD NEW PRODUCT'}</Modal.Title>
           </Modal.Header>
           <Modal.Body className="py-0">
             <Form.Group className="mb-3">
-              <Form.Label className="small fw-bold">Tên sản phẩm</Form.Label>
+              <Form.Label className="small fw-bold">Product Name</Form.Label>
               <Form.Control 
                 className="tcg-input" 
                 value={form.name} 
@@ -200,7 +200,7 @@ const AdminProductList = () => {
             <Row>
               <Col>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-bold">Giá (VNĐ)</Form.Label>
+                  <Form.Label className="small fw-bold">Price (VNĐ)</Form.Label>
                   <Form.Control 
                     className="tcg-input" 
                     type="number" 
@@ -212,7 +212,7 @@ const AdminProductList = () => {
               </Col>
               <Col>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-bold">Số lượng trong kho</Form.Label>
+                  <Form.Label className="small fw-bold">Stock Quantity</Form.Label>
                   <Form.Control 
                     className="tcg-input" 
                     type="number" 
@@ -227,7 +227,7 @@ const AdminProductList = () => {
             <Row>
               <Col>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-bold">Thể Loại Card Game (gameType)</Form.Label>
+                  <Form.Label className="small fw-bold">Game Type (gameType)</Form.Label>
                   <Form.Select 
                     className="tcg-input"
                     value={form.gameType} 
@@ -244,7 +244,7 @@ const AdminProductList = () => {
               </Col>
               <Col>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-bold">Loại sản phẩm (category)</Form.Label>
+                  <Form.Label className="small fw-bold">Product Category (category)</Form.Label>
                   <Form.Select 
                     className="tcg-input"
                     value={form.categoryId} 
@@ -261,14 +261,14 @@ const AdminProductList = () => {
             </Row>
 
             <Form.Group className="mb-3">
-              <Form.Label className="small fw-bold">Độ hiếm (Rarity)</Form.Label>
+              <Form.Label className="small fw-bold">Rarity</Form.Label>
               <Form.Select
                 className="tcg-input"
                 value={form.rarityId}
                 onChange={e => setForm({...form, rarityId: e.target.value})}
                 required
               >
-                <option value="">-- Chọn độ hiếm --</option>
+                <option value="">-- Select Rarity --</option>
                 {rarities.map(r => (
                   <option key={r.id} value={r.id}>{r.name}</option>
                 ))}
@@ -276,30 +276,30 @@ const AdminProductList = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label className="small fw-bold">Mô tả sản phẩm (Description)</Form.Label>
+              <Form.Label className="small fw-bold">Product Description (Description)</Form.Label>
               <Form.Control 
                 className="tcg-input" 
                 as="textarea"
                 rows={3}
-                placeholder="Nhập thông tin chi tiết về thẻ bài/hộp bài (ví dụ: Tình trạng card, ngôn ngữ, năm phát hành...)"
+                placeholder="Enter detailed information about the card box (e.g., card condition, language, release year...)"
                 value={form.description} 
                 onChange={e => setForm({...form, description: e.target.value})} 
               />
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label className="small fw-bold text-danger">Lý do thay đổi kho hàng / Ghi chú Log</Form.Label>
+              <Form.Label className="small fw-bold text-danger">Reason for Stock Change / Log Notes</Form.Label>
               <Form.Control 
                 className="tcg-input" 
                 value={form.changeReason} 
-                placeholder="Nhập lý do (ví dụ: Nhập hàng mới, Hàng bị hỏng, Điều chỉnh kiểm kê...)"
+                placeholder="Enter the reason for the stock change (e.g., New shipment, Damaged items, Inventory adjustment...)"
                 onChange={e => setForm({...form, changeReason: e.target.value})} 
                 required
               />
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label className="small fw-bold">Link hình ảnh sản phẩm</Form.Label>
+              <Form.Label className="small fw-bold">Product image link</Form.Label>
               <Form.Control 
                 className="tcg-input" 
                 value={form.image} 
@@ -309,9 +309,9 @@ const AdminProductList = () => {
             </Form.Group>
           </Modal.Body>
           <Modal.Footer className="border-0">
-            <Button variant="light" onClick={() => setShow(false)}>Hủy</Button>
+            <Button variant="light" onClick={() => setShow(false)}>Cancel</Button>
             <Button type="submit" variant="danger" className="px-4">
-              {isEdit ? 'CẬP NHẬT' : 'LƯU SẢN PHẨM'}
+              {isEdit ? 'Update' : 'Save Product'}
             </Button>
           </Modal.Footer>
         </Form>

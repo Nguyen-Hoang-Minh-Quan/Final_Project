@@ -8,7 +8,7 @@ const addOrderItems = async (req, res) => {
     const { orderItems, address, city, phone, paymentMethod } = req.body;
 
     if (!orderItems || orderItems.length === 0) {
-        return res.status(400).json({ message: 'Đơn hàng trống, không có sản phẩm nào!' });
+        return res.status(400).json({ message: 'The order is empty; there are no products!' });
     }
 
     const t = await sequelize.transaction();
@@ -26,20 +26,20 @@ const addOrderItems = async (req, res) => {
 
             if (!product) {
                 await t.rollback();
-                return res.status(404).json({ message: `Sản phẩm ID ${item.productId} không tồn tại!` });
+                return res.status(404).json({ message: `Product ID ${item.productId} does not exist!` });
             }
 
-            // 🌟 PRE-CHECK KHO: Nếu số lượng yêu cầu lớn hơn số lượng trong kho, chặn ngay lập tức
+            //PRE-CHECK KHO: Nếu số lượng yêu cầu lớn hơn số lượng trong kho, chặn ngay lập tức
             if (product.countInStock < item.qty) {
                 await t.rollback();
                 return res.status(400).json({ 
-                    message: `Sản phẩm "${product.name}" vừa bị người khác mua hết hoặc không đủ số lượng! (Còn lại: ${product.countInStock})` 
+                    message: `Product "${product.name}" is out of stock or insufficient quantity! (Available: ${product.countInStock})` 
                 });
             }
 
             calculatedTotalPrice += Number(product.price) * item.qty;
 
-            // 🌟 TRỪ KHO AN TOÀN
+            // TRỪ KHO AN TOÀN
             product.countInStock -= item.qty;
             await product.save({ transaction: t });
 
@@ -59,7 +59,8 @@ const addOrderItems = async (req, res) => {
             phone,
             paymentMethod,
             totalPrice: calculatedTotalPrice,
-            isPaid: paymentMethod === 'COD' ? false : true
+            isPaid: paymentMethod === 'COD' ? false : true,
+            status: 'Pending' // Mặc định đơn mới là Pending
         }, { transaction: t });
 
         const finalOrderItems = itemsToCreate.map(item => ({
@@ -69,11 +70,11 @@ const addOrderItems = async (req, res) => {
         await OrderItem.bulkCreate(finalOrderItems, { transaction: t });
 
         await t.commit();
-        res.status(201).json({ message: 'Đặt hàng thành công!', orderId: order.id });
+        res.status(201).json({ message: 'Order placed successfully!', orderId: order.id });
 
     } catch (error) {
         if (!t.finished) await t.rollback();
-        res.status(500).json({ message: 'Lỗi hệ thống khi đặt hàng: ' + error.message });
+        res.status(500).json({ message: 'System error while placing order: ' + error.message });
     }
 };
 
@@ -87,14 +88,14 @@ const getOrderById = async (req, res) => {
 
         if (order) {
             if (order.userId !== req.user.id && !req.user.isAdmin) {
-                return res.status(403).json({ message: 'Bạn không có quyền xem đơn hàng này!' });
+                return res.status(403).json({ message: 'You do not have permission to view this order!' });
             }
             res.json(order);
         } else {
-            res.status(404).json({ message: 'Không tìm thấy đơn hàng!' });
+            res.status(404).json({ message: 'Order not found!' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server: ' + error.message });
+        res.status(500).json({ message: 'Server error: ' + error.message });
     }
 };
 
@@ -108,7 +109,7 @@ const getMyOrders = async (req, res) => {
         });
         res.json(orders);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi hệ thống: ' + error.message });
+        res.status(500).json({ message: 'System error: ' + error.message });
     }
 };
 
@@ -121,9 +122,9 @@ const getAllOrders = async (req, res) => {
         });
         return res.json(orders);
     } catch (error) {
-        console.error(" LỖI TẠI GETALLORDERS BACKEND:", error);
+        console.error(" ERROR IN GETALLORDERS BACKEND:", error);
         return res.status(500).json({ 
-            message: 'Lỗi server khi lấy danh sách đơn hàng', 
+            message: 'Server error when fetching order list', 
             error: error.message 
         });
     }
@@ -134,7 +135,6 @@ const getAllOrders = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     const t = await sequelize.transaction();
     try {
-        // Tìm đơn hàng kèm các items bên trong
         const order = await Order.findByPk(req.params.id, {
             include: [{ model: OrderItem, as: 'orderItems' }],
             transaction: t
@@ -142,15 +142,14 @@ const updateOrderStatus = async (req, res) => {
         
         if (!order) {
             await t.rollback();
-            return res.status(404).json({ message: 'Không tìm thấy đơn hàng!' });
+            return res.status(404).json({ message: 'Order not found!' });
         }
         
         const oldStatus = order.status;
-        const newStatus = req.body.status;
+        const newStatus = req.body.status; // Nhận trạng thái tiếng Anh từ frontend (ví dụ: Delivered, Cancelled, Pending, Shipping)
         
-        // 🌟 LOGIC HOÀN KHO (STOCK ROLLBACK) KHI HỦY ĐƠN
-        // Nếu đơn hàng chưa hủy nay chuyển sang 'Đã hủy'
-        if (newStatus === 'Đã hủy' && oldStatus !== 'Đã hủy') {
+        // PRE-CHECK KHO: Nếu số lượng yêu cầu lớn hơn số lượng trong kho, chặn ngay lập tức
+        if (newStatus === 'Cancelled' && oldStatus !== 'Cancelled') {
             for (const item of order.orderItems) {
                 const product = await Product.findByPk(item.productId, { transaction: t });
                 if (product) {
@@ -160,24 +159,24 @@ const updateOrderStatus = async (req, res) => {
             }
         }
         
-        // Ngược lại, nếu Admin lỡ bấm 'Đã hủy' nhưng muốn khôi phục lại thành 'Chờ xử lý'/'Đang giao'
-        if (oldStatus === 'Đã hủy' && newStatus !== 'Đã hủy') {
+        // Ngược lại, nếu khôi phục từ trạng thái 'Cancelled' sang trạng thái khác
+        if (oldStatus === 'Cancelled' && newStatus !== 'Cancelled') {
             for (const item of order.orderItems) {
                 const product = await Product.findByPk(item.productId, { transaction: t });
                 if (product) {
                     if (product.countInStock < item.qty) {
                         await t.rollback();
-                        return res.status(400).json({ message: `Không thể khôi phục đơn! Sản phẩm "${product.name}" trong kho không đủ để trừ lại.` });
+                        return res.status(400).json({ message: `Cannot restore order! Product "${product.name}" in stock is insufficient.` });
                     }
                     product.countInStock -= item.qty; // Trừ lại kho
                     await product.save({ transaction: t });
                 }
             }
         }
-
-        // Cập nhật trạng thái và dòng tiền như cũ của Quân
+        
+        // Cập nhật trạng thái và dòng tiền
         order.status = newStatus;
-        if (newStatus === 'Đã giao') {
+        if (newStatus === 'Delivered') {
             order.isPaid = true;
         } else {
             order.isPaid = false; 
@@ -186,10 +185,11 @@ const updateOrderStatus = async (req, res) => {
         await order.save({ transaction: t });
         await t.commit();
         
-        res.json({ message: 'Cập nhật trạng thái đơn hàng thành công!', order });
+        res.json({ message: 'Order status updated successfully!', order });
     } catch (error) {
         if (!t.finished) await t.rollback();
-        res.status(500).json({ message: 'Lỗi server khi cập nhật trạng thái: ' + error.message });
+        console.error("ERROR IN UPDATEORDERSTATUS:", error);
+        res.status(500).json({ message: 'Server error when updating order status: ' + error.message });
     }
 };
 
@@ -197,19 +197,16 @@ const updateOrderStatus = async (req, res) => {
 // @route   GET /api/orders/stats
 const getOrderStats = async (req, res) => {
     try {
-        // 🌟 BƯỚC 1: SỬA LOGIC DOANH THU - Chỉ lấy đơn thực sự ĐÃ GIAO THÀNH CÔNG
+        // Chỉ lấy đơn thực sự ĐÃ GIAO THÀNH CÔNG ('Delivered')
         const orders = await Order.findAll({
             where: {
-                status: 'Đã giao' // Nghiêm ngặt: Phải giao thành công mới tính doanh thu thực thu
+                status: 'Delivered' 
             },
             attributes: ['totalPrice', 'createdAt'],
-            // 🌟 BƯỚC 2: SỬA LỖI ĐẢO NGÀY - Sắp xếp tăng dần theo mốc thời gian thực ngay từ Database
             order: [['createdAt', 'ASC']] 
         });
 
         let totalRevenue = 0;
-        
-        // Dùng Map hoặc Object để nhóm tiền theo ngày
         const salesByDate = {};
 
         orders.forEach(order => {
@@ -217,10 +214,8 @@ const getOrderStats = async (req, res) => {
             totalRevenue += price;
 
             const dateObj = new Date(order.createdAt);
-            // Định dạng ngày hiển thị trên biểu đồ trục X (Ví dụ: 17/5, 28/5)
             const formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}`;
 
-            // Vì database đã được ORDER BY 'createdAt' ASC, các ngày đẩy vào đây sẽ tự động theo thứ tự tuyến tính từ cũ đến mới
             if (salesByDate[formattedDate]) {
                 salesByDate[formattedDate] += price;
             } else {
@@ -228,7 +223,6 @@ const getOrderStats = async (req, res) => {
             }
         });
 
-        // Chuyển đổi dữ liệu sang mảng cho Recharts
         const dailySales = Object.keys(salesByDate).map(date => ({
             date,
             sales: salesByDate[date]
@@ -236,13 +230,13 @@ const getOrderStats = async (req, res) => {
 
         res.json({
             totalRevenue,
-            orderCount: orders.length, // Đếm chính xác số đơn giao thành công
-            dailySales // Trả về mảng đã tự động chuẩn hóa thứ tự thời gian
+            orderCount: orders.length,
+            dailySales 
         });
 
     } catch (error) {
-        console.error("LỖI TẠI GETORDERSTATS BACKEND:", error);
-        res.status(500).json({ message: 'Lỗi hệ thống khi tính doanh thu: ' + error.message });
+        console.error("ERROR IN GETORDERSTATS BACKEND:", error);
+        res.status(500).json({ message: 'System error when calculating revenue: ' + error.message });
     }
 };
 
@@ -258,8 +252,8 @@ const getTopProducts = async (req, res) => {
             ],
             include: [{
                 model: Order,
-                as: 'Order', // 🌟 SỬA TẠI ĐÂY: Đổi 'order' thành 'Order' viết hoa để khớp với định nghĩa association
-                where: { status: 'Đã giao' }, 
+                as: 'Order', 
+                where: { status: 'Delivered' }, 
                 attributes: [] 
             }],
             group: [
@@ -274,7 +268,6 @@ const getTopProducts = async (req, res) => {
             raw: true
         });
 
-        // Định dạng dữ liệu sạch để gửi về Frontend
         const formattedProducts = topProducts.map(item => ({
             productId: item.productId,
             name: item.name,
@@ -285,8 +278,8 @@ const getTopProducts = async (req, res) => {
 
         res.json(formattedProducts);
     } catch (error) {
-        console.error("LỖI CHI TIẾT TẠI GETTOPPRODUCTS:", error);
-        res.status(500).json({ message: 'Lỗi lấy top sản phẩm: ' + error.message });
+        console.error("DETAILED ERROR AT GETTOPPRODUCTS:", error);
+        res.status(500).json({ message: 'Server error when fetching top products: ' + error.message });
     }
 };
 

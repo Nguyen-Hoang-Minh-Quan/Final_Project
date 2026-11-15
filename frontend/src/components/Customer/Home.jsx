@@ -49,8 +49,8 @@ const Home = ({ customData }) => {
 
         setLoading(false);
       } catch (error) {
-        toast.error("Lỗi đồng bộ dữ liệu hệ thống!");
-        console.error("Lỗi tải trang chủ:", error);
+        toast.error("Synchronized data system error!");
+        console.error("Synchronized data system error:", error);
         setLoading(false);
       }
     };
@@ -65,7 +65,7 @@ const Home = ({ customData }) => {
       if (existItem.qty < card.countInStock) {
         existItem.qty += 1;
       } else {
-        return toast.error(`Sản phẩm "${card.name}" trong kho không đủ số lượng!`);
+        return toast.error(`Product "${card.name}" in stock is not enough!`);
       }
     } else {
       cartItems.push({ ...card, qty: 1 });
@@ -73,7 +73,7 @@ const Home = ({ customData }) => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
     window.dispatchEvent(new Event("cartUpdated"));
     
-    toast.success(`Đã thêm "${card.name}" vào giỏ hàng! 🛒`);
+    toast.success(`Product "${card.name}" added to cart! 🛒`);
   };
 
   if (loading) {
@@ -101,9 +101,9 @@ const Home = ({ customData }) => {
             <Carousel.Caption className="text-start pb-5">
               <Badge bg="danger" className="mb-2 text-uppercase p-2 fw-bold">Hot Release</Badge>
               <h1 className="fw-bold display-4 text-white">PHANTASMAL FLAMES</h1>
-              <p className="fs-5 text-light">Sở hữu ngay các siêu phẩm thẻ bài với độ hiếm SR, SAR cực đỉnh tại TCG SHOP.</p>
+              <p className="fs-5 text-light">Get your hands on top-tier, highly sought-after cards with SR and SAR rarities at TCG SHOP!</p>
               <Button variant="danger" className="fw-bold px-4 py-2" onClick={() => navigate('/shop')}>
-                KHÁM PHÁ NGAY
+                DISCOVER NOW
               </Button>
             </Carousel.Caption>
           </Carousel.Item>
@@ -117,10 +117,10 @@ const Home = ({ customData }) => {
             />
             <Carousel.Caption className="text-start pb-5">
               <Badge bg="warning" className="mb-2 text-dark text-uppercase p-2 fw-bold">Pre-Order</Badge>
-              <h1 className="fw-bold display-4 text-white">BOOSTER BOX CHÍNH HÃNG</h1>
-              <p className="fs-5 text-light">Nói không với reseal. Đảm bảo nguyên seal nhà máy tới tay nhà sưu tầm.</p>
+              <h1 className="fw-bold display-4 text-white">AUTHENTIC BOOSTER BOX</h1>
+              <p className="fs-5 text-light">Say no to reseal. Ensure original factory seals reach your hands.</p>
               <Button variant="light" className="fw-bold text-danger px-4 py-2" onClick={() => navigate('/shop')}>
-                XEM THÊM
+                VIEW MORE
               </Button>
             </Carousel.Caption>
           </Carousel.Item>
@@ -132,7 +132,7 @@ const Home = ({ customData }) => {
           <div className="mb-5 bg-white p-4 rounded shadow-sm">
             <div className="border-bottom pb-2 mb-4">
               <h3 className="m-0 fw-bold fs-5 text-dark text-uppercase d-flex align-items-center">
-                <FaLayerGroup className="me-2 text-warning" /> Danh mục sản phẩm TCG
+                <FaLayerGroup className="me-2 text-warning" /> Product Categories
               </h3>
             </div>
             <Row className="g-3 justify-content-center">
@@ -166,7 +166,7 @@ const Home = ({ customData }) => {
         {customData ? (
           <>
             <h2 className="section-title border-bottom pb-2 mb-4 text-uppercase fw-bold fs-4">
-              🔍 Kết quả tìm kiếm ({cards.length})
+              🔍 Search Results ({cards.length})
             </h2>
             <Row>
               {cards.map(card => (
@@ -181,9 +181,9 @@ const Home = ({ customData }) => {
             <div className="mb-5">
               <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
                 <h3 className="m-0 fw-bold fs-4 text-dark text-uppercase">
-                  <FaRegClock className="me-2 text-primary" /> Sản phẩm mới nhất
+                  <FaRegClock className="me-2 text-primary" /> Latest products
                 </h3>
-                <Link to="/shop" className="text-decoration-none text-muted small fw-bold hover-danger">Xem tất cả</Link>
+                <Link to="/shop" className="text-decoration-none text-muted small fw-bold hover-danger">View All</Link>
               </div>
               <Row>
                 {newArrivals.map(card => (
@@ -197,9 +197,9 @@ const Home = ({ customData }) => {
             <div className="mb-4">
               <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
                 <h3 className="m-0 fw-bold fs-4 text-dark text-uppercase">
-                  <FaFire className="me-2 text-danger" /> Sản phẩm nổi bật
+                  <FaFire className="me-2 text-danger" /> Best Selling Products
                 </h3>
-                <Link to="/shop" className="text-decoration-none text-muted small fw-bold hover-danger">Xem tất cả</Link>
+                <Link to="/shop" className="text-decoration-none text-muted small fw-bold hover-danger">View All</Link>
               </div>
               <Row>
                 {bestSellers.map(card => (
@@ -221,7 +221,7 @@ const ProductCardItem = ({ card, addToCart, isNew, isHot }) => {
     <Card className="tcg-card h-100 shadow-sm border-0 position-relative overflow-hidden">
       {isNew && card.countInStock > 0 && <Badge bg="primary" className="position-absolute top-0 start-0 m-2 z-1">NEW</Badge>}
       {isHot && card.countInStock > 0 && <Badge bg="danger" className="position-absolute top-0 start-0 m-2 z-1">HOT</Badge>}
-      {card.countInStock <= 0 && <Badge bg="secondary" className="position-absolute top-0 start-0 m-2 z-1">HẾT HÀNG</Badge>}
+      {card.countInStock <= 0 && <Badge bg="secondary" className="position-absolute top-0 start-0 m-2 z-1">OUT OF STOCK</Badge>}
 
       <Link to={`/product/${card.id}`} className="text-decoration-none">
         <div className="product-img-box position-relative overflow-hidden p-3" style={{ cursor: 'pointer', height: '240px' }}>
@@ -258,7 +258,7 @@ const ProductCardItem = ({ card, addToCart, isNew, isHot }) => {
           onClick={() => addToCart(card)}
           style={{ fontSize: '0.85rem' }}
         >
-          {card.countInStock > 0 ? "THÊM VÀO GIỎ" : "HẾT HÀNG"}
+          {card.countInStock > 0 ? "ADD TO CART" : "OUT OF STOCK"}
         </Button>
       </Card.Body>
     </Card>

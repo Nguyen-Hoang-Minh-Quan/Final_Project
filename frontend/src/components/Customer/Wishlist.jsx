@@ -20,11 +20,11 @@ const Wishlist = () => {
 
   const handleToggleWishlist = (product) => {
     let items = JSON.parse(localStorage.getItem('wishlistItems')) || [];
-    items = items.filter(x => x.id !== product.id); // Chắc chắn là xóa vì đang ở trang Wishlist
+    items = items.filter(x => x.id !== product.id); // Xóa sản phẩm khỏi danh sách yêu thích
     localStorage.setItem('wishlistItems', JSON.stringify(items));
     setWishlistItems(items);
     window.dispatchEvent(new Event("wishlistUpdated"));
-    toast.info("Đã xóa khỏi danh sách yêu thích!");
+    toast.info("Removed from wishlist!");
   };
 
   const addToCart = (product) => {
@@ -32,20 +32,20 @@ const Wishlist = () => {
     const existItem = cartItems.find(x => x.id === product.id);
     if (existItem) {
       if (existItem.qty < product.countInStock) { existItem.qty += 1; } 
-      else { return toast.error("Số lượng trong kho không đủ!"); }
+      else { return toast.error("Insufficient stock!"); }
     } else {
       cartItems.push({ ...product, qty: 1 });
     }
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
     window.dispatchEvent(new Event("cartUpdated"));
-    toast.success(`Đã thêm vào giỏ hàng! 🛒`);
+    toast.success(`Added to cart!`);
   };
 
   return (
     <Container className="main-layout py-4">
-      <h3 className="fw-bold mb-4 text-uppercase fs-4 border-bottom pb-2">Danh sách yêu thích ❤️ ({wishlistItems.length})</h3>
+      <h3 className="fw-bold mb-4 text-uppercase fs-4 border-bottom pb-2">Wishlist({wishlistItems.length})</h3>
       {wishlistItems.length === 0 ? (
-        <Alert variant="info" className="text-center py-4">Danh sách yêu thích của bạn đang trống.</Alert>
+        <Alert variant="info" className="text-center py-4">Your wishlist is empty.</Alert>
       ) : (
         <Row xs={1} sm={2} md={3} lg={4} className="g-4">
           {wishlistItems.map(product => (

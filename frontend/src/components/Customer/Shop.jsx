@@ -91,7 +91,7 @@ const Shop = () => {
     }
 
     setFilteredProducts(result);
-  }, [categoryFilter, statusFilter, sortOrder, products, keywordFromUrl]); // 🌟 Đã thêm keywordFromUrl vào mảng phụ thuộc
+  }, [categoryFilter, statusFilter, sortOrder, products, keywordFromUrl]); // thêm keywordFromUrl vào mảng phụ thuộc
 
   const handleCategoryChange = (e) => {
     const val = e.target.value;
@@ -109,14 +109,14 @@ const Shop = () => {
       if (existItem.qty < product.countInStock) {
         existItem.qty += 1;
       } else {
-        return toast.error("Số lượng trong kho không đủ!");
+        return toast.error("Insufficient stock!");
       }
     } else {
       cartItems.push({ ...product, qty: 1 });
     }
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
     window.dispatchEvent(new Event("cartUpdated"));
-    toast.success(`Đã thêm vào giỏ hàng! 🛒`);
+    toast.success(`Added to cart!`);
   };
 
   if (loading) {
@@ -134,17 +134,17 @@ const Shop = () => {
         <Col lg={3} md={4} className="mb-4">
           <Card className="p-3 border-0 shadow-sm bg-light">
             <h5 className="fw-bold mb-3 d-flex align-items-center">
-              <FaFilter className="me-2 text-danger" size={16} /> BỘ LỌC SẢN PHẨM
+              <FaFilter className="me-2 text-danger" size={16} /> PRODUCT FILTERS
             </h5>
             
             <Form.Group className="mb-4">
-              <Form.Label className="small fw-bold text-secondary">DANH MỤC THẺ BÀI</Form.Label>
+              <Form.Label className="small fw-bold text-secondary">CARD CATALOG</Form.Label>
               <Form.Select 
                 className="tcg-input" 
                 value={categoryFilter} 
                 onChange={handleCategoryChange}
               >
-                <option value="all">Tất cả danh mục</option>
+                <option value="all">All Categories</option>
                 {categories.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
@@ -152,20 +152,20 @@ const Shop = () => {
             </Form.Group>
             
             <Form.Group className="mb-4">
-              <Form.Label className="small fw-bold text-secondary">TRẠNG THÁI</Form.Label>
+              <Form.Label className="small fw-bold text-secondary">STATUS</Form.Label>
               <Form.Select className="tcg-input" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                <option value="all">Tất cả sản phẩm</option>
-                <option value="inStock">Còn hàng trong kho</option>
-                <option value="outOfStock">Hàng hết / Đặt trước</option>
+                <option value="all">All Products</option>
+                <option value="inStock">In Stock</option>
+                <option value="outOfStock">Out of Stock</option>
               </Form.Select>
             </Form.Group>
 
             <Form.Group className="mb-2">
-              <Form.Label className="small fw-bold text-secondary">SẮP XẾP THEO GIÁ</Form.Label>
+              <Form.Label className="small fw-bold text-secondary">SORT BY PRICE</Form.Label>
               <Form.Select className="tcg-input" value={sortOrder} onChange={e => setSortOrder(e.target.value)}>
-                <option value="default">Mặc định</option>
-                <option value="lowToHigh">Giá: Thấp đến Cao</option>
-                <option value="highToLow">Giá: Cao đến Thấp</option>
+                <option value="default">Default</option>
+                <option value="lowToHigh">Price: Low to High</option>
+                <option value="highToLow">Price: High to Low</option>
               </Form.Select>
             </Form.Group>
 
@@ -177,7 +177,7 @@ const Shop = () => {
                 className="w-100 mt-3 fw-bold"
                 onClick={() => setSearchParams(categoryIdFromUrl ? { categoryId: categoryIdFromUrl } : {})}
               >
-                Xóa từ khóa: "{keywordFromUrl}"
+                Clear keyword: "{keywordFromUrl}"
               </Button>
             )}
           </Card>
@@ -187,18 +187,18 @@ const Shop = () => {
         <Col lg={9} md={8}>
           {/* Tiêu đề động hiển thị rõ từ khóa tìm kiếm nếu có */}
           <h3 className="fw-bold mb-4 text-uppercase fs-4 border-bottom pb-2">
-            {keywordFromUrl ? `Kết quả tìm kiếm cho: "${keywordFromUrl}"` : "Cửa hàng thẻ bài"} ({filteredProducts.length})
+            {keywordFromUrl ? `Search results for: "${keywordFromUrl}"` : "Card Shop"} ({filteredProducts.length})
           </h3>
           
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-5 text-muted">Không tìm thấy sản phẩm nào khớp với điều kiện lọc.</div>
+            <div className="text-center py-5 text-muted">No products found matching your filter criteria.</div>
           ) : (
             <Row xs={1} sm={2} md={3} className="g-4">
               {filteredProducts.map(product => (
                 <Col key={product.id}>
                   <Card className="tcg-card h-100 shadow-sm border-0 position-relative overflow-hidden">
                     {product.countInStock <= 0 && (
-                      <Badge bg="secondary" className="position-absolute top-0 start-0 m-2 z-1">HẾT HÀNG</Badge>
+                      <Badge bg="secondary" className="position-absolute top-0 start-0 m-2 z-1">OUT OF STOCK</Badge>
                     )}
                     <Link to={`/product/${product.id}`} className="text-decoration-none">
                       <div className="p-3" style={{ height: '220px' }}>
@@ -229,7 +229,7 @@ const Shop = () => {
                         onClick={() => addToCart(product)}
                         style={{ fontSize: '0.8rem' }}
                       >
-                        {product.countInStock > 0 ? "THÊM VÀO GIỎ" : "HẾT HÀNG"}
+                        {product.countInStock > 0 ? "ADD TO CART" : "OUT OF STOCK"}
                       </Button>
                     </Card.Body>
                   </Card>

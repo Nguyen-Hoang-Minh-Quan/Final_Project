@@ -31,7 +31,6 @@ Product.hasMany(Review, { foreignKey: 'productId', as: 'reviews', onDelete: 'CAS
 Review.belongsTo(Product, { foreignKey: 'productId', as: 'ProductData' });
 
 User.hasMany(Review, { foreignKey: 'userId', as: 'reviews', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-Review.belongsTo(User, { foreignKey: 'userId', as: 'UserData' });
 
 User.hasMany(Order, { foreignKey: 'userId', as: 'orders' });
 Order.belongsTo(User, { foreignKey: 'userId', as: 'UserData' });

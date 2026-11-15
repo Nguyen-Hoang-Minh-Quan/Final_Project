@@ -34,7 +34,7 @@ const Checkout = () => {
     const handleApplyCoupon = (e) => {
         e.preventDefault();
         if (!couponCode.trim()) return;
-        alert(`Mã giảm giá "${couponCode.toUpperCase()}" sẽ được tích hợp xử lý ở giai đoạn sau!`);
+        alert(`Coupon code "${couponCode.toUpperCase()}" will be integrated for processing at a later stage!`);
     };
 
     // Hàm nhận dữ liệu địa chỉ được click chọn từ component con
@@ -44,7 +44,7 @@ const Checkout = () => {
 
     const placeOrder = async () => {
         if (!selectedAddress || !selectedAddress.details || !selectedAddress.phone) {
-            return setError("Vui lòng bổ sung hoặc lựa chọn một địa chỉ nhận hàng từ sổ địa chỉ!");
+            return setError("Please add a delivery address or select one from your address book!");
         }
 
         try {
@@ -66,25 +66,25 @@ const Checkout = () => {
             localStorage.removeItem('cartItems');
             window.dispatchEvent(new Event("cartUpdated"));
 
-            alert("Đặt hàng thành công! 🎉");
+            alert("Order placed successfully! 🎉");
             navigate('/order-history');
         } catch (err) {
-            console.error("Lỗi đặt hàng:", err);
-            setError(err.response?.data?.message || "Máy chủ không phản hồi, vui lòng thử lại sau!");
+            console.error("Error placing order:", err);
+            setError(err.response?.data?.message || "Server is not responding, please try again later!");
         }
     };
 
     return (
         <Container className="main-layout py-5">
             <h2 className="section-title text-uppercase mb-4">
-                <FaTruck className="me-2 text-danger"/> Thanh toán đơn hàng
+                <FaTruck className="me-2 text-danger"/> Checkout
             </h2>
 
             {error && <Alert variant="danger">{error}</Alert>}
 
             <Row>
                 <Col md={7}>
-                    {/* 🌟 1. TÍCH HỢP KHỐI CHỌN NHIỀU ĐỊA CHỈ THAY THẾ CHO THÀNH PHẦN INPUT CŨ */}
+                    {/* 1. TÍCH HỢP KHỐI CHỌN NHIỀU ĐỊA CHỈ THAY THẾ CHO THÀNH PHẦN INPUT CŨ */}
                     <CheckoutAddressSection onAddressSelect={handleAddressSelect} />
 
                     <Card className="tcg-card p-4 mb-4 border-0 shadow-sm">
@@ -92,11 +92,11 @@ const Checkout = () => {
                             {/* Khối nhập mã giảm giá tinh chỉnh hạ xuống dưới */}
                             <Col md={12}>
                                 <Form.Group className="mb-3">
-                                    <Form.Label className="small fw-bold">MÃ GIẢM GIÁ / GIFTCODE (NẾU CÓ)</Form.Label>
+                                    <Form.Label className="small fw-bold">COUPON CODE / GIFTCODE (IF ANY)</Form.Label>
                                     <div className="d-flex gap-2">
                                         <Form.Control 
                                             className="tcg-input mb-0" 
-                                            placeholder="Ví dụ: TCGSHOP50"
+                                            placeholder="E.g.: TCGSHOP50"
                                             value={couponCode}
                                             onChange={e => setCouponCode(e.target.value)}
                                         />
@@ -106,7 +106,7 @@ const Checkout = () => {
                                             onClick={handleApplyCoupon}
                                             style={{ borderRadius: '6px', fontSize: '13px' }}
                                         >
-                                            ÁP DỤNG
+                                            APPLY
                                         </Button>
                                     </div>
                                 </Form.Group>
@@ -114,14 +114,14 @@ const Checkout = () => {
                         </Row>
 
                         <h5 className="fw-bold mt-4 mb-3">
-                            <FaCreditCard className="me-2 text-warning"/> PHƯƠNG THỨC THANH TOÁN
+                            <FaCreditCard className="me-2 text-warning"/> PAYMENT METHOD
                         </h5>
                         <div className="bg-light p-3 rounded">
                             {['COD', 'Momo' , 'Ngân hàng'].map(m => (
                                 <Form.Check 
                                     key={m} 
                                     type="radio" 
-                                    label={m === 'COD' ? "Thanh toán khi nhận hàng (COD)" : m === 'Momo' ? "Thanh toán qua Momo" : "Thanh toán qua Ngân hàng"} 
+                                    label={m === 'COD' ? "Pay when receiving (COD)" : m === 'Momo' ? "Pay via Momo" : "Pay via Bank Transfer"} 
                                     name="method" 
                                     id={`method-${m}`}
                                     checked={method === m} 
@@ -133,19 +133,19 @@ const Checkout = () => {
 
                         {method === 'Momo' && (
                             <div className="text-center bg-white p-3 rounded mt-3 border border-danger shadow-sm">
-                                <h6 className="fw-bold text-danger"><FaQrcode className="me-2"/>QUÉT MÃ QR MOMO</h6>
+                                <h6 className="fw-bold text-danger"><FaQrcode className="me-2"/>SCAN MOMO QR CODE</h6>
                                 <img 
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=PAY_ORDER_${total}`} 
                                     alt="QR Code Payment" 
                                     className="img-fluid border p-2 bg-white my-2" 
                                 />
-                                <p className="small text-muted mb-0">Vui lòng quét mã để thanh toán đơn hàng</p>
+                                <p className="small text-muted mb-0">Please scan the code to complete the payment</p>
                             </div>
                         )}
 
                         {method === 'Ngân hàng' && (
                             <div className="text-center bg-white p-3 rounded mt-3 border border-danger shadow-sm">
-                                <h6 className="fw-bold text-danger"><FaCreditCard className="me-2"/>THÔNG TIN THANH TOÁN</h6>
+                                <h6 className="fw-bold text-danger"><FaCreditCard className="me-2"/>PAYMENT INFORMATION</h6>
                                 <img 
                                     src={`https://img.vietqr.io/image/vcb-777666999-compact2.jpg?amount=${total}&addInfo=THANH_TOAN_DON_HANG`} 
                                     alt="Vietcombank QR Code"
@@ -159,14 +159,14 @@ const Checkout = () => {
                             variant="danger" 
                             onClick={placeOrder}
                         >
-                            XÁC NHẬN ĐẶT HÀNG
+                            CONFIRM ORDER
                         </Button>
                     </Card>
                 </Col>
 
                 <Col md={5}>
                     <Card className="tcg-card p-3 shadow-sm border-0 sticky-top" style={{ top: '100px' }}>
-                        <h5 className="fw-bold mb-3">TÓM TẮT ĐƠN HÀNG ({cartItems.length})</h5>
+                        <h5 className="fw-bold mb-3">ORDER SUMMARY ({cartItems.length})</h5>
                         <ListGroup variant="flush">
                             {cartItems.map((item, idx) => (
                                 <ListGroup.Item key={idx} className="d-flex justify-content-between px-0 bg-transparent">
@@ -179,7 +179,7 @@ const Checkout = () => {
                                         />
                                         <div>
                                             <div className="small fw-bold text-truncate" style={{maxWidth: '180px'}}>{item.name}</div>
-                                            <div className="small text-muted">Số lượng: {item.qty}</div>
+                                            <div className="small text-muted">Quantity: {item.qty}</div>
                                         </div>
                                     </div>
                                     <span className="fw-bold">{(item.qty * item.price).toLocaleString()}đ</span>
@@ -188,23 +188,23 @@ const Checkout = () => {
                             
                             <div className="border-top mt-3 pt-3">
                                 <div className="d-flex justify-content-between mb-2">
-                                    <span>Tạm tính:</span>
+                                    <span>Subtotal:</span>
                                     <span>{total.toLocaleString()}đ</span>
                                 </div>
                                 <div className="d-flex justify-content-between mb-2">
-                                    <span>Phí vận chuyển:</span>
-                                    <span className="text-success fw-bold">Miễn phí</span>
+                                    <span>Shipping Fee:</span>
+                                    <span className="text-success fw-bold">Free</span>
                                 </div>
                                 
                                 {couponCode && (
                                     <div className="d-flex justify-content-between mb-2 text-success fw-bold small">
-                                        <span> Mã giảm giá:</span>
+                                        <span> Discount Code:</span>
                                         <span>-0đ</span>
                                     </div>
                                 )}
 
                                 <div className="d-flex justify-content-between fw-bold fs-4 text-danger mt-2">
-                                    <span>TỔNG CỘNG:</span>
+                                    <span>TOTAL:</span>
                                     <span>{total.toLocaleString()}đ</span>
                                 </div>
                             </div>

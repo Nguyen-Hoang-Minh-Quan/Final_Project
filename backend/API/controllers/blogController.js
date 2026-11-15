@@ -11,7 +11,7 @@ const getBlogs = async (req, res) => {
         });
         res.json(blogs);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi tải bài viết: ' + error.message });
+        res.status(500).json({ message: 'Error fetching blogs: ' + error.message });
     }
 };
 
@@ -22,10 +22,10 @@ const getBlogBySlug = async (req, res) => {
             where: { slug: req.params.slug },
             include: [{ model: User, as: 'AuthorData', attributes: ['id', 'name'] }]
         });
-        if (!blog) return res.status(404).json({ message: 'Không tìm thấy bài viết!' });
+        if (!blog) return res.status(404).json({ message: 'Blog not found!' });
         res.json(blog);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server: ' + error.message });
+        res.status(500).json({ message: 'Server error: ' + error.message });
     }
 };
 
@@ -34,7 +34,6 @@ const createBlog = async (req, res) => {
     try {
         const { title, summary, content, image } = req.body;
         
-        // Chuẩn hóa Slug an toàn với tiếng Việt
         const cleanTitle = (title || 'blog')
             .toLowerCase()
             .normalize("NFD")
@@ -54,23 +53,70 @@ const createBlog = async (req, res) => {
             authorId
         });
 
-        // Ghi log hoạt động nhân viên (Bọc catch riêng tránh dừng việc tạo bài viết)
         if (authorId) {
             try {
                 await StaffLog.create({
                     staffId: authorId,
-                    action: `Đăng bài viết mới #${blog.id}`,
-                    details: `Tiêu đề: ${title}`
+                    action: `Post a new article #${blog.id}`,
+                    details: `Title: ${title}`
                 });
             } catch (logErr) {
-                console.error("⚠️ Không thể ghi StaffLog khi đăng blog:", logErr.message);
+                console.error("Cannot write StaffLog when posting blog:", logErr.message);
             }
         }
 
         res.status(201).json(blog);
     } catch (error) {
-        console.error("❌ LỖI TẠO BÀI VIẾT:", error);
-        res.status(500).json({ message: 'Lỗi tạo bài viết: ' + error.message });
+        console.error("Error creating blog:", error);
+        res.status(500).json({ message: 'Error creating blog: ' + error.message });
+    }
+};
+
+const updateBlog = async (req, res) => {
+    try {
+        const { title, summary, content, image } = req.body;
+        const blog = await Blog.findByPk(req.params.id);
+
+        if (!blog) {
+            return res.status(404).json({ message: 'Blog not found!' });
+        }
+
+        let slug = blog.slug;
+        if (title && title !== blog.title) {
+            const cleanTitle = title
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]/g, "-")
+                .replace(/-+/g, "-");
+            slug = `${cleanTitle}-${Date.now()}`;
+        }
+
+        blog.title = title || blog.title;
+        blog.slug = slug;
+        blog.summary = summary !== undefined ? summary : blog.summary;
+        blog.content = content || blog.content;
+        blog.image = image !== undefined ? image : blog.image;
+
+        await blog.save();
+
+        const authorId = req.user ? req.user.id : null;
+        if (authorId) {
+            try {
+                await StaffLog.create({
+                    staffId: authorId,
+                    action: `Update blog #${blog.id}`,
+                    details: `Title: ${blog.title}`
+                });
+            } catch (logErr) {
+                console.error("Cannot write StaffLog when updating blog:", logErr.message);
+            }
+        }
+
+        res.json({ message: 'Blog updated successfully!', blog });
+    } catch (error) {
+        console.error("Error updating blog:", error);
+        res.status(500).json({ message: 'Error updating blog: ' + error.message });
     }
 };
 
@@ -78,13 +124,13 @@ const createBlog = async (req, res) => {
 const deleteBlog = async (req, res) => {
     try {
         const blog = await Blog.findByPk(req.params.id);
-        if (!blog) return res.status(404).json({ message: 'Bài viết không tồn tại!' });
+        if (!blog) return res.status(404).json({ message: 'Blog not found!' });
 
         await blog.destroy();
-        res.json({ message: 'Đã xóa bài viết!' });
+        res.json({ message: 'Blog deleted successfully!' });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi xóa bài viết: ' + error.message });
+        res.status(500).json({ message: 'Error deleting blog: ' + error.message });
     }
 };
 
-module.exports = { getBlogs, getBlogBySlug, createBlog, deleteBlog };
+module.exports = { getBlogs, getBlogBySlug, createBlog, updateBlog, deleteBlog };

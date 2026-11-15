@@ -9,7 +9,7 @@ const ProductCardItem = ({ card, addToCart, onQuickView, isWishlist, onToggleWis
       {/* Khối Badge */}
       {isNew && card.countInStock > 0 && <Badge bg="primary" className="position-absolute top-0 start-0 m-2 z-1">NEW</Badge>}
       {isHot && card.countInStock > 0 && <Badge bg="danger" className="position-absolute top-0 start-0 m-2 z-1">HOT</Badge>}
-      {card.countInStock <= 0 && <Badge bg="secondary" className="position-absolute top-0 start-0 m-2 z-1">HẾT HÀNG</Badge>}
+      {card.countInStock <= 0 && <Badge bg="secondary" className="position-absolute top-0 start-0 m-2 z-1">OUT OF STOCK</Badge>}
 
       {/* NÚT WISHLIST (TRÁI TIM) ĐỊNH VỊ GÓC TRÊN PHẢI */}
       <button
@@ -36,7 +36,7 @@ const ProductCardItem = ({ card, addToCart, onQuickView, isWishlist, onToggleWis
         {/* NÚT QUICK VIEW HIỆN KHI HOVER (Hoặc định vị ẩn/hiện bằng CSS) */}
         <div className="quick-view-overlay position-absolute start-50 top-50 translate-middle w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 item-hover-show" style={{ transition: '0.3s' }}>
           <Button variant="light" size="sm" className="fw-bold shadow d-flex align-items-center gap-1 py-2 px-3" onClick={() => onQuickView(card)}>
-            <FaEye /> Xem nhanh
+            <FaEye /> Quick view
           </Button>
         </div>
       </div>
@@ -65,7 +65,7 @@ const ProductCardItem = ({ card, addToCart, onQuickView, isWishlist, onToggleWis
           onClick={() => addToCart(card)}
           style={{ fontSize: '0.8rem' }}
         >
-          {card.countInStock > 0 ? "THÊM VÀO GIỎ" : "HẾT HÀNG"}
+          {card.countInStock > 0 ? "ADD TO CART" : "OUT OF STOCK"}
         </Button>
       </Card.Body>
     </Card>

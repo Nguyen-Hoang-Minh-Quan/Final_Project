@@ -15,7 +15,7 @@ const Cart = () => {
 
   const updateQty = (id, newQty, stock) => {
     if (newQty < 1 || newQty > stock) return;
-    // 🌟 ĐỒNG BỘ: Chuyển hoàn toàn item._id sang item.id
+    // ĐỒNG BỘ: Chuyển hoàn toàn item._id sang item.id
     const newCart = cartItems.map(item => item.id === id ? { ...item, qty: newQty } : item);
     saveCart(newCart);
   };
@@ -32,22 +32,22 @@ const Cart = () => {
 
   return (
     <Container className="main-layout">
-      <h2 className="section-title">GIỎ HÀNG</h2>
+      <h2 className="section-title">CART</h2>
       {cartItems.length === 0 ? (
         <Card className="tcg-card p-5 text-center shadow-sm">
-          <p className="fs-5">Giỏ hàng đang trống!</p>
-          <Button as={Link} to="/" variant="danger" className="tcg-btn mx-auto w-25">MUA NGAY</Button>
+          <p className="fs-5">Your cart is empty!</p>
+          <Button as={Link} to="/" variant="danger" className="tcg-btn mx-auto w-25">SHOP NOW</Button>
         </Card>
       ) : (
         <Row>
           <Col lg={8}>
             <Table responsive className="tcg-card bg-white shadow-sm align-middle">
               <thead className="bg-dark text-white">
-                <tr><th>Sản phẩm</th><th className="text-center">SL</th><th className="text-end">Giá</th><th></th></tr>
+                <tr><th>Product</th><th className="text-center">Quantity</th><th className="text-end">Price</th><th></th></tr>
               </thead>
               <tbody>
                 {cartItems.map(item => (
-                  // 🌟 ĐỒNG BỘ: key={item.id}
+                  // ĐỒNG BỘ: key={item.id}
                   <tr key={item.id}>
                     <td>
                       <img 
@@ -58,7 +58,7 @@ const Cart = () => {
                       <div className="d-inline-block align-middle ms-2">
                         <span className="fw-bold d-block">{item.name}</span>
                         {item.RarityData?.name && (
-                          <small className="text-muted">Độ hiếm: {item.RarityData.name}</small>
+                          <small className="text-muted">Rarity: {item.RarityData.name}</small>
                         )}
                       </div>
                     </td>
@@ -76,12 +76,12 @@ const Cart = () => {
           </Col>
           <Col lg={4}>
             <Card className="tcg-card p-4 shadow-sm">
-              <h5 className="fw-bold mb-4">THANH TOÁN</h5>
+              <h5 className="fw-bold mb-4">CHECKOUT</h5>
               <div className="d-flex justify-content-between mb-4 fs-5">
-                <span>Tổng tiền:</span><span className="text-danger fw-bold">{total.toLocaleString()}đ</span>
+                <span>Total:</span><span className="text-danger fw-bold">{total.toLocaleString()}đ</span>
               </div>
               <Button className="tcg-btn w-100" variant="danger" onClick={() => navigate(userInfo ? '/checkout' : '/login')}>
-                {userInfo ? "TIẾN HÀNH ĐẶT HÀNG" : "ĐĂNG NHẬP ĐỂ MUA"}
+                {userInfo ? "PROCEED TO CHECKOUT" : "LOGIN TO PURCHASE"}
               </Button>
             </Card>
           </Col>

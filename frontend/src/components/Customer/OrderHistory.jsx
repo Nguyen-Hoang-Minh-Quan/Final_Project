@@ -11,7 +11,7 @@ const OrderHistory = () => {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
-  // 🌟 HÀM PHỤC VỤ CHO THAO TÁC HỦY ĐƠN VÀ ĐỒNG BỘ LẠI DỮ LIỆU
+  // HÀM PHỤC VỤ CHO THAO TÁC HỦY ĐƠN VÀ ĐỒNG BỘ LẠI DỮ LIỆU
   const reloadOrdersAndDetail = async (orderId) => {
     if (!userInfo?.token) return;
     try {
@@ -28,13 +28,13 @@ const OrderHistory = () => {
       const detailRes = await axios.get(`http://localhost:5000/api/orders/${orderId}`, currentConfig);
       setActiveTrackOrder(detailRes.data);
     } catch (error) {
-      console.error("Lỗi khi đồng bộ lại dữ liệu đơn hàng:", error);
+      console.error("Error while re-syncing order data:", error);
     } finally {
       setLoadingDetail(false);
     }
   };
 
-  // 🌟 KHỐI USEEFFECT ĐƯỢC CHUẨN HÓA KHÔNG THIẾU DEPENDENCY (KHÔNG GÂY WARNING ESLINT)
+  //KHỐI USEEFFECT ĐƯỢC CHUẨN HÓA KHÔNG THIẾU DEPENDENCY (KHÔNG GÂY WARNING ESLINT)
   useEffect(() => {
     const fetchOrdersAndInitialDetail = async () => {
       if (userInfo?.token) {
@@ -54,7 +54,7 @@ const OrderHistory = () => {
             setActiveTrackOrder(detailRes.data);
           }
         } catch (error) {
-          console.error("Lỗi lấy lịch sử đơn hàng ban đầu:", error);
+          console.error("Error retrieving initial order history:", error);
         } finally {
           setLoadingDetail(false);
         }
@@ -64,7 +64,7 @@ const OrderHistory = () => {
     fetchOrdersAndInitialDetail();
   }, [userInfo?.token]); // Chỉ kích hoạt lại khi token thay đổi
 
-  // 🌟 HÀM TÁCH RIÊNG KHI CLICK VÀO CARD ĐỂ XEM CHI TIẾT ĐƠN KHÁC
+  // HÀM TÁCH RIÊNG KHI CLICK VÀO CARD ĐỂ XEM CHI TIẾT ĐƠN KHÁC
   const handleSelectOrderCard = async (orderId) => {
     if (!userInfo?.token) return;
     try {
@@ -75,7 +75,7 @@ const OrderHistory = () => {
       const { data } = await axios.get(`http://localhost:5000/api/orders/${orderId}`, innerConfig);
       setActiveTrackOrder(data);
     } catch (error) {
-      console.error("Lỗi lấy chi tiết đơn hàng được chọn:", error);
+      console.error("Error fetching selected order details:", error);
     } finally {
       setLoadingDetail(false);
     }
@@ -83,58 +83,58 @@ const OrderHistory = () => {
 
   // CHỨC NĂNG HỦY ĐƠN HÀNG DÀNH CHO NGƯỜI DÙNG
   const cancelOrderHandler = async (orderId) => {
-    if (window.confirm(`Bạn có chắc chắn muốn hủy đơn hàng #${orderId} không?`)) {
+    if (window.confirm(`Are you sure you want to cancel order #${orderId}?`)) {
       try {
         const innerConfig = {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         };
         // Gửi trạng thái "Đã hủy" tương thích với logic xử lý hoàn kho ở Backend của bạn
-        await axios.put(`http://localhost:5000/api/orders/${orderId}/status`, { status: "Đã hủy" }, innerConfig);
-        alert("Hủy đơn hàng thành công! 🛑");
+        await axios.put(`http://localhost:5000/api/orders/${orderId}/status`, { status: "Cancelled" }, innerConfig);
+        alert("Order cancelled successfully!");
         
         // Gọi hàm reload để đồng bộ lại giao diện
         await reloadOrdersAndDetail(orderId);
       } catch (error) {
-        console.error("Lỗi khi hủy đơn hàng:", error);
-        alert(error.response?.data?.message || "Không thể hủy đơn hàng lúc này.");
+        console.error("Error while cancelling order:", error);
+        alert(error.response?.data?.message || "Cannot cancel order at this time.");
       }
     }
   };
 
   // CHUẨN HÓA CÁC BADGE HIỂN THỊ TRẠNG THÁI THEO TEXT DỮ LIỆU BACKEND
   const getStatusBadge = (status) => {
-    const currentStatus = status ? String(status).trim() : 'Chờ xử lý';
-    if (currentStatus === 'Đang giao hàng' || currentStatus === 'Đang giao' || currentStatus === '1') {
-      return <Badge bg="info" text="dark" className="text-uppercase px-2 py-1">Đang giao</Badge>;
-    } else if (currentStatus === 'Hoàn thành' || currentStatus === 'Đã giao' || currentStatus === '2') {
-      return <Badge bg="success" className="text-uppercase px-2 py-1">Đã giao</Badge>;
-    } else if (currentStatus === 'Đã hủy' || currentStatus === '3') {
-      return <Badge bg="secondary" className="text-uppercase px-2 py-1">Đã hủy</Badge>;
+    const currentStatus = status ? String(status).trim() : 'Pending processing';
+    if (currentStatus === 'Out for delivery' || currentStatus === 'Out for delivery' || currentStatus === '1') {
+      return <Badge bg="info" text="dark" className="text-uppercase px-2 py-1">Out for delivery</Badge>;
+    } else if (currentStatus === 'Delivered' || currentStatus === 'Delivered' || currentStatus === '2') {
+      return <Badge bg="success" className="text-uppercase px-2 py-1">Delivered</Badge>;
+    } else if (currentStatus === 'Cancelled' || currentStatus === 'Cancelled' || currentStatus === '3') {
+      return <Badge bg="secondary" className="text-uppercase px-2 py-1">Cancelled</Badge>;
     } else {
-      return <Badge bg="warning" text="dark" className="text-uppercase px-2 py-1">Chờ xử lý</Badge>;
+      return <Badge bg="warning" text="dark" className="text-uppercase px-2 py-1">Pending processing</Badge>;
     }
   };
 
   return (
     <Container className="main-layout py-4">
       <h2 className="section-title text-uppercase mb-4">
-        <FaHistory className="me-2 text-danger" /> Lịch sử mua hàng
+        <FaHistory className="me-2 text-danger" /> Purchase history
       </h2>
 
       {orders.length === 0 ? (
         <Card className="tcg-card text-center py-5 border-0 shadow-sm bg-white">
           <Card.Body>
             <FaReceipt className="text-muted mb-3" size={48} />
-            <p className="text-muted fw-bold">Bạn chưa có đơn hàng nào trong hệ thống!</p>
-            <Button href="/shop" variant="danger" className="tcg-btn btn-sm px-4">MUA SẮM NGAY</Button>
+            <p className="text-muted fw-bold">You have no orders in the system!</p>
+            <Button href="/shop" variant="danger" className="tcg-btn btn-sm px-4">BUY NOW</Button>
           </Card.Body>
         </Card>
       ) : (
         <Row>
-          {/* 📊 CỘT TRÁI (40%): DANH SÁCH TÓM TẮT CÁC ĐƠN HÀNG */}
+          {/*CỘT TRÁI (40%): DANH SÁCH TÓM TẮT CÁC ĐƠN HÀNG */}
           <Col lg={5} md={12} className="mb-4">
             <h5 className="fw-bold mb-3 small text-secondary text-uppercase tracking-wider">
-              Danh sách đơn hàng ({orders.length})
+              Order list ({orders.length})
             </h5>
             <div className="order-list-sidebar" style={{ maxHeight: '680px', overflowY: 'auto', paddingRight: '5px' }}>
               {orders.map((o) => (
@@ -154,7 +154,7 @@ const OrderHistory = () => {
                   <Card.Body className="p-3">
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <span className="fw-bold text-dark">
-                        Mã đơn: <span className="text-danger">#{String(o.id).toUpperCase()}</span>
+                        Order ID: <span className="text-danger">#{String(o.id).toUpperCase()}</span>
                       </span>
                       {getStatusBadge(o.status)}
                     </div>
@@ -173,12 +173,12 @@ const OrderHistory = () => {
             </div>
           </Col>
 
-          {/* 🎯 CỘT PHẢI (60%): CHI TIẾT ĐƠN HÀNG ĐANG ĐƯỢC CHỌN */}
+          {/* CỘT PHẢI (60%): CHI TIẾT ĐƠN HÀNG ĐANG ĐƯỢC CHỌN */}
           <Col lg={7} md={12}>
             {activeTrackOrder ? (
               <div>
                 <h5 className="fw-bold mb-3 small text-secondary text-uppercase tracking-wider">
-                  Chi tiết đơn hàng đang xem
+                  Order details
                 </h5>
                 
                 <Card className="tcg-card border-0 shadow-sm bg-white overflow-hidden rounded-3 mb-4">
@@ -191,7 +191,7 @@ const OrderHistory = () => {
                     </div>
                     
                     {/* Chỉ hiển thị nút Hủy đơn khi đơn hàng ở các trạng thái chưa xử lý lý/giao */}
-                    {(activeTrackOrder.status === 'Chờ xử lý' || activeTrackOrder.status === 'Đã đặt đơn' || Number(activeTrackOrder.status) === 0 || !activeTrackOrder.status) && (
+                    {(activeTrackOrder.status === 'Pending processing' || activeTrackOrder.status === 'Order placed' || Number(activeTrackOrder.status) === 0 || !activeTrackOrder.status) && (
                       <Button
                         variant="danger"
                         size="sm"
@@ -199,7 +199,7 @@ const OrderHistory = () => {
                         style={{ fontSize: '0.75rem', borderRadius: '4px' }}
                         onClick={() => cancelOrderHandler(activeTrackOrder.id)}
                       >
-                        <FaTrashAlt className="me-1" size={10} /> HỦY ĐƠN
+                        <FaTrashAlt className="me-1" size={10} /> CANCEL ORDER
                       </Button>
                     )}
                   </Card.Header>
@@ -210,19 +210,19 @@ const OrderHistory = () => {
                     </div>
 
                     <h6 className="fw-bold text-dark mb-3 d-flex align-items-center border-bottom pb-2">
-                      <FaBoxOpen className="me-2 text-danger" /> Vật phẩm trong đơn
+                      <FaBoxOpen className="me-2 text-danger" /> Items in the order
                     </h6>
                     
                     {loadingDetail ? (
-                      <div className="text-center py-4 text-muted small">Đang tải danh sách sản phẩm...</div>
+                      <div className="text-center py-4 text-muted small">Loading product list...</div>
                     ) : (
                       <Table responsive className="align-middle m-0 table-borderless">
                         <thead>
                           <tr className="border-bottom text-secondary small">
-                            <th style={{ width: '70px' }}>Ảnh</th>
-                            <th>Tên vật phẩm</th>
-                            <th className="text-center">SL</th>
-                            <th className="text-end">Thành tiền</th>
+                            <th style={{ width: '70px' }}>Image</th>
+                            <th>Product Name</th>
+                            <th className="text-center">Quantity</th>
+                            <th className="text-end">Total</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -252,7 +252,7 @@ const OrderHistory = () => {
                           ) : (
                             <tr>
                               <td colSpan="4" className="text-center py-4 text-muted small">
-                                Không tìm thấy dữ liệu chi tiết sản phẩm của đơn hàng này.
+                                Detailed product data for this order could not be found.
                               </td>
                             </tr>
                           )}
@@ -262,7 +262,7 @@ const OrderHistory = () => {
 
                     <div className="d-flex justify-content-end align-items-center mt-3 pt-3 border-top">
                       <div className="text-end">
-                        <span className="text-secondary small me-2"><FaMoneyBillWave className="me-1"/>Tổng tiền thanh toán:</span>
+                        <span className="text-secondary small me-2"><FaMoneyBillWave className="me-1"/>Total amount to pay:</span>
                         <span className="fw-bold text-danger fs-5">
                           {activeTrackOrder.totalPrice ? Number(activeTrackOrder.totalPrice).toLocaleString() : 0}đ
                         </span>
@@ -273,7 +273,7 @@ const OrderHistory = () => {
               </div>
             ) : (
               <div className="h-100 d-flex justify-content-center align-items-center border rounded-3 bg-white shadow-sm p-5 text-muted">
-                Vui lòng chọn một đơn hàng từ danh sách để xem chi tiết tiến trình.
+                Please select an order from the list to view its progress details.
               </div>
             )}
           </Col>

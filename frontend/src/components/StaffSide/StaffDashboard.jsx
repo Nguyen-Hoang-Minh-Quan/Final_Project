@@ -19,7 +19,7 @@ const StaffDashboard = () => {
         
         // Đếm đơn hàng đang chờ xử lý từ DB
         const pending = ordersRes.data.filter(o => 
-          o.status === 'Chờ xử lý' || 
+          o.status === 'Pending processing' || 
           o.status === 'Processing' || 
           o.status === 'Pending' || 
           !o.isDelivered
@@ -37,11 +37,11 @@ const StaffDashboard = () => {
   }, []);
 
   const staffActions = [
-    { title: "XỬ LÝ ĐƠN HÀNG", icon: <FaBoxOpen />, color: "bg-primary", link: "/admin/orders", badge: pendingOrdersCount > 0 ? `${pendingOrdersCount} đơn mới` : null },
-    { title: "QUẢN LÝ KHO HÀNG", icon: <FaTools />, color: "bg-danger", link: "/admin/products", badge: lowStockCount > 0 ? `${lowStockCount} mặt hàng sắp hết` : null },
-    { title: "ĐĂNG TIN TỨC TCG", icon: <FaNewspaper />, color: "bg-secondary", link: "/admin/blogs" },
-    { title: "QUẢN LÝ ĐÁNH GIÁ", icon: <FaComment />, color: "bg-info", link: "/admin/reviews" },
-    { title: "PHÒNG CHAT HỖ TRỢ", icon: <FaComments />, color: "bg-warning", link: "/admin/chat" }
+    { title: "PROCESS ORDERS", icon: <FaBoxOpen />, color: "bg-primary", link: "/admin/orders", badge: pendingOrdersCount > 0 ? `${pendingOrdersCount} new orders` : null },
+    { title: "MANAGE INVENTORY", icon: <FaTools />, color: "bg-danger", link: "/admin/products", badge: lowStockCount > 0 ? `${lowStockCount} items running low` : null },
+    { title: "POST NEWS", icon: <FaNewspaper />, color: "bg-secondary", link: "/admin/blogs" },
+    { title: "MANAGE REVIEWS", icon: <FaComment />, color: "bg-info", link: "/admin/reviews" },
+    { title: "SUPPORT CHAT", icon: <FaComments />, color: "bg-warning", link: "/admin/chat" }
   ];
 
   return (
@@ -49,7 +49,7 @@ const StaffDashboard = () => {
       {/* HEADER BẢNG ĐIỀU KHIỂN */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="section-title text-uppercase m-0 fw-bold">
-          BẢNG ĐIỀU KHIỂN NHÂN VIÊN
+          STAFF CONTROL PANEL
         </h2>
         <Badge bg="warning" text="dark" className="text-uppercase px-3 py-2 fw-bold fs-6">
           ROLE: STAFF
@@ -63,8 +63,8 @@ const StaffDashboard = () => {
             <Card.Body className="d-flex align-items-center">
               <FaHourglassHalf className="fs-1 text-warning me-3" />
               <div>
-                <h6 className="fw-bold mb-1">Đơn hàng cần duyệt</h6>
-                <div className="fs-5 fw-bold text-dark">{pendingOrdersCount} đơn đang chờ xử lý</div>
+                <h6 className="fw-bold mb-1">Pending Orders</h6>
+                <div className="fs-5 fw-bold text-dark">{pendingOrdersCount} orders pending processing</div>
               </div>
             </Card.Body>
           </Card>
@@ -74,8 +74,8 @@ const StaffDashboard = () => {
             <Card.Body className="d-flex align-items-center">
               <FaExclamationTriangle className="fs-1 text-danger me-3" />
               <div>
-                <h6 className="fw-bold mb-1">Cảnh báo kho hàng</h6>
-                <div className="fs-5 fw-bold text-dark">{lowStockCount} sản phẩm có nguy cơ hết hàng</div>
+                <h6 className="fw-bold mb-1">Inventory Warning</h6>
+                <div className="fs-5 fw-bold text-dark">{lowStockCount} items running low</div>
               </div>
             </Card.Body>
           </Card>
@@ -98,7 +98,7 @@ const StaffDashboard = () => {
                 </div>
                 <Card.Title className="fw-bold fs-6 mb-3 text-dark text-uppercase">{action.title}</Card.Title>
                 <Button as={Link} to={action.link} variant={action.color.replace('bg-', '')} className="tcg-btn w-100 mt-auto fw-bold">
-                  THỰC HIỆN
+                  EXECUTE
                 </Button>
               </Card.Body>
             </Card>

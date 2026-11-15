@@ -14,7 +14,7 @@ const getMyAddresses = async (req, res) => {
         });
         res.status(200).json(addresses);
     } catch (error) {
-        res.status(500).json({ message: 'Không thể lấy danh sách địa chỉ: ' + error.message });
+        res.status(500).json({ message: 'Unable to retrieve the list of addresses: ' + error.message });
     }
 };
 
@@ -26,7 +26,7 @@ const addAddress = async (req, res) => {
 
     try {
         if (!receiverName || !phone || !details) {
-            return res.status(400).json({ message: 'Vui lòng điền đầy đủ các thông tin bắt buộc!' });
+            return res.status(400).json({ message: 'Please fill in all required information!' });
         }
 
         // Đếm xem user đã có địa chỉ nào chưa
@@ -52,7 +52,7 @@ const addAddress = async (req, res) => {
 
         res.status(201).json(newAddress);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi khi tạo địa chỉ mới: ' + error.message });
+        res.status(500).json({ message: 'Error creating new address: ' + error.message });
     }
 };
 
@@ -66,7 +66,7 @@ const setDefaultAddress = async (req, res) => {
         });
 
         if (!address) {
-            return res.status(404).json({ message: 'Không tìm thấy địa chỉ này của bạn!' });
+            return res.status(404).json({ message: 'Address not found!' });
         }
 
         // Hạ tất cả các địa chỉ khác của user thành false
@@ -76,9 +76,9 @@ const setDefaultAddress = async (req, res) => {
         address.isDefault = true;
         await address.save();
 
-        res.status(200).json({ message: 'Đã cập nhật địa chỉ mặc định thành công!', address });
+        res.status(200).json({ message: 'Default address updated successfully!', address });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi thiết lập mặc định: ' + error.message });
+        res.status(500).json({ message: 'Error setting default address: ' + error.message });
     }
 };
 
@@ -92,17 +92,17 @@ const deleteAddress = async (req, res) => {
         });
 
         if (!address) {
-            return res.status(404).json({ message: 'Địa chỉ không tồn tại hoặc không thuộc quyền sở hữu!' });
+            return res.status(404).json({ message: 'Address not found!' });
         }
 
         if (address.isDefault) {
-            return res.status(400).json({ message: 'Không thể xóa địa chỉ đang được đặt làm mặc định!' });
+            return res.status(400).json({ message: 'Cannot delete the default address!' });
         }
 
         await address.destroy();
-        res.status(200).json({ message: 'Xóa địa chỉ thành công!' });
+        res.status(200).json({ message: 'Address deleted successfully!' });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi khi xóa địa chỉ: ' + error.message });
+        res.status(500).json({ message: 'Error deleting address: ' + error.message });
     }
 };
 

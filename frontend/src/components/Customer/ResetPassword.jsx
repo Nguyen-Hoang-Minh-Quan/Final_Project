@@ -16,24 +16,24 @@ const ResetPassword = () => {
     const submitHandler = async (e) => {
         e.preventDefault();
 
-        // 🌟 BÁO LỖI SO KHỚP QUA TOAST NGAY LẬP TỨC
+        //BÁO LỖI SO KHỚP QUA TOAST NGAY LẬP TỨC
         if (password !== confirmPassword) {
-            return toast.error('Mật khẩu xác nhận không trùng khớp!');
+            return toast.error('Passwords do not match!');
         }
 
         setLoading(true);
         try {
             const { data } = await axios.post(`http://localhost:5000/api/auth/reset-password/${token}`, { password });
             
-            // 🌟 THÔNG BÁO ĐỔI MẬT KHẨU THÀNH CÔNG
-            toast.success(data.message || 'Đặt lại mật khẩu thành công!');
+            //THÔNG BÁO ĐỔI MẬT KHẨU THÀNH CÔNG
+            toast.success(data.message || 'Password reset successfully!');
             
             setTimeout(() => {
                 navigate('/login');
             }, 2000);
         } catch (err) {
-            // 🌟 THÔNG BÁO KHI TOKEN HẾT HẠN HOẶC SAI LỖI
-            toast.error(err.response?.data?.message || 'Liên kết đã hết hạn hoặc không hợp lệ!');
+            //THÔNG BÁO KHI TOKEN HẾT HẠN HOẶC SAI LỖI
+            toast.error(err.response?.data?.message || 'Link has expired or is invalid!');
         } finally {
             setLoading(false);
         }
@@ -42,15 +42,15 @@ const ResetPassword = () => {
     return (
         <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '70vh' }}>
             <Card className="tcg-card p-4 shadow" style={{ width: '400px' }}>
-                <h3 className="text-center fw-bold text-danger mb-4">MẬT KHẨU MỚI</h3>
+                <h3 className="text-center fw-bold text-danger mb-4">NEW PASSWORD</h3>
 
                 <Form onSubmit={submitHandler}>
                     <Form.Group className="mb-3">
-                        <Form.Label className="fw-bold">Mật khẩu mới</Form.Label>
+                        <Form.Label className="fw-bold">New Password</Form.Label>
                         <Form.Control 
                             className="tcg-input" 
                             type="password" 
-                            placeholder="Nhập mật khẩu mới..."
+                            placeholder="Enter new password..."
                             value={password}
                             onChange={e => setPassword(e.target.value)} 
                             required 
@@ -58,11 +58,10 @@ const ResetPassword = () => {
                     </Form.Group>
 
                     <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold">Xác nhận mật khẩu</Form.Label>
+                        <Form.Label className="fw-bold">Confirm Password</Form.Label>
                         <Form.Control 
-                            className="tcg-input" 
                             type="password" 
-                            placeholder="Nhập lại mật khẩu mới..."
+                            placeholder="Confirm new password..."
                             value={confirmPassword}
                             onChange={e => setConfirmPassword(e.target.value)} 
                             required 
@@ -70,7 +69,7 @@ const ResetPassword = () => {
                     </Form.Group>
                     
                     <Button className="tcg-btn w-100" variant="danger" type="submit" disabled={loading}>
-                        {loading ? 'ĐANG CẬP NHẬT...' : 'LƯU MẬT KHẨU'}
+                        {loading ? 'UPDATING...' : 'SAVE PASSWORD'}
                     </Button>
                 </Form>
             </Card>

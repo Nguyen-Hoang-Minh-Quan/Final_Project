@@ -17,7 +17,7 @@ const Login = () => {
             
             localStorage.setItem('userInfo', JSON.stringify(data));
             
-            toast.success(`Chào mừng ${data.name || 'bạn'} quay trở lại TCG Shop! ✨`);
+            toast.success(`Welcome ${data.name || 'bạn'} back to TCG Shop!`);
             
             if (data.isAdmin) {
                 navigate('/admin');
@@ -26,50 +26,50 @@ const Login = () => {
             }
         } catch (err) { 
             
-            toast.error(err.response?.data?.message || "Sai tài khoản hoặc mật khẩu rồi!"); 
+            toast.error(err.response?.data?.message || "Invalid username or password!"); 
         }
     };
 
     return (
         <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '70vh' }}>
             <Card className="tcg-card p-4 shadow" style={{ width: '400px' }}>
-                <h3 className="text-center fw-bold text-danger mb-4">ĐĂNG NHẬP</h3>
+                <h3 className="text-center fw-bold text-danger mb-4">LOGIN</h3>
                 <Form onSubmit={submitHandler}>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">Email</Form.Label>
                         <Form.Control 
                             className="tcg-input" 
                             type="email" 
-                            placeholder="Nhập email của bạn..."
+                            placeholder="Enter your email..."
                             onChange={e => setEmail(e.target.value)} 
                             required 
                         />
                     </Form.Group>
                     
                     <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold">Mật khẩu</Form.Label>
+                        <Form.Label className="fw-bold">Password</Form.Label>
                         <Form.Control 
                             className="tcg-input" 
                             type="password" 
-                            placeholder="Nhập mật khẩu..."
+                            placeholder="Enter your password..."
                             onChange={e => setPassword(e.target.value)} 
                             required 
                         />
                     </Form.Group>
                     
                     <Button className="tcg-btn w-100" variant="danger" type="submit">
-                        XÁC NHẬN
+                        CONFIRM
                     </Button>
                     
                     <div className='py-3 text-center'>
-                        Bạn chưa có tài khoản?{' '}
+                        You don't have an account?{' '}
                         <Link to='/register' style={{ color: '#dc3545', fontWeight: 'bold', textDecoration: 'none' }}>
-                            Đăng ký ngay
+                            Register now
                         </Link>
                     </div>
                     <div className='text-center'>
                         <Link to='/forgot-password' style={{ color: '#6c757d', textDecoration: 'none', fontWeight: 'bold' }}>
-                            Quên mật khẩu?
+                            Forgot your password?
                         </Link>
                     </div>
                 </Form>

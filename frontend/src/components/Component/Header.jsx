@@ -45,7 +45,7 @@ const Header = () => {
 
   const logoutHandler = () => {
     localStorage.removeItem('userInfo');
-    toast.warn("Đã đăng xuất khỏi tài khoản!");
+    toast.warn("Logged out of the account!");
     navigate('/login');
   };
 
@@ -61,15 +61,16 @@ const Header = () => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto ms-lg-4">
-            <Nav.Link as={Link} to="/" className="fw-bold text-uppercase">Trang chủ</Nav.Link>
-            <Nav.Link as={Link} to="/shop" className="fw-bold text-uppercase">Sản phẩm</Nav.Link>
+            <Nav.Link as={Link} to="/" className="fw-bold text-uppercase">Home</Nav.Link>
+            <Nav.Link as={Link} to="/shop" className="fw-bold text-uppercase">Products</Nav.Link>
+            <Nav.Link as={Link} to="/blogs" className="fw-bold text-uppercase">News</Nav.Link>
           </Nav>
 
           {/* Thanh tìm kiếm */}
           <Form onSubmit={submitHandler} className="d-flex me-3">
             <FormControl 
               type="text" 
-              placeholder="Tìm thẻ bài..." 
+              placeholder="Search cards..." 
               className="tcg-input me-2" 
               onChange={(e) => setKeyword(e.target.value)} 
             />
@@ -110,33 +111,33 @@ const Header = () => {
                 } 
               >
                 <NavDropdown.Item as={Link} to="/profile">
-                  <FaUserCircle className="me-2 text-primary"/>Hồ sơ cá nhân
+                  <FaUserCircle className="me-2 text-primary"/>Profile
                 </NavDropdown.Item>
 
                 {/* KIỂM TRA QUYỀN ADMIN / STAFF ĐỂ HIỆN NÚT TRUY CẬP TRANG QUẢN TRỊ */}
                 {isStaffOrAdmin ? (
                   <NavDropdown.Item as={Link} to="/admin" className="fw-bold text-danger">
                     {userRole === 'Staff' ? (
-                      <><FaUserCog className="me-2 text-warning"/>Bảng điều khiển Staff</>
+                      <><FaUserCog className="me-2 text-warning"/>Staff Dashboard</>
                     ) : (
-                      <><FaUserShield className="me-2 text-danger"/>Quản trị hệ thống</>
+                      <><FaUserShield className="me-2 text-danger"/>System Administration</>
                     )}
                   </NavDropdown.Item>
                 ) : (
                   <NavDropdown.Item as={Link} to="/order-history">
-                    <FaHistory className="me-2 text-success"/>Lịch sử đơn hàng
+                    <FaHistory className="me-2 text-success"/>Order History
                   </NavDropdown.Item>
                 )}
 
                 <NavDropdown.Divider />
                 
                 <NavDropdown.Item onClick={logoutHandler} className="text-danger">
-                  <FaSignOutAlt className="me-2"/>Đăng xuất
+                  <FaSignOutAlt className="me-2"/>Log Out
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
               <Button as={Link} to="/login" variant="outline-danger" className="tcg-btn">
-                ĐĂNG NHẬP
+                Log In
               </Button>
             )}
           </Nav>

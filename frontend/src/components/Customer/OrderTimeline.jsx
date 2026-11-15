@@ -5,32 +5,32 @@ import '../../styles/TCGStyles.css';
 const OrderTimeline = ({ order }) => {
   if (!order) return null;
 
-  // 🌟 SỬA ĐOẠN NÀY: Linh hoạt chuyển đổi cả chữ lẫn số về chuẩn ID số quy ước
+  // SỬA ĐOẠN NÀY: Linh hoạt chuyển đổi cả chữ lẫn số về chuẩn ID số quy ước
   let statusId = 0;
   const rawStatus = order.status;
 
-  if (rawStatus === 'Đang giao' || Number(rawStatus) === 1) {
+  if (rawStatus === 'Out for delivery' || Number(rawStatus) === 1) {
     statusId = 1;
-  } else if (rawStatus === 'Đã giao' || Number(rawStatus) === 2) {
+  } else if (rawStatus === 'Delivered' || Number(rawStatus) === 2) {
     statusId = 2;
-  } else if (rawStatus === 'Đã hủy' || Number(rawStatus) === 3) {
+  } else if (rawStatus === 'Cancelled' || Number(rawStatus) === 3) {
     statusId = 3;
   } else {
-    statusId = 0; // Chờ xử lý / Đã đặt đơn
+    statusId = 0; // Pending processing / Order placed
   }
 
   // Khai báo các bước (Giữ nguyên logic hiển thị dựa trên statusId)
   const steps = [
-    { id: 1, title: "Đã đặt đơn", icon: <FaClipboardList />, active: true, time: order.createdAt },
-    { id: 2, title: "Đã xác nhận", icon: <FaBoxOpen />, active: statusId === 1 || statusId === 2, time: order.paidAt || order.createdAt },
-    { id: 3, title: "Đang giao hàng", icon: <FaTruck />, active: statusId === 1 || statusId === 2, time: order.deliveredAt },
-    { id: 4, title: "Hoàn thành", icon: <FaCheckCircle />, active: statusId === 2, time: order.updatedAt || order.deliveredAt }
+    { id: 1, title: "Placed Order", icon: <FaClipboardList />, active: true, time: order.createdAt },
+    { id: 2, title: "Confirmed", icon: <FaBoxOpen />, active: statusId === 1 || statusId === 2, time: order.paidAt || order.createdAt },
+    { id: 3, title: "In Transit", icon: <FaTruck />, active: statusId === 1 || statusId === 2, time: order.deliveredAt },
+    { id: 4, title: "Delivered", icon: <FaCheckCircle />, active: statusId === 2, time: order.updatedAt || order.deliveredAt }
   ];
 
   if (statusId === 3) {
     return (
       <div className="d-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger p-3 rounded-3 mb-4 fw-bold border border-danger border-opacity-25 gap-2" style={{borderRadius: '12px'}}>
-        <FaTimesCircle size={20}/> ĐƠN HÀNG NÀY ĐÃ BỊ HỦY BỞI NGƯỜI DÙNG HOẶC HỆ THỐNG QUẢN TRỊ
+        <FaTimesCircle size={20}/> ORDER HAS BEEN CANCELLED BY THE USER OR ADMIN
       </div>
     );
   }

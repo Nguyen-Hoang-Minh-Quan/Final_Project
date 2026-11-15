@@ -23,6 +23,7 @@ import Shop from './components/Customer/Shop';
 import Chatbot from './components/Component/Chatbot';
 import ScrollToTop from './components/Component/ScrollToTop';
 import Wishlist from './components/Customer/Wishlist';
+import BlogList from './components/Customer/BlogList';
 
 // --- ADMIN COMPONENTS ---
 import AdminDashboard from './components/AdminSide/AdminDashboard';
@@ -36,6 +37,7 @@ import AdminUserManagement from './components/AdminSide/AdminUserManagement';
 import StaffDashboard from './components/StaffSide/StaffDashboard';
 import StaffBlogManagement from './components/StaffSide/StaffBlogManagement';
 import StaffReviewList from './components/StaffSide/StaffReviewList';
+import StaffChat from './components/StaffSide/StaffChat';
 
 const ProtectedRoute = ({ allowedRoles }) => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -87,6 +89,7 @@ function App() {
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/blogs" element={<BlogList />} />
 
               {/* ROUTE DÙNG CHUNG CẢ ADMIN VÀ STAFF */}
               <Route element={<ProtectedRoute allowedRoles={['Admin', 'Staff']} />}>
@@ -95,6 +98,7 @@ function App() {
                 <Route path="/admin/products" element={<AdminProductList />} />
                 <Route path="/admin/reviews" element={<StaffReviewList />} />
                 <Route path="/admin/blogs" element={<StaffBlogManagement />} />
+                <Route path="/admin/chat" element={<StaffChat />} />
               </Route>
 
               {/* ROUTE DÀNH RIÊNG CHO ADMIN */}

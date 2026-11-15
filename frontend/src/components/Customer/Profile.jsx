@@ -13,7 +13,7 @@ const Profile = () => {
   const [phone, setPhone] = useState(user?.phone || '');
   const [address, setAddress] = useState(user?.address || '');
   const [birthday, setBirthday] = useState(user?.birthday || '');
-  const [gender, setGender] = useState(user?.gender || 'Chưa tiết lộ');
+  const [gender, setGender] = useState(user?.gender || 'Not yet disclosed');
   
   const [loading, setLoading] = useState(false);
 
@@ -41,10 +41,10 @@ const Profile = () => {
       // Cập nhật cục dữ liệu mới nhận từ API vào localStorage để đồng bộ hiển thị
       localStorage.setItem('userInfo', JSON.stringify(data));
       
-      toast.success('Cập nhật thông tin cá nhân thành công!');
+      toast.success('Personal information updated successfully!');
     } catch (error) {
-      console.error('Lỗi khi cập nhật thông tin cá nhân:', error);
-      toast.error('Cập nhật thông tin cá nhân thất bại. Vui lòng thử lại.');
+      console.error('Error while updating personal information:', error);
+      toast.error('Failed to update personal information. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -53,14 +53,14 @@ const Profile = () => {
   return (
     <Container className="main-layout d-flex justify-content-center" style={{ marginTop: '30px', marginBottom: '30px' }}>
       <Card className="tcg-card p-4 shadow-sm bg-white" style={{ width: '100%', maxWidth: '650px', borderRadius: '12px' }}>
-        <h3 className="text-center fw-bold text-danger mb-4">HỒ SƠ CÁ NHÂN</h3>
+        <h3 className="text-center fw-bold text-danger mb-4">PERSONAL PROFILE</h3>
         
         <Form onSubmit={submitHandler}>
           {/* Hàng 1: Họ tên & Email */}
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-bold">Tên người dùng</Form.Label>
+                <Form.Label className="fw-bold">Display Name</Form.Label>
                 <Form.Control 
                   className="tcg-input" 
                   value={name} 
@@ -86,11 +86,11 @@ const Profile = () => {
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-bold">Số điện thoại</Form.Label>
+                <Form.Label className="fw-bold">Phone Number</Form.Label>
                 <Form.Control 
                   className="tcg-input" 
                   type="text"
-                  placeholder="Nhập số điện thoại nhận hàng"
+                  placeholder="Enter phone number for delivery notifications..."
                   value={phone} 
                   onChange={e => setPhone(e.target.value)} 
                 />
@@ -98,16 +98,16 @@ const Profile = () => {
             </Col>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-bold">Giới tính</Form.Label>
+                <Form.Label className="fw-bold">Gender</Form.Label>
                 <Form.Select 
                   className="tcg-input"
                   value={gender} 
                   onChange={e => setGender(e.target.value)}
                 >
-                  <option value="Chưa tiết lộ">Chưa tiết lộ</option>
-                  <option value="Nam">Nam</option>
-                  <option value="Nữ">Nữ</option>
-                  <option value="Khác">Khác</option>
+                  <option value="Not yet disclosed">Not yet disclosed</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
                 </Form.Select>
               </Form.Group>
             </Col>
@@ -115,7 +115,7 @@ const Profile = () => {
 
           {/* Hàng 3: Ngày sinh */}
           <Form.Group className="mb-3">
-            <Form.Label className="fw-bold">Ngày sinh</Form.Label>
+            <Form.Label className="fw-bold">Birthday</Form.Label>
             <Form.Control 
               className="tcg-input" 
               type="date"
@@ -126,12 +126,12 @@ const Profile = () => {
 
           {/* Hàng 4: Địa chỉ giao hàng mặc định */}
           <Form.Group className="mb-4">
-            <Form.Label className="fw-bold">Địa chỉ giao hàng mặc định</Form.Label>
+            <Form.Label className="fw-bold">Default Shipping Address</Form.Label>
             <Form.Control 
               className="tcg-input" 
               as="textarea"
               rows={2}
-              placeholder="Nhập chi tiết số nhà, tên đường, khu vực nhận thẻ bài..."
+              placeholder="Enter detailed address including house number, street name, and delivery area..."
               value={address} 
               onChange={e => setAddress(e.target.value)} 
             />
@@ -144,7 +144,7 @@ const Profile = () => {
             type="submit"
             disabled={loading}
           >
-            {loading ? 'ĐANG XỬ LÝ...' : 'CẬP NHẬT THÔNG TIN'}
+            {loading ? 'UPDATING...' : 'UPDATE INFORMATION'}
           </Button>
         </Form>
       </Card>

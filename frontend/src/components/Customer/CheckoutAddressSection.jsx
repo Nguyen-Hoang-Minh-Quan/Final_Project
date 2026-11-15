@@ -25,8 +25,8 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
           onAddressSelect(defaultAddr);
         }
       } catch (error) {
-        console.error("Lỗi lấy danh sách địa chỉ từ Neon:", error);
-        toast.error(error.response?.data?.message || "Không thể tải sổ địa chỉ!");
+        console.error("Error retrieving address list from Neon:", error);
+        toast.error(error.response?.data?.message || "Cannot load address book!");
       }
     };
 
@@ -42,7 +42,7 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
   const handleAddAddress = async (e) => {
     e.preventDefault();
     if (!newName.trim() || !newPhone.trim() || !newDetails.trim()) {
-      return toast.warn("Vui lòng nhập đầy đủ thông tin!");
+      return toast.warn("Please fill in all required fields!");
     }
 
     const addressData = {
@@ -63,10 +63,10 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
       setNewPhone('');
       setNewDetails('');
       setShowModal(false);
-      toast.success("Đã lưu địa chỉ giao hàng vào hệ thống! 🏠");
+      toast.success("Address saved successfully!");
     } catch (error) {
-      console.error("Lỗi lưu địa chỉ lên Neon:", error);
-      toast.error(error.response?.data?.message || "Lỗi máy chủ, không thể lưu địa chỉ.");
+      console.error("Error saving address to Neon:", error);
+      toast.error(error.response?.data?.message || "Server error, cannot save address.");
     }
   };
 
@@ -77,15 +77,15 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
       
       const updated = addresses.filter(a => a.id !== id);
       setAddresses(updated);
-      toast.info("Đã xóa địa chỉ thành công!");
+      toast.info("Address deleted successfully!");
 
       if (selectedAddressId === id && updated.length > 0) {
         setSelectedAddressId(updated[0].id);
         onAddressSelect(updated[0]);
       }
     } catch (error) {
-      console.error("Lỗi xóa địa chỉ trên Neon:", error);
-      toast.error(error.response?.data?.message || "Không thể xóa địa chỉ này.");
+      console.error("Error deleting address from Neon:", error);
+      toast.error(error.response?.data?.message || "Cannot delete this address.");
     }
   };
 
@@ -94,7 +94,7 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
       <Card.Body p={4}>
         <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
           <h5 className="fw-bold text-dark m-0 d-flex align-items-center gap-2" style={{fontSize: '1.1rem'}}>
-            <FaMapMarkerAlt className="text-danger" /> SỔ ĐỊA CHỈ GIAO HÀNG
+            <FaMapMarkerAlt className="text-danger" /> SHIPPING ADDRESS BOOK
           </h5>
           <Button 
             variant="outline-danger" 
@@ -103,13 +103,13 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
             onClick={() => setShowModal(true)}
             style={{ borderRadius: '6px', fontSize: '0.8rem' }}
           >
-            <FaPlus /> THÊM ĐỊA CHỈ MỚI
+            <FaPlus /> ADD NEW ADDRESS
           </Button>
         </div>
 
         <Form>
           {addresses.length === 0 ? (
-            <p className="text-muted small text-center my-3">Bạn chưa có địa chỉ giao hàng nào. Vui lòng thêm mới!</p>
+            <p className="text-muted small text-center my-3">You have no shipping addresses yet. Please add a new one!</p>
           ) : (
             addresses.map((addr) => (
               <div 
@@ -137,7 +137,7 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
                       <span className="text-secondary fw-bold small">{addr.phone}</span>
                       {addr.isDefault && (
                         <span className="badge bg-danger ms-1 text-uppercase fw-bold" style={{fontSize: '0.6rem', padding: '3px 6px'}}>
-                          Mặc định
+                          Default
                         </span>
                       )}
                     </div>
@@ -162,27 +162,27 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
       </Card.Body>
 
       <Modal show={showModal} onHide={() => setShowModal(false)} centered backdrop="static">
-        <Modal.Header closeButton><Modal.Title className="fw-bold fs-5 text-dark">Thêm Địa Chỉ Giao Hàng Mới</Modal.Title></Modal.Header>
+        <Modal.Header closeButton><Modal.Title className="fw-bold fs-5 text-dark">Add a New Delivery Address</Modal.Title></Modal.Header>
         <Form onSubmit={handleAddAddress}>
           <Modal.Body>
             <Row>
               <Col md={6} className="mb-3">
-                <Form.Label className="small fw-bold text-secondary">Tên người nhận</Form.Label>
-                <Form.Control type="text" placeholder="Ví dụ: Nguyễn Minh Quân" value={newName} onChange={e => setNewName(e.target.value)} required className="tcg-input"/>
+                <Form.Label className="small fw-bold text-secondary">Recipient's name</Form.Label>
+                <Form.Control type="text" placeholder="E.g.: Nguyen Minh Quan" value={newName} onChange={e => setNewName(e.target.value)} required className="tcg-input"/>
               </Col>
               <Col md={6} className="mb-3">
-                <Form.Label className="small fw-bold text-secondary">Số điện thoại nhận hàng</Form.Label>
-                <Form.Control type="text" placeholder="Ví dụ: 0703xxxxxx" value={newPhone} onChange={e => setNewPhone(e.target.value)} required className="tcg-input"/>
+                <Form.Label className="small fw-bold text-secondary">Phone number for delivery</Form.Label>
+                <Form.Control type="text" placeholder="E.g.: 0703xxxxxx" value={newPhone} onChange={e => setNewPhone(e.target.value)} required className="tcg-input"/>
               </Col>
             </Row>
             <Form.Group className="mb-3">
-              <Form.Label className="small fw-bold text-secondary">Địa chỉ nhận hàng chi tiết</Form.Label>
-              <Form.Control as="textarea" rows={2} placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..." value={newDetails} onChange={e => setNewDetails(e.target.value)} required className="tcg-input"/>
+              <Form.Label className="small fw-bold text-secondary">Detailed delivery address</Form.Label>
+              <Form.Control as="textarea" rows={2} placeholder="House number, street name, ward/district, city/province..." value={newDetails} onChange={e => setNewDetails(e.target.value)} required className="tcg-input"/>
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="light" size="sm" className="fw-bold border" onClick={() => setShowModal(false)}>HỦY</Button>
-            <Button type="submit" variant="danger" size="sm" className="tcg-btn fw-bold px-3">LƯU ĐỊA CHỈ</Button>
+            <Button variant="light" size="sm" className="fw-bold border" onClick={() => setShowModal(false)}>CANCEL</Button>
+            <Button type="submit" variant="danger" size="sm" className="tcg-btn fw-bold px-3">SAVE ADDRESS</Button>
           </Modal.Footer>
         </Form>
       </Modal>

@@ -15,7 +15,7 @@ const registerUser = async (req, res) => {
     try {
         const userExists = await User.findOne({ where: { email } });
         if (userExists) {
-            return res.status(400).json({ message: 'Email này đã được đăng ký sử dụng!' });
+            return res.status(400).json({ message: 'This email is already registered!' });
         }
 
         const user = await User.create({ name, email, password });
@@ -33,7 +33,7 @@ const registerUser = async (req, res) => {
             token: generateToken(user.id),
         });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi hệ thống khi đăng ký: ' + error.message });
+        res.status(500).json({ message: 'System error when registering: ' + error.message });
     }
 };
 
@@ -59,10 +59,10 @@ const loginUser = async (req, res) => {
                 token: generateToken(user.id),
             });
         } else {
-            res.status(401).json({ message: 'Email hoặc mật khẩu không chính xác!' });
+            res.status(401).json({ message: 'Incorrect email or password!' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi hệ thống khi đăng nhập: ' + error.message });
+        res.status(500).json({ message: 'System error when logging in: ' + error.message });
     }
 };
 
@@ -95,10 +95,10 @@ const updateUserProfile = async (req, res) => {
                 token: generateToken(updatedUser.id)
             });
         } else {
-            res.status(404).json({ message: 'Không tìm thấy thông tin người dùng!' });
+            res.status(404).json({ message: 'User not found!' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server khi cập nhật hồ sơ: ' + error.message });
+        res.status(500).json({ message: 'Server error when updating profile: ' + error.message });
     }
 };
 
@@ -118,7 +118,7 @@ const getUserProfile = async (req, res) => {
             gender: req.user.gender,
         });
     } else {
-        res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+        res.status(404).json({ message: 'User not found!' });
     }
 };
 
@@ -131,13 +131,13 @@ const forgotPassword = async (req, res) => {
         if (user) {
             const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
             res.json({ 
-                message: `Hệ thống đã xác nhận tài khoản ${user.name}! Bạn có thể truy cập link này để đổi mật khẩu: http://localhost:3000/reset-password/${resetToken}` 
+                message: `System has confirmed account ${user.name}! You can visit this link to change your password: http://localhost:3000/reset-password/${resetToken}` 
             });
         } else {
-            res.status(404).json({ message: 'Email này không tồn tại trên hệ thống TCG Shop!' });
+            res.status(404).json({ message: 'This email does not exist in the TCG Shop system!' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi hệ thống: ' + error.message });
+        res.status(500).json({ message: 'System error: ' + error.message });
     }
 };
 
@@ -150,16 +150,16 @@ const resetPassword = async (req, res) => {
         const user = await User.findByPk(decoded.id);
 
         if (!user) {
-            return res.status(404).json({ message: 'Tài khoản không tồn tại hoặc đã bị xóa!' });
+            return res.status(404).json({ message: 'Account not found or has been deleted!' });
         }
 
         user.password = password;
         await user.save();
 
-        return res.json({ message: 'Mật khẩu của bạn đã được cập nhật thành công!' });
+        return res.json({ message: 'Your password has been updated successfully!' });
     } catch (error) {
-        console.error("❌ LỖI ĐẶT LẠI MẬT KHẨU:", error);
-        return res.status(400).json({ message: 'Liên kết xác thực đã hết hạn hoặc không hợp lệ!' });
+        console.error("Error resetting password:", error);
+        return res.status(400).json({ message: 'The verification link has expired or is invalid!' });
     }
 };
 
@@ -171,7 +171,7 @@ const getUsers = async (req, res) => {
         });
         res.json(users);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi lấy danh sách user: ' + error.message });
+        res.status(500).json({ message: 'Error fetching user list: ' + error.message });
     }
 };
 
@@ -181,16 +181,16 @@ const updateUserRole = async (req, res) => {
         const user = await User.findByPk(req.params.id);
 
         if (!user) {
-            return res.status(404).json({ message: 'Không tìm thấy người dùng này!' });
+            return res.status(404).json({ message: 'User not found!' });
         }
 
         user.role = role;
         user.isAdmin = (role === 'Admin');
         await user.save();
 
-        res.json({ message: `Đã cập nhật vai trò của ${user.name} thành ${role}`, user });
+        res.json({ message: `Updated role for ${user.name} to ${role}`, user });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi cập nhật vai trò: ' + error.message });
+        res.status(500).json({ message: 'Error updating role: ' + error.message });
     }
 };
 

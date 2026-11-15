@@ -2,6 +2,7 @@ const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Rarity = require('../models/Rarity');
 const Review = require('../models/Review');
+const User = require('../models/User');
 const InventoryLog = require('../models/InventoryLog');
 const StaffLog = require('../models/StaffLog');
 
@@ -18,7 +19,7 @@ const getProducts = async (req, res) => {
         });
         res.json(products);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi tải danh sách sản phẩm: ' + error.message });
+        res.status(500).json({ message: 'Error loading product list: ' + error.message });
     }
 };
 
@@ -30,16 +31,16 @@ const getProductById = async (req, res) => {
             include: [
                 { model: Category, as: 'CategoryData' },
                 { model: Rarity, as: 'RarityData' },
-                { model: Review, as: 'reviews' }
+                { model: Review, as: 'reviews', include: [{ model: User, as: 'UserData' }] }
             ]
         });
         if (product) {
             res.json(product);
         } else {
-            res.status(404).json({ message: 'Không tìm thấy sản phẩm!' });
+            res.status(404).json({ message: 'Product not found!' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server: ' + error.message });
+        res.status(500).json({ message: 'Server error: ' + error.message });
     }
 };
 
@@ -52,13 +53,13 @@ const createProduct = async (req, res) => {
         // Ghi Staff Activity Log
         await StaffLog.create({
             staffId: req.user.id,
-            action: `Thêm sản phẩm mới #${product.id}`,
-            details: `Tên sản phẩm: ${product.name} | Kho ban đầu: ${product.countInStock}`
+            action: `Add new product #${product.id}`,
+            details: `Product name: ${product.name} | Initial stock: ${product.countInStock}`
         });
 
         res.status(201).json(product);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi tạo sản phẩm: ' + error.message });
+        res.status(500).json({ message: 'Error creating product: ' + error.message });
     }
 };
 
@@ -67,7 +68,7 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
-        if (!product) return res.status(404).json({ message: 'Không tìm thấy sản phẩm!' });
+        if (!product) return res.status(404).json({ message: 'Product not found!' });
 
         const oldStock = product.countInStock;
         const newStock = Number(req.body.countInStock);
@@ -84,20 +85,20 @@ const updateProduct = async (req, res) => {
                 oldStock,
                 newStock,
                 changeQuantity: changeQty,
-                reason: req.body.changeReason || 'Thay đổi kiểm kê'
+                reason: req.body.changeReason || 'Inventory change'
             });
         }
 
         // 2. Tự động ghi Staff Activity Log
         await StaffLog.create({
             staffId: req.user.id,
-            action: `Cập nhật sản phẩm #${product.id}`,
-            details: `Tên: ${product.name} | Kho mới: ${newStock}`
+            action: `Update product #${product.id}`,
+            details: `Name: ${product.name} | New Stock: ${newStock}`
         });
 
         res.json(product);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi cập nhật sản phẩm: ' + error.message });
+        res.status(500).json({ message: 'Error updating product: ' + error.message });
     }
 };
 
@@ -106,7 +107,7 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
-        if (!product) return res.status(404).json({ message: 'Không tìm thấy sản phẩm!' });
+        if (!product) return res.status(404).json({ message: 'Product not found!' });
 
         const productName = product.name;
         await product.destroy();
@@ -114,13 +115,13 @@ const deleteProduct = async (req, res) => {
         // Ghi Staff Activity Log
         await StaffLog.create({
             staffId: req.user.id,
-            action: `Xóa sản phẩm #${req.params.id}`,
-            details: `Tên sản phẩm đã xóa: ${productName}`
+            action: `Delete product #${req.params.id}`,
+            details: `Deleted product name: ${productName}`
         });
 
-        res.json({ message: 'Đã xóa sản phẩm thành công!' });
+        res.json({ message: 'Product deleted successfully!' });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi xóa sản phẩm: ' + error.message });
+        res.status(500).json({ message: 'Error deleting product: ' + error.message });
     }
 };
 
@@ -131,7 +132,7 @@ const getRarities = async (req, res) => {
         const rarities = await Rarity.findAll();
         res.json(rarities);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi tải độ hiếm: ' + error.message });
+        res.status(500).json({ message: 'Error loading rarities: ' + error.message });
     }
 };
 
@@ -142,7 +143,7 @@ const getCategories = async (req, res) => {
         const categories = await Category.findAll();
         res.json(categories);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi tải danh mục: ' + error.message });
+        res.status(500).json({ message: 'Error loading categories: ' + error.message });
     }
 };
 
@@ -159,7 +160,7 @@ const createProductReview = async (req, res) => {
         });
         res.status(201).json(review);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi tạo đánh giá: ' + error.message });
+        res.status(500).json({ message: 'Error creating review: ' + error.message });
     }
 };
 

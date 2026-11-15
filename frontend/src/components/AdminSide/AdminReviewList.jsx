@@ -21,8 +21,8 @@ const AdminReviewList = () => {
       const { data } = await axiosClient.get('/reviews'); 
       setReviews(data);
     } catch (err) {
-      console.error("Lỗi lấy danh sách đánh giá:", err);
-      toast.error("Không thể tải danh sách đánh giá hệ thống!");
+      console.error("Error retrieving the list of reviews:", err);
+      toast.error("Cannot load the list of reviews!");
     } finally {
       setLoading(false);
     }
@@ -43,13 +43,13 @@ const AdminReviewList = () => {
   }, []);
 
   const deleteReviewHandler = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa đánh giá này không?')) {
+    if (window.confirm('Are you sure you want to delete this review?')) {
       try {
         await axiosClient.delete(`/reviews/${id}`);
-        toast.success("Đã xóa đánh giá thành công!");
+        toast.success("Review deleted successfully!");
         fetchAllReviews(); 
       } catch (err) {
-        toast.error("Xóa đánh giá thất bại!");
+        toast.error("Failed to delete review!");
       }
     }
   };
@@ -77,12 +77,12 @@ const AdminReviewList = () => {
         <Row className="align-items-center mb-4">
           <Col>
             <h2 className="fw-bold mb-0 text-info">
-              <FaComments className="me-2"/>QUẢN LÝ ĐÁNH GIÁ HỆ THỐNG
+              <FaComments className="me-2"/>SYSTEM EVALUATION MANAGEMENT
                       <Button variant="outline-secondary" className="border-0" onClick={() => navigate('/admin/')}>
-                       <FaArrowLeft className="me-2"/> Quay lại
+                       <FaArrowLeft className="me-2"/> GO BACK
                       </Button>
             </h2>
-            <small className="text-muted">Xem, lọc và dọn dẹp các bình luận từ khách hàng</small>
+            <small className="text-muted">View, filter, and manage customer reviews</small>
           </Col>
         </Row>
 
@@ -90,7 +90,7 @@ const AdminReviewList = () => {
         <Card className="bg-light border-0 p-3 mb-4 rounded-3 shadow-sm">
           <Row className="align-items-center">
             <Col md={1} className="d-flex align-items-center text-muted fw-bold mb-2 mb-md-0">
-              <FaFilter className="me-2"/> LỌC:
+              <FaFilter className="me-2"/> FILTER:
             </Col>
             
             <Col md={5} className="mb-2 mb-md-0">
@@ -99,7 +99,7 @@ const AdminReviewList = () => {
                 value={filterProduct} 
                 onChange={(e) => setFilterProduct(e.target.value)}
               >
-                <option value="all">🔍 Tất cả sản phẩm trong kho</option>
+                <option value="all">🔍 All products in stock</option>
                 {products.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -112,49 +112,49 @@ const AdminReviewList = () => {
                 value={filterRating} 
                 onChange={(e) => setFilterRating(e.target.value)}
               >
-                <option value="all">⭐ Tất cả mức sao</option>
-                <option value="5">⭐⭐⭐⭐⭐ 5 Sao</option>
-                <option value="4">⭐⭐⭐⭐ 4 Sao</option>
-                <option value="3">⭐⭐⭐ 3 Sao</option>
-                <option value="2">⭐⭐ 2 Sao</option>
-                <option value="1">⭐ 1 Sao</option>
+                <option value="all">⭐ All star ratings</option>
+                <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                <option value="3">⭐⭐⭐ 3 Stars</option>
+                <option value="2">⭐⭐ 2 Stars</option>
+                <option value="1">⭐ 1 Star</option>
               </Form.Select>
             </Col>
             
             <Col md={2} className="text-md-end text-muted small fw-bold">
-              Tìm thấy: {filteredReviews.length} nhận xét
+              Found: {filteredReviews.length} reviews
             </Col>
           </Row>
         </Card>
 
         {/* Bảng dữ liệu hiển thị */}
         {loading ? (
-          <p className="text-center text-muted py-5">Đang xử lý dữ liệu đánh giá...</p>
+          <p className="text-center text-muted py-5">Processing review data...</p>
         ) : filteredReviews.length === 0 ? (
           <div className="alert alert-light border text-center py-5 text-muted rounded-3">
-            Không tìm thấy đánh giá nào khớp với điều kiện lọc! Admin có thể thảnh thơi rồi. 🎉
+            No reviews found matching the filter criteria! Admin can relax. 🎉
           </div>
         ) : (
           <Table responsive hover className="admin-table border-top m-0">
             <thead>
               <tr>
-                <th style={{ width: '15%' }}>KHÁCH HÀNG</th>
-                <th style={{ width: '25%' }}>SẢN PHẨM</th>
-                <th className="text-center" style={{ width: '15%' }}>ĐÁNH GIÁ</th>
-                <th style={{ width: '35%' }}>NỘI DUNG</th>
-                <th className="text-end" style={{ width: '10%' }}>HÀNH ĐỘNG</th>
+                <th style={{ width: '15%' }}>CUSTOMER</th>
+                <th style={{ width: '25%' }}>PRODUCT</th>
+                <th className="text-center" style={{ width: '15%' }}>RATING</th>
+                <th style={{ width: '35%' }}>CONTENT</th>
+                <th className="text-end" style={{ width: '10%' }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
               {filteredReviews.map(review => (
                 <tr key={review.id}>
-                  <td className="fw-bold text-dark">{review.UserData?.name || "Ẩn danh"}</td>
+                  <td className="fw-bold text-dark">{review.UserData?.name || "Anonymous"}</td>
                   <td>
                     <div className="fw-bold text-truncate" style={{ maxWidth: '220px' }}>
-                      {review.ProductData?.name || `Sản phẩm #${review.productId}`}
+                      {review.ProductData?.name || `Product #${review.productId}`}
                     </div>
                     <small className="text-muted" style={{ fontSize: '0.75rem' }}>
-                      Ngày: {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                      Date: {new Date(review.createdAt).toLocaleDateString('vi-VN')}
                     </small>
                   </td>
                   <td className="text-center">{renderStars(review.rating)}</td>

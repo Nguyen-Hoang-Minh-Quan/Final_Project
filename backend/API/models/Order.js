@@ -23,9 +23,9 @@ const Order = sequelize.define('Order', {
         allowNull: false
     },
     paymentMethod: {
-        type: DataTypes.ENUM('Momo', 'ZaloPay', 'Ngân hàng', 'COD'),
-        allowNull: false,
-        defaultValue: 'COD'
+            type: DataTypes.STRING, // Dùng STRING thay vì ENUM để an toàn tuyệt đối
+            allowNull: false,
+            defaultValue: 'COD'
     },
     totalPrice: {
         type: DataTypes.DECIMAL(10, 2),
@@ -38,9 +38,9 @@ const Order = sequelize.define('Order', {
         defaultValue: false
     },
     status: {
-        type: DataTypes.ENUM('Chờ xử lý', 'Đang giao', 'Đã giao', 'Đã hủy'),
+        type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: 'Chờ xử lý'
+        defaultValue: 'Pending'
     }
 }, {
     timestamps: true
@@ -74,15 +74,12 @@ const OrderItem = sequelize.define('OrderItem', {
 });
 
 // 3. Thiết lập mối quan hệ Thực thể Quan hệ (Associations)
-// Một User có nhiều Đơn hàng - Một Đơn hàng thuộc về một User
 User.hasMany(Order, { foreignKey: 'userId', onDelete: 'CASCADE' });
 Order.belongsTo(User, { foreignKey: 'userId' });
 
-// Một Đơn hàng chứa nhiều Sản phẩm chi tiết - Một dòng chi tiết thuộc về một Đơn hàng nhất định
 Order.hasMany(OrderItem, { foreignKey: 'orderId', as: 'orderItems', onDelete: 'CASCADE' });
 OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
 
-// Một Sản phẩm có thể xuất hiện trong nhiều Chi tiết đơn hàng của nhiều người
 Product.hasMany(OrderItem, { foreignKey: 'productId' });
 OrderItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 

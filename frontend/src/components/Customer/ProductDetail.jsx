@@ -345,6 +345,11 @@ const ProductDetail = () => {
                     <p className="text-secondary m-0 small" style={{ lineHeight: '1.5' }}>
                       {review.comment}
                     </p>
+                    {review.reply && (
+                      <div className="mt-2 p-2 bg-light rounded small">
+                        <strong className="text-success">Phản hồi từ người bán:</strong> {review.reply}
+                      </div>
+                    )}
                   </ListGroup.Item>
                 ))}
               </ListGroup>

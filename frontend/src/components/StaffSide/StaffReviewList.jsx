@@ -15,10 +15,11 @@ const StaffReviewList = () => {
 
   const fetchReviews = async () => {
     try {
-      const { data } = await axiosClient.get('/products/reviews/all'); // API lấy toàn bộ reviews
+      // 🌟 ĐÃ SỬA: Chuẩn hóa đường dẫn gọi tới API backend /reviews
+      const { data } = await axiosClient.get('/reviews');
       setReviews(data);
     } catch (error) {
-      console.error("Lỗi tải đánh giá:", error);
+      console.error("Error loading reviews:", error);
     }
   };
 
@@ -33,12 +34,13 @@ const StaffReviewList = () => {
   const handleSendReply = async (e) => {
     e.preventDefault();
     try {
-      await axiosClient.put(`/products/reviews/${selectedReview.id}/reply`, { reply: replyText });
-      toast.success("Đã gửi phản hồi cho khách hàng!");
+      // Sửa lại endpoint khớp với router backend
+      await axiosClient.put(`/reviews/${selectedReview.id}/reply`, { reply: replyText });
+      toast.success("Response sent to the customer!");
       setShowReplyModal(false);
       fetchReviews();
     } catch (error) {
-      toast.error("Lỗi khi gửi phản hồi!");
+      toast.error("Error sending response!");
     }
   };
 
@@ -47,9 +49,9 @@ const StaffReviewList = () => {
       <Card className="border-0 shadow-sm p-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h2 className="fw-bold mb-1"><FaComment className="text-info me-2" />QUẢN LÝ ĐÁNH GIÁ CỦA KHÁCH HÀNG</h2>
+            <h2 className="fw-bold mb-1"><FaComment className="text-info me-2" />MANAGE CUSTOMER REVIEWS</h2>
             <Button variant="outline-secondary" size="sm" className="border-0 tcg-btn" onClick={() => navigate('/admin')}>
-              <FaChevronLeft className="me-1" /> QUAY LẠI DASHBOARD
+              <FaChevronLeft className="me-1" /> BACK TO DASHBOARD
             </Button>
           </div>
         </div>
@@ -57,12 +59,12 @@ const StaffReviewList = () => {
         <Table responsive hover className="admin-table border-top">
           <thead>
             <tr>
-              <th>KHÁCH HÀNG</th>
-              <th>SẢN PHẨM</th>
-              <th>ĐÁNH GIÁ</th>
-              <th>NỘI DUNG nhận xét</th>
-              <th>PHẢN HỒI TỪ STAFF</th>
-              <th className="text-end">THAO TÁC</th>
+              <th>CUSTOMER</th>
+              <th>PRODUCT</th>
+              <th>RATING</th>
+              <th>REVIEW CONTENT</th>
+              <th>RESPONSE FROM STAFF</th>
+              <th className="text-end">ACTIONS</th>
             </tr>
           </thead>
           <tbody>
@@ -80,12 +82,12 @@ const StaffReviewList = () => {
                   {r.reply ? (
                     <span className="text-success small fw-bold">{r.reply}</span>
                   ) : (
-                    <span className="text-muted small italic">Chưa phản hồi</span>
+                    <span className="text-muted small italic">Not replied yet</span>
                   )}
                 </td>
                 <td className="text-end">
                   <Button variant="outline-primary" size="sm" onClick={() => handleOpenReply(r)}>
-                    <FaReply className="me-1" /> Phản hồi
+                    <FaReply className="me-1" /> Reply
                   </Button>
                 </td>
               </tr>
@@ -98,27 +100,27 @@ const StaffReviewList = () => {
       <Modal show={showReplyModal} onHide={() => setShowReplyModal(false)} centered>
         <Form onSubmit={handleSendReply}>
           <Modal.Header closeButton>
-            <Modal.Title className="fw-bold fs-6">PHẢN HỒI ĐÁNH GIÁ CỦA {selectedReview?.UserData?.name}</Modal.Title>
+            <Modal.Title className="fw-bold fs-6">RESPONSE TO REVIEW FROM {selectedReview?.UserData?.name}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <div className="mb-3 p-2 bg-light rounded small">
-              <strong>Nhận xét của khách:</strong> "{selectedReview?.comment}"
+              <strong>Customer's Review:</strong> "{selectedReview?.comment}"
             </div>
             <Form.Group>
-              <Form.Label className="fw-bold small">Nội dung phản hồi từ Nhân viên</Form.Label>
+              <Form.Label className="fw-bold small">Response Content from Staff</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={4}
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Nhập câu trả lời lịch sự, hỗ trợ khách hàng..."
+                placeholder="Enter a polite and helpful response..."
                 required
               />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="light" onClick={() => setShowReplyModal(false)}>Hủy</Button>
-            <Button type="submit" variant="info" className="text-white fw-bold">GỬI PHẢN HỒI</Button>
+            <Button variant="light" onClick={() => setShowReplyModal(false)}>Cancel</Button>
+            <Button type="submit" variant="info" className="text-white fw-bold">SEND RESPONSE</Button>
           </Modal.Footer>
         </Form>
       </Modal>

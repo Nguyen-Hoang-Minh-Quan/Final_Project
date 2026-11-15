@@ -14,22 +14,22 @@ const Register = () => {
     try {
       await axios.post('http://localhost:5000/api/auth/register', formData);
       
-      // 🌟 THÔNG BÁO TOAST THÀNH CÔNG VÀ CHUYỂN TRANG
-      toast.success("Đăng ký tài khoản thành công! Hãy đăng nhập ngay."); 
+      //THÔNG BÁO TOAST THÀNH CÔNG VÀ CHUYỂN TRANG
+      toast.success("Account registered successfully! Please log in now."); 
       navigate('/login');
     } catch (err) { 
-      // 🌟 THÔNG BÁO TOAST THẤT BẠI
-      toast.error(err.response?.data?.message || "Lỗi đăng ký tài khoản!"); 
+      //THÔNG BÁO TOAST THẤT BẠI
+      toast.error(err.response?.data?.message || "Error registering account!"); 
     }
   };
 
   return (
     <Container className="main-layout d-flex justify-content-center">
       <Card className="tcg-card p-4 shadow" style={{width: '400px'}}>
-        <h3 className="text-center fw-bold text-danger mb-4">ĐĂNG KÝ</h3>
+        <h3 className="text-center fw-bold text-danger mb-4">Register</h3>
         <Form onSubmit={handleRegister}>
           <Form.Group className="mb-3">
-            <Form.Label>Tên hiển thị</Form.Label>
+            <Form.Label>Display Name</Form.Label>
             <Form.Control className="tcg-input" onChange={e => setFormData({...formData, name: e.target.value})} required />
           </Form.Group>
           <Form.Group className="mb-3">
@@ -37,10 +37,10 @@ const Register = () => {
             <Form.Control className="tcg-input" type="email" onChange={e => setFormData({...formData, email: e.target.value})} required />
           </Form.Group>
           <Form.Group className="mb-4">
-            <Form.Label>Mật khẩu</Form.Label>
+            <Form.Label>Password</Form.Label>
             <Form.Control className="tcg-input" type="password" onChange={e => setFormData({...formData, password: e.target.value})} required />
           </Form.Group>
-          <Button className="tcg-btn w-100" variant="danger" type="submit">ĐĂNG KÝ NGAY</Button>
+          <Button className="tcg-btn w-100" variant="danger" type="submit">Register Now</Button>
         </Form>
       </Card>
     </Container>

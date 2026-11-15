@@ -4,7 +4,7 @@ const Product = require('../models/Product');
 
 // @desc    Lấy toàn bộ đánh giá hệ thống kèm thông tin User và Product
 // @route   GET /api/reviews
-// @access  Private/Admin
+// @access  Private/Staff/Admin
 const getAllReviews = async (req, res) => {
     try {
         const reviews = await Review.findAll({
@@ -12,7 +12,7 @@ const getAllReviews = async (req, res) => {
                 {
                     model: User,
                     as: 'UserData',
-                    attributes: ['id', 'name', 'email'] // Bảo mật password, chỉ lấy thông tin cần thiết
+                    attributes: ['id', 'name', 'email']
                 },
                 {
                     model: Product,
@@ -20,33 +20,56 @@ const getAllReviews = async (req, res) => {
                     attributes: ['id', 'name', 'image']
                 }
             ],
-            order: [['createdAt', 'DESC']] // Đánh giá mới nhất xếp lên đầu
+            order: [['createdAt', 'DESC']]
         });
         res.json(reviews);
     } catch (error) {
-        console.error("Lỗi lấy toàn bộ review:", error);
-        res.status(500).json({ message: "Lỗi hệ thống khi tải danh sách nhận xét!" });
+        console.error("Error retrieving all reviews:", error);
+        res.status(500).json({ message: "Error retrieving all reviews!" });
     }
 };
 
-// @desc    Xóa đánh giá (Admin dọn dẹp spam)
+// @desc    Staff/Admin phản hồi đánh giá
+// @route   PUT /api/reviews/:id/reply
+// @access  Private/Staff/Admin
+const replyReview = async (req, res) => {
+    try {
+        const { reply } = req.body;
+        const review = await Review.findByPk(req.params.id);
+
+        if (!review) {
+            return res.status(404).json({ message: "Review not found!" });
+        }
+
+        review.reply = reply;
+        await review.save();
+
+        res.json({ message: "Reply saved successfully!", review });
+    } catch (error) {
+        console.error("Error replying to review:", error);
+        res.status(500).json({ message: "Failed to send reply!" });
+    }
+};
+
+// @desc    Xóa đánh giá
 // @route   DELETE /api/reviews/:id
 // @access  Private/Admin
 const deleteReview = async (req, res) => {
     try {
         const review = await Review.findByPk(req.params.id);
         if (!review) {
-            return res.status(404).json({ message: "Không tìm thấy đánh giá này!" });
+            return res.status(404).json({ message: "Review not found!" });
         }
         await review.destroy();
-        res.json({ message: "Đã xóa bỏ đánh giá thành công khỏi hệ thống!" });
+        res.json({ message: "Review deleted successfully!" });
     } catch (error) {
-        console.error("Lỗi xóa review:", error);
-        res.status(500).json({ message: "Xóa đánh giá thất bại!" });
+        console.error("Error deleting review:", error);
+        res.status(500).json({ message: "Failed to delete review!" });
     }
 };
 
 module.exports = {
     getAllReviews,
+    replyReview,
     deleteReview
 };

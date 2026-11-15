@@ -28,7 +28,7 @@ const QuickViewModal = ({ show, handleClose, product, addToCart }) => {
               </div>
               <h3 className="text-danger fw-bold mb-3">{Number(product.price).toLocaleString()}đ</h3>
               <p className="text-muted small mb-4" style={{ display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {product.description || "Sản phẩm này chưa có bài viết mô tả chi tiết."}
+                {product.description || "This product does not yet have a detailed description."}
               </p>
             </div>
             
@@ -42,10 +42,10 @@ const QuickViewModal = ({ show, handleClose, product, addToCart }) => {
                   handleClose();
                 }}
               >
-                <FaShoppingBag className="me-2" /> Thêm vào giỏ
+                <FaShoppingBag className="me-2" /> Add to cart
               </Button>
               <Button as={Link} to={`/product/${product.id}`} variant="outline-danger" className="fw-bold" onClick={handleClose}>
-                <FaEye className="me-1"/> Chi tiết
+                <FaEye className="me-1"/> View details
               </Button>
             </div>
           </Col>

@@ -22,7 +22,7 @@ const AdminStaffLogs = () => {
       setInventoryLogs(invRes.data);
       setStaffLogs(staffRes.data);
     } catch (error) {
-      console.error("Lỗi tải nhật ký:", error);
+      console.error("Error loading logs:", error);
     } finally {
       setLoading(false);
     }
@@ -39,7 +39,7 @@ const AdminStaffLogs = () => {
           <Col>
             <h2 className="fw-bold mb-2">
               <FaClipboardList className="text-danger me-2" />
-              NHẬT KÝ HỆ THỐNG & KHO HÀNG
+              SYSTEM & INVENTORY LOGS
             </h2>
             <Button 
               variant="outline-secondary" 
@@ -47,7 +47,7 @@ const AdminStaffLogs = () => {
               className="border-0 tcg-btn" 
               onClick={() => navigate('/admin')}
             >
-              <FaChevronLeft className="me-1" /> QUAY LẠI
+              <FaChevronLeft className="me-1" /> GO BACK
             </Button>
           </Col>
         </Row>
@@ -63,35 +63,35 @@ const AdminStaffLogs = () => {
             title={
               <span>
                 <FaBoxes className="me-2" />
-                Lịch Sử Biến Động Kho ({inventoryLogs.length})
+                Inventory Change Logs ({inventoryLogs.length})
               </span>
             }
           >
             <Table responsive hover className="admin-table border-top mt-3">
               <thead>
                 <tr>
-                  <th>SẢN PHẨM</th>
-                  <th>NGƯỜI THỰC HIỆN</th>
-                  <th className="text-center">LOẠI BIẾN ĐỘNG</th>
-                  <th className="text-center">KHO CŨ $\rightarrow$ KHO MỚI</th>
-                  <th className="text-center">THAY ĐỔI</th>
-                  <th>LÝ DO / GHI CHÚ</th>
+                  <th>PRODUCT</th>
+                  <th>PERFORMED BY</th>
+                  <th className="text-center">CHANGE TYPE</th>
+                  <th className="text-center">OLD STOCK $\rightarrow$ NEW STOCK</th>
+                  <th className="text-center">CHANGE QUANTITY</th>
+                  <th>REASON / NOTES</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="text-center py-4">Đang tải dữ liệu...</td>
+                    <td colSpan="6" className="text-center py-4">Loading data...</td>
                   </tr>
                 ) : inventoryLogs.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center py-4 text-muted">Chưa có ghi nhận biến động kho nào.</td>
+                    <td colSpan="6" className="text-center py-4 text-muted">No inventory change logs available.</td>
                   </tr>
                 ) : (
                   inventoryLogs.map((log) => (
                     <tr key={log.id}>
                       <td>
-                        <div className="fw-bold text-dark">{log.ProductData?.name || `Sản phẩm #${log.productId}`}</div>
+                        <div className="fw-bold text-dark">{log.ProductData?.name || `Product #${log.productId}`}</div>
                       </td>
                       <td>
                         <div className="fw-bold">{log.StaffData?.name || `Staff #${log.staffId}`}</div>
@@ -123,7 +123,7 @@ const AdminStaffLogs = () => {
             title={
               <span>
                 <FaUserShield className="me-2" />
-                Nhật Ký Hoạt Động Staff ({staffLogs.length})
+                Staff Activity Log ({staffLogs.length})
               </span>
             }
           >
@@ -131,19 +131,19 @@ const AdminStaffLogs = () => {
               <thead>
                 <tr>
                   <th style={{ width: '80px' }}>ID</th>
-                  <th>NHÂN VIÊN</th>
-                  <th>HÀNH ĐỘNG</th>
-                  <th>CHI TIẾT THAO TÁC</th>
+                  <th>STAFF</th>
+                  <th>ACTION</th>
+                  <th>DETAILS</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="4" className="text-center py-4">Đang tải dữ liệu...</td>
+                    <td colSpan="4" className="text-center py-4">Loading data...</td>
                   </tr>
                 ) : staffLogs.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="text-center py-4 text-muted">Chưa có nhật ký hoạt động nào.</td>
+                    <td colSpan="4" className="text-center py-4 text-muted">No staff activity logs available.</td>
                   </tr>
                 ) : (
                   staffLogs.map((log) => (
@@ -156,7 +156,7 @@ const AdminStaffLogs = () => {
                       <td>
                         <Badge bg="info" className="text-dark">{log.action}</Badge>
                       </td>
-                      <td className="text-muted small">{log.details || 'Không có chi tiết'}</td>
+                      <td className="text-muted small">{log.details || 'No details available'}</td>
                     </tr>
                   ))
                 )}
