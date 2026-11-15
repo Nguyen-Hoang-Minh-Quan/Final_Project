@@ -39,13 +39,21 @@ const accessChatRoom = async (req, res) => {
   }
 };
 
-// 2. Lấy toàn bộ lịch sử tin nhắn cũ của một phòng chat
+// 2. Lấy toàn bộ lịch sử tin nhắn cũ của một phòng chat (Kèm tên & vai trò người gửi)
 const getRoomMessages = async (req, res) => {
   try {
     const { roomId } = req.params;
 
     const messages = await sequelize.query(
-      'SELECT * FROM chat_messages WHERE room_id = :roomId ORDER BY created_at ASC',
+      `SELECT cm.*, 
+              u.name as sender_name, 
+              u.email as sender_email, 
+              u.role as sender_role, 
+              u."isAdmin" as sender_is_admin
+       FROM chat_messages cm
+       LEFT JOIN "Users" u ON cm.sender_id = u.id
+       WHERE cm.room_id = :roomId 
+       ORDER BY cm.created_at ASC`,
       {
         replacements: { roomId },
         type: QueryTypes.SELECT
@@ -59,7 +67,7 @@ const getRoomMessages = async (req, res) => {
   }
 };
 
-// 3. API lưu tin nhắn xuống Database Neon
+// 3. API lưu tin nhắn xuống Database Neon (Trả về kèm thông tin người gửi)
 const saveMessage = async (req, res) => {
   try {
     const { room_id, sender_id, message_text, product_context } = req.body;
@@ -67,6 +75,10 @@ const saveMessage = async (req, res) => {
     if (!room_id || !sender_id || !message_text) {
       return res.status(400).json({ message: 'Please fill in all message information!' });
     }
+
+    const serializedContext = product_context
+      ? (typeof product_context === 'string' ? product_context : JSON.stringify(product_context))
+      : null;
 
     const [newMessage] = await sequelize.query(
       `INSERT INTO chat_messages (room_id, sender_id, message_text, product_context, is_read, created_at) 
@@ -76,31 +88,100 @@ const saveMessage = async (req, res) => {
           room_id,
           sender_id,
           message_text,
-          product_context: product_context ? JSON.stringify(product_context) : null
+          product_context: serializedContext
         },
         type: QueryTypes.INSERT
       }
     );
 
-    res.status(201).json(newMessage[0]);
+    const saved = newMessage[0];
+
+    const senderInfo = await sequelize.query(
+      `SELECT name as sender_name, email as sender_email, role as sender_role, "isAdmin" as sender_is_admin 
+       FROM "Users" WHERE id = :sender_id LIMIT 1`,
+      {
+        replacements: { sender_id },
+        type: QueryTypes.SELECT
+      }
+    );
+
+    res.status(201).json({
+      ...saved,
+      ...(senderInfo[0] || {})
+    });
   } catch (error) {
     console.error('Error while saving message:', error.message);
     res.status(500).json({ message: 'Error saving message: ' + error.message });
   }
 };
 
-// 4. Admin lấy danh sách tất cả các phòng chat đang hoạt động
+// 4. Admin / Staff lấy danh sách tất cả các phòng chat đang hoạt động (Không bao giờ hiện phòng của chính mình)
 const getAllChatRooms = async (req, res) => {
   try {
-    const rooms = await sequelize.query(
-      `SELECT cr.*, u.name as user_name, u.email as user_email 
+    const viewerId = req.query.viewerId ? Number(req.query.viewerId) : null;
+
+    const rawRooms = await sequelize.query(
+      `SELECT cr.*, 
+              u.name as user_name, 
+              u.email as user_email,
+              u.role as user_role,
+              u."isAdmin" as user_is_admin,
+              (SELECT cm.message_text FROM chat_messages cm WHERE cm.room_id = cr.id ORDER BY cm.created_at DESC LIMIT 1) as last_message,
+              (SELECT cm.created_at FROM chat_messages cm WHERE cm.room_id = cr.id ORDER BY cm.created_at DESC LIMIT 1) as last_message_at
        FROM chat_rooms cr
        JOIN "Users" u ON cr.user_id = u.id
        ORDER BY cr.created_at DESC`,
       { type: QueryTypes.SELECT }
     );
 
-    res.status(200).json(rooms);
+    if (!viewerId) {
+      return res.status(200).json(rawRooms);
+    }
+
+    const isStaffOrAdminUser = (r) =>
+      r.user_is_admin === true || r.user_role === 'Admin' || r.user_role === 'Staff';
+
+    // 1. Các phòng của Khách hàng (Customer) - loại bỏ nếu trùng viewerId
+    const customerRooms = rawRooms
+      .filter((r) => !isStaffOrAdminUser(r) && Number(r.user_id) !== viewerId)
+      .map((r) => ({
+        ...r,
+        user_role: 'Customer',
+        is_internal: false
+      }));
+
+    // 2. Các phòng trao đổi nội bộ với Admin/Staff khác (loại bỏ chính bản thân viewerId)
+    // Dùng phòng chung canonical theo MAX(viewerId, colleague.user_id) để 2 bên luôn vào chung 1 phòng
+    const staffMembers = rawRooms.filter((r) => isStaffOrAdminUser(r));
+    const roomByUserId = new Map(rawRooms.map((r) => [Number(r.user_id), r]));
+
+    const internalRooms = [];
+    for (const colleague of staffMembers) {
+      const colleagueId = Number(colleague.user_id);
+      if (colleagueId === viewerId) continue; // Tuyệt đối không hiện bản thân
+
+      const canonicalOwnerId = Math.max(viewerId, colleagueId);
+      const canonicalRoom = roomByUserId.get(canonicalOwnerId) || colleague;
+
+      internalRooms.push({
+        ...canonicalRoom,
+        id: canonicalRoom.id,
+        user_id: colleagueId, // Đối phương đang chat cùng
+        user_name: colleague.user_name,
+        user_email: colleague.user_email,
+        user_role: colleague.user_is_admin ? 'Admin' : (colleague.user_role || 'Staff'),
+        user_is_admin: colleague.user_is_admin,
+        is_internal: true
+      });
+    }
+
+    const finalRooms = [...customerRooms, ...internalRooms].sort((a, b) => {
+      const timeA = new Date(a.last_message_at || a.created_at || 0).getTime();
+      const timeB = new Date(b.last_message_at || b.created_at || 0).getTime();
+      return timeB - timeA;
+    });
+
+    res.status(200).json(finalRooms);
   } catch (error) {
     console.error('Error while fetching chat rooms:', error.message);
     res.status(500).json({ message: 'Error fetching chat rooms: ' + error.message });
