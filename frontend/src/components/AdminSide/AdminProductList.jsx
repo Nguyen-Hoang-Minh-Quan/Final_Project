@@ -52,7 +52,7 @@ const AdminProductList = () => {
     setIsEdit(false);
     setForm({ 
       name: '', 
-      price: 0, 
+      price: '', 
       image: '', 
       countInStock: 0, 
       categoryId: '1', 
@@ -69,7 +69,7 @@ const AdminProductList = () => {
     setCurrentId(product.id);
     setForm({
       name: product.name,
-      price: product.price,
+      price: product.price ? Number(product.price) / 1000 : 0, // Quy đổi về nghìn đồng khi sửa
       image: product.image,
       countInStock: product.countInStock || 0,
       categoryId: product.categoryId || '',
@@ -86,7 +86,7 @@ const AdminProductList = () => {
     try {
       const dataToSend = {
         ...form,
-        price: Number(form.price),
+        price: Math.round(Number(form.price) * 1000), // Quy đổi: 1 = 1.000đ, 10 = 10.000đ
         countInStock: Number(form.countInStock),
         categoryId: form.categoryId ? Number(form.categoryId) : null,
         rarityId: form.rarityId ? Number(form.rarityId) : null
@@ -200,14 +200,19 @@ const AdminProductList = () => {
             <Row>
               <Col>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-bold">Price (VNĐ)</Form.Label>
+                  <Form.Label className="small fw-bold">Price (x1.000 VNĐ - Nghìn đồng)</Form.Label>
                   <Form.Control 
                     className="tcg-input" 
                     type="number" 
+                    step="any"
+                    placeholder="VD: Nhập 1 = 1.000đ; 10 = 10.000đ"
                     value={form.price} 
                     onChange={e => setForm({...form, price: e.target.value})} 
                     required 
                   />
+                  <div className="text-muted small mt-1" style={{ fontSize: '11px' }}>
+                    💵 Giá hiển thị trên web: <strong className="text-danger">{(Number(form.price || 0) * 1000).toLocaleString('vi-VN')}đ</strong>
+                  </div>
                 </Form.Group>
               </Col>
               <Col>

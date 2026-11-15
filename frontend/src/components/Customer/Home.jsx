@@ -71,6 +71,10 @@ const Home = ({ customData }) => {
       cartItems.push({ ...card, qty: 1 });
     }
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    const uInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (uInfo && uInfo.id) {
+      localStorage.setItem(`cartItems_${uInfo.id}`, JSON.stringify(cartItems));
+    }
     window.dispatchEvent(new Event("cartUpdated"));
     
     toast.success(`Product "${card.name}" added to cart! 🛒`);

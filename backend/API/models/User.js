@@ -50,6 +50,14 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: 'Chưa tiết lộ'
+    },
+    resetOtp: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    resetOtpExpires: {
+        type: DataTypes.DATE,
+        allowNull: true
     }
 }, {
     timestamps: true,

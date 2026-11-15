@@ -16,6 +16,15 @@ const Login = () => {
             const { data } = await axiosClient.post('/auth/login', { email, password });
             
             localStorage.setItem('userInfo', JSON.stringify(data));
+
+            // Đồng bộ giỏ hàng riêng của User này (tránh xung đột giỏ hàng của tài khoản khác)
+            const savedUserCart = localStorage.getItem(`cartItems_${data.id}`);
+            if (savedUserCart) {
+                localStorage.setItem('cartItems', savedUserCart);
+            } else {
+                localStorage.removeItem('cartItems');
+            }
+            window.dispatchEvent(new Event("cartUpdated"));
             
             toast.success(`Welcome ${data.name || 'bạn'} back to TCG Shop!`);
             

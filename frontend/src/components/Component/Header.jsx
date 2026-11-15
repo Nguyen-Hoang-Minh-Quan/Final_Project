@@ -44,8 +44,20 @@ const Header = () => {
   };
 
   const logoutHandler = () => {
+    // Lưu giỏ hàng riêng cho user trước khi đăng xuất
+    const currentUser = JSON.parse(localStorage.getItem('userInfo'));
+    if (currentUser && currentUser.id) {
+      const currentCart = localStorage.getItem('cartItems');
+      if (currentCart) {
+        localStorage.setItem(`cartItems_${currentUser.id}`, currentCart);
+      }
+    }
+    // Xóa session user và dọn sạch giỏ hàng hiện tại trên browser để không đụng giỏ hàng tài khoản khác
     localStorage.removeItem('userInfo');
-    toast.warn("Logged out of the account!");
+    localStorage.removeItem('cartItems');
+    window.dispatchEvent(new Event("cartUpdated"));
+
+    toast.warn("Đã đăng xuất khỏi tài khoản!");
     navigate('/login');
   };
 

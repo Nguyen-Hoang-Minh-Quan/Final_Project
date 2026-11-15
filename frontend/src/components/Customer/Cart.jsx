@@ -25,6 +25,10 @@ const Cart = () => {
   const saveCart = (data) => {
     setCartItems(data);
     localStorage.setItem('cartItems', JSON.stringify(data));
+    const uInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (uInfo && uInfo.id) {
+      localStorage.setItem(`cartItems_${uInfo.id}`, JSON.stringify(data));
+    }
     window.dispatchEvent(new Event("cartUpdated"));
   };
 
