@@ -30,7 +30,7 @@ const StaffChat = () => {
   // Thông tin tài khoản đang đăng nhập
   const userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
   const staffId = userInfo.id ? Number(userInfo.id) : null;
-  const myName = userInfo.name || 'Nhân viên';
+  const myName = userInfo.name || 'Staff';
   const myEmail = userInfo.email || '';
   const myRole = userInfo.isAdmin || userInfo.role === 'Admin' ? 'Admin' : (userInfo.role || 'Staff');
 
@@ -62,7 +62,7 @@ const StaffChat = () => {
       };
     }
     return {
-      label: 'KHÁCH HÀNG',
+      label: 'CUSTOMER',
       badgeBg: 'success',
       avatarBg: 'linear-gradient(135deg, #198754, #0f5132)',
       icon: <FaUser className="me-1" />
@@ -152,7 +152,7 @@ const StaffChat = () => {
     if (!text.trim() || !activeRoom || !staffId) return;
 
     if (Number(activeRoom.user_id) === Number(staffId)) {
-      toast.warning('Bạn không thể tự nhắn tin cho chính mình!');
+      toast.warning('You cannot send a message to yourself!');
       return;
     }
 
@@ -182,7 +182,7 @@ const StaffChat = () => {
       fetchRooms(false);
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error('Không thể gửi tin nhắn, vui lòng thử lại!');
+      toast.error('Cannot send message, please try again!');
     }
   };
 
@@ -208,7 +208,7 @@ const StaffChat = () => {
       return {
         isMe: false,
         isAiBot: true,
-        senderName: 'Trợ lý AI TCG',
+        senderName: 'AI Assistant TCG',
         roleLabel: 'AI BOT',
         badgeBg: 'info',
         avatarBg: 'linear-gradient(135deg, #6f42c1, #432874)',
@@ -226,7 +226,7 @@ const StaffChat = () => {
       return {
         isMe: true,
         isAiBot: false,
-        senderName: `Bạn (${myName})`,
+        senderName: `You (${myName})`,
         roleLabel: meta.label,
         badgeBg: 'light',
         badgeText: 'dark',
@@ -318,10 +318,10 @@ const StaffChat = () => {
             </div>
             <div>
               <h5 className="m-0 fw-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>
-                TRUNG TÂM HỖ TRỢ & CHAT TRỰC TUYẾN
+                AI ASSISTANT TCG
               </h5>
               <div className="small text-white-50">
-                Hệ thống phân luồng tài khoản khách hàng & nội bộ theo thời gian thực
+                AI-powered customer support and real-time chat system
               </div>
             </div>
           </div>
@@ -364,7 +364,7 @@ const StaffChat = () => {
         </div>
 
         <Row className="g-0" style={{ height: 'calc(78vh - 76px)' }}>
-          {/* CỘT TRÁI: DANH SÁCH NGƯỜI DÙNG (KHÔNG BAO GIỜ HIỆN BẢN THÂN) */}
+          {/* CỘT TRÁI: DANH SÁCH NGƯỜI DÙNG (KHÔNG HIỆN BẢN THÂN) */}
           <Col md={4} className="border-end d-flex flex-column bg-white" style={{ height: '100%' }}>
             {/* Thanh tìm kiếm & Bộ lọc */}
             <div className="p-3 border-bottom bg-light">
@@ -376,7 +376,7 @@ const StaffChat = () => {
                 <Form.Control
                   type="text"
                   size="sm"
-                  placeholder="Tìm tên hoặc email..."
+                  placeholder="Search name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="ps-4 shadow-none bg-white"
@@ -392,7 +392,7 @@ const StaffChat = () => {
                   style={{ fontSize: '0.75rem', borderRadius: '6px' }}
                   onClick={() => setFilterTab('all')}
                 >
-                  Tất cả ({rooms.length})
+                  All ({rooms.length})
                 </Button>
                 <Button
                   size="sm"
@@ -401,7 +401,7 @@ const StaffChat = () => {
                   style={{ fontSize: '0.75rem', borderRadius: '6px' }}
                   onClick={() => setFilterTab('customer')}
                 >
-                  Khách hàng
+                  Customer
                 </Button>
                 <Button
                   size="sm"
@@ -410,7 +410,7 @@ const StaffChat = () => {
                   style={{ fontSize: '0.75rem', borderRadius: '6px' }}
                   onClick={() => setFilterTab('internal')}
                 >
-                  Nội bộ (Staff/Admin)
+                  Internal (Staff/Admin)
                 </Button>
               </div>
             </div>
@@ -420,9 +420,9 @@ const StaffChat = () => {
               {displayedRooms.length === 0 ? (
                 <div className="text-center text-muted p-4 my-4">
                   <FaComments className="fs-2 mb-2 opacity-50" />
-                  <div className="small fw-bold">Không có cuộc trò chuyện nào</div>
+                  <div className="small fw-bold">No conversations available</div>
                   <div style={{ fontSize: '0.78rem' }}>
-                    Tài khoản của chính bạn ({myName}) đã được ẩn để tránh tự chat với bản thân.
+                    Your account ({myName}) has been hidden to prevent self-chatting.
                   </div>
                 </div>
               ) : (
@@ -523,7 +523,7 @@ const StaffChat = () => {
                       </div>
 
                       <Badge bg="success" className="px-3 py-2 d-flex align-items-center gap-1 rounded-pill">
-                        <FaCircle style={{ fontSize: '8px' }} /> Đang kết nối
+                        <FaCircle style={{ fontSize: '8px' }} /> Connecting
                       </Badge>
                     </div>
                   );
@@ -538,8 +538,8 @@ const StaffChat = () => {
                   {messages.length === 0 ? (
                     <div className="text-center text-muted my-5 py-4">
                       <FaComments className="fs-1 mb-2 opacity-25" />
-                      <p className="mb-0 fw-bold">Chưa có tin nhắn nào trong cuộc trò chuyện này</p>
-                      <small>Hãy gửi tin nhắn đầu tiên cho {activeRoom.user_name}!</small>
+                      <p className="mb-0 fw-bold">No messages yet in this conversation</p>
+                      <small>Send the first message to {activeRoom.user_name}!</small>
                     </div>
                   ) : (
                     messages.map((msg, index) => {
@@ -624,7 +624,7 @@ const StaffChat = () => {
                 <Form onSubmit={handleSendMessage} className="p-3 border-top bg-white d-flex gap-2 align-items-center">
                   <Form.Control
                     type="text"
-                    placeholder={`Nhắn tin tới ${activeRoom.user_name} với tư cách ${myName} (${myRole})...`}
+                    placeholder={`Message ${activeRoom.user_name} as ${myName} (${myRole})...`}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     className="shadow-none py-2 px-3"
@@ -637,16 +637,16 @@ const StaffChat = () => {
                     className="px-4 py-2 fw-bold d-flex align-items-center gap-2 tcg-btn"
                     style={{ borderRadius: '10px' }}
                   >
-                    <FaPaperPlane /> GỬI
+                    <FaPaperPlane /> SEND
                   </Button>
                 </Form>
               </>
             ) : (
               <div className="text-center text-muted m-auto p-4">
                 <FaComments className="fs-1 text-secondary mb-3 opacity-50" />
-                <h5 className="fw-bold text-dark">Chọn một người dùng ở danh sách bên trái</h5>
+                <h5 className="fw-bold text-dark">Choose a user from the list on the left</h5>
                 <p className="small text-muted mb-0">
-                  Hệ thống đã tự động ẩn tài khoản của chính bạn ({myName}) để tránh tự chat với bản thân.
+                  The system has automatically hidden your account ({myName}) to prevent self-chatting.
                 </p>
               </div>
             )}

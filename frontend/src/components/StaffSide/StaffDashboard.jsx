@@ -30,7 +30,7 @@ const StaffDashboard = () => {
         const lowStock = productsRes.data.filter(p => Number(p.countInStock) <= 5).length;
         setLowStockCount(lowStock);
       } catch (err) {
-        console.error("Lỗi lấy dữ liệu dashboard:", err);
+        console.error("Error retrieving dashboard data:", err);
       }
     };
     fetchQuickStats();

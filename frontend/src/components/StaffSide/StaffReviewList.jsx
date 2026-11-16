@@ -15,7 +15,7 @@ const StaffReviewList = () => {
 
   const fetchReviews = async () => {
     try {
-      // 🌟 ĐÃ SỬA: Chuẩn hóa đường dẫn gọi tới API backend /reviews
+      // Chuẩn hóa đường dẫn gọi tới API backend /reviews
       const { data } = await axiosClient.get('/reviews');
       setReviews(data);
     } catch (error) {
