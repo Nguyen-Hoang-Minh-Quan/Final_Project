@@ -90,7 +90,10 @@ const AdminOrders = () => {
                 <tr key={orderId}>
                   <td className="fw-bold">#{String(orderId).slice(-6).toUpperCase()}</td>
                   <td>
-                    <div className="fw-bold text-dark">{o.user?.name || o.userName || "Customer"}</div>
+                    {/* Hiển thị tên tài khoản khách hàng từ dữ liệu User được join ở Backend */}
+                    <div className="fw-bold text-dark">
+                      {o.UserData?.name || o.User?.name || o.user?.name || o.userName || "Customer"}
+                    </div>
                     <small className="text-muted">{o.phone}</small>
                   </td>
                   <td className="text-center fw-bold text-danger">

@@ -1,5 +1,6 @@
 const { Order, OrderItem } = require('../models/Order');
 const Product = require('../models/Product');
+const User = require('../models/User');
 const { sequelize } = require('../config/db');
 
 // @desc    Tạo đơn hàng mới + Tự động tính tiền + Tự động trừ kho (Inventory Control)
@@ -113,11 +114,19 @@ const getMyOrders = async (req, res) => {
     }
 };
 
-// @desc    Lấy toàn bộ đơn hàng (Chỉ dành cho Admin)
+// @desc    Lấy toàn bộ đơn hàng kèm thông tin tài khoản khách hàng (Chỉ dành cho Staff/Admin)
 // @route   GET /api/orders/all
 const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.findAll({
+            // Join với bảng User qua alias 'UserData' (đã khai báo trong server.js) để lấy tên tài khoản
+            include: [
+                {
+                    model: User,
+                    as: 'UserData',
+                    attributes: ['id', 'name', 'email']
+                }
+            ],
             order: [['createdAt', 'DESC']]
         });
         return res.json(orders);
