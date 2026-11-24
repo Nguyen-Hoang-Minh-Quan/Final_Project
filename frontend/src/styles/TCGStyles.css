@@ -106,61 +106,164 @@
     background-color: rgba(var(--bs-primary-rgb), 0.1); /* Mặc định */
 }
 
-/* ==================== HỆ THỐNG CHATBOT NỔI (REAL-TIME) ==================== */
+/* ==================== HỆ THỐNG CHAT NỔI KÉP (AI ASSISTANT & LIVE SUPPORT) ==================== */
 
-/* Khung bọc tổng định vị cố định ở góc màn hình */
+/* Cụm 2 nút bong bóng nổi định vị cố định ở góc phải dưới */
 .floating-chat-container {
     position: fixed;
-    bottom: 25px;
-    right: 25px;
-    z-index: 99999 !important; /* Ép mức ưu tiên cao nhất để không bị Footer che khuất */
+    bottom: 24px;
+    right: 24px;
+    z-index: 99999 !important; /* Ưu tiên cao nhất để không bị Footer che khuất */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
 }
 
-/* Nút bong bóng tròn mở Chat */
+.chat-dock-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Nhãn chú thích bên cạnh nút nổi để khách phân biệt ngay AI và Nhân viên */
+.chat-dock-label {
+    background: rgba(26, 29, 32, 0.92);
+    color: #ffffff;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 5px 11px;
+    border-radius: 20px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    transform: translateX(8px);
+    pointer-events: none;
+    transition: all 0.22s ease;
+}
+
+.chat-dock-item:hover .chat-dock-label {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Nút bong bóng tròn mở Chat (Dùng chung khung cơ bản) */
 .chat-trigger-btn {
-    width: 60px;
-    height: 60px;
+    position: relative;
+    width: 58px;
+    height: 58px;
     border-radius: 50% !important;
-    background-color: var(--primary-red, #dc3545) !important;
     color: #ffffff !important;
-    border: 3px solid var(--pokemon-gold, #ffc107) !important; /* Viền vàng chuẩn phong cách Pokemon TCG */
-    box-shadow: 0 4px 16px rgba(220, 53, 69, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 26px;
+    font-size: 24px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.chat-trigger-btn:hover {
-    transform: scale(1.1) rotate(10deg); /* Di chuột vào nút sẽ hơi xoay nhẹ tinh tế */
-    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.6);
+/* Nút 1: AI Assistant (Tông Tím Indigo công nghệ) */
+.chat-trigger-btn.ai-trigger {
+    background: linear-gradient(135deg, #6d28d9, #4c1d95) !important;
+    border: 3px solid #c4b5fd !important;
+    box-shadow: 0 5px 18px rgba(109, 40, 217, 0.45);
 }
 
-/* Cửa sổ hộp thoại Chat lớn */
+.chat-trigger-btn.ai-trigger:hover,
+.chat-trigger-btn.ai-trigger.active-trigger {
+    transform: scale(1.08);
+    border-color: var(--pokemon-gold, #ffc107) !important;
+    box-shadow: 0 7px 22px rgba(109, 40, 217, 0.65);
+}
+
+/* Nút 2: Live Staff Support (Tông Đỏ Vàng chuẩn TCG Shop) */
+.chat-trigger-btn.staff-trigger {
+    background: linear-gradient(135deg, #dc3545, #b02a37) !important;
+    border: 3px solid var(--pokemon-gold, #ffc107) !important;
+    box-shadow: 0 5px 18px rgba(220, 53, 69, 0.45);
+}
+
+.chat-trigger-btn.staff-trigger:hover,
+.chat-trigger-btn.staff-trigger.active-trigger {
+    transform: scale(1.08);
+    box-shadow: 0 7px 22px rgba(220, 53, 69, 0.65);
+}
+
+/* Nhãn nhỏ gắn trên góc nút tròn (AI / STAFF) */
+.chat-trigger-pill {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    line-height: 1.3;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.chat-trigger-pill.ai-pill {
+    background: #f3e8ff;
+    color: #4c1d95;
+    border: 1px solid #c4b5fd;
+}
+
+.chat-trigger-pill.staff-pill {
+    background: #ffc107;
+    color: #1a1d20;
+    border: 1px solid #ffffff;
+}
+
+/* Chấm xanh ngọc báo có phản hồi mới từ nhân viên */
+.chat-unread-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #20c997;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2px rgba(32, 201, 151, 0.35);
+}
+
+/* Cửa sổ hộp thoại Chat mở bên trái cụm nút nổi để không che khuất 2 nút chuyển đổi */
 .chat-window {
     position: fixed;
-    bottom: 100px; /* Nằm cách góc dưới một khoảng để nhường chỗ cho nút kích hoạt */
-    right: 25px;
-    width: 360px;
-    height: 500px;
+    bottom: 24px;
+    right: 98px;
+    width: 375px;
+    height: 530px;
+    max-height: calc(100vh - 48px);
     background: #ffffff;
-    border-radius: var(--border-radius, 12px);
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
     border: 1px solid rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     z-index: 99999 !important;
-    animation: popInChat 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    animation: popInChat 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@media (max-width: 576px) {
+    .chat-window {
+        right: 12px;
+        left: 12px;
+        bottom: 165px;
+        width: auto;
+        height: 68vh;
+    }
 }
 
 /* Hiệu ứng zoom lướt mở khung chat mượt mà */
 @keyframes popInChat {
     from {
         opacity: 0;
-        transform: scale(0.9) translateY(20px);
+        transform: scale(0.94) translateY(14px);
     }
     to {
         opacity: 1;
@@ -168,17 +271,25 @@
     }
 }
 
-/* Thanh đầu đề của khung Chat (Chat Header) */
+/* Thanh đầu đề của khung Chat */
 .chat-header {
-    background: var(--primary-red, #dc3545);
     color: #ffffff;
-    padding: 15px;
+    padding: 14px 16px;
     font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: 0.5px;
+    font-size: 0.96rem;
+    letter-spacing: 0.4px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.chat-header.ai-header {
+    background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 100%);
+    border-bottom: 3px solid #c4b5fd;
+}
+
+.chat-header.staff-header {
+    background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
     border-bottom: 3px solid var(--pokemon-gold, #ffc107);
 }
 
@@ -186,7 +297,7 @@
 .dot-online {
     width: 8px;
     height: 8px;
-    background-color: #28a745;
+    background-color: #20c997;
     border-radius: 50%;
     display: inline-block;
     animation: pulseOnline 1.5s infinite;
@@ -200,22 +311,25 @@
 
 /* Nút X đóng khung chat */
 .chat-close-btn {
-    background: none;
+    background: rgba(255, 255, 255, 0.15);
     border: none;
     color: #ffffff;
-    font-size: 18px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 15px;
     cursor: pointer;
-    opacity: 0.8;
-    transition: opacity 0.2s;
+    transition: background 0.2s;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 .chat-close-btn:hover {
-    opacity: 1;
+    background: rgba(255, 255, 255, 0.3);
 }
 
-/* Thân chứa lịch sử chat (Có thanh cuộn dọc khi vượt quá chiều cao) */
+/* Thân chứa lịch sử chat */
 .chat-body {
     flex: 1;
     padding: 15px;
@@ -226,40 +340,81 @@
     gap: 12px;
 }
 
+.chat-body.ai-body {
+    background-color: #f7f5ff;
+}
+
 /* Định hình chung cho các bong bóng text tin nhắn */
 .chat-msg {
-    max-width: 80%;
+    max-width: 82%;
     padding: 10px 14px;
     border-radius: 14px;
-    font-size: 0.92rem;
-    line-height: 1.4;
+    font-size: 0.9rem;
+    line-height: 1.45;
     word-wrap: break-word;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-/* Tin nhắn của khách hàng - Nằm bên phải */
+/* Tin nhắn của khách hàng trong Live Support */
 .chat-msg.user {
     align-self: flex-end;
-    background-color: #ffe3e5; /* Đỏ hồng nhạt hợp tone shop */
+    background-color: #ffe3e5;
     color: #212529;
-    border-bottom-right-radius: 2px; /* Bo góc vát kiểu chat messenger */
-    border-left: 4px solid var(--primary-red, #dc3545);
+    border-bottom-right-radius: 3px;
+    border-right: 4px solid var(--primary-red, #dc3545);
 }
 
-/* Tin nhắn của Admin/Hệ thống - Nằm bên trái */
+/* Tin nhắn của khách hàng trong AI Assistant */
+.chat-msg.ai-user {
+    align-self: flex-end;
+    background-color: #ede9fe;
+    color: #2e1065;
+    border-bottom-right-radius: 3px;
+    border-right: 4px solid #6d28d9;
+}
+
+/* Tin nhắn phản hồi của Nhân viên / Admin */
 .chat-msg.admin {
     align-self: flex-start;
     background-color: #ffffff;
     color: #212529;
-    border-bottom-left-radius: 2px;
-    border-left: 4px solid var(--pokemon-blue, #007bff); /* Xanh Pokemon nổi bật */
+    border-bottom-left-radius: 3px;
+    border-left: 4px solid var(--pokemon-blue, #007bff);
+}
+
+/* Tin nhắn phản hồi của AI Bot */
+.chat-msg.ai-bot {
+    align-self: flex-start;
+    background-color: #ffffff;
+    color: #1f2937;
+    border-bottom-left-radius: 3px;
+    border-left: 4px solid #7c3aed;
+}
+
+/* Các nút gợi ý câu hỏi nhanh cho AI */
+.ai-quick-chip {
+    border: 1px solid #d8b4fe;
+    background: #ffffff;
+    color: #5b21b6;
+    border-radius: 16px;
+    padding: 4px 10px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ai-quick-chip:hover {
+    background: #6d28d9;
+    color: #ffffff;
+    border-color: #6d28d9;
 }
 
 /* Phần dưới cùng nhập liệu text */
 .chat-footer {
-    padding: 12px;
+    padding: 10px 12px;
     background: #ffffff;
-    border-top: 1px solid #f1f1f1;
+    border-top: 1px solid #ececec;
 }
 
 /* Tùy biến thanh cuộn scrollbar của khung chat cho mượt */

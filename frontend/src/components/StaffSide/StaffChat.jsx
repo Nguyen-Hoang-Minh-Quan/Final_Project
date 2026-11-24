@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -10,11 +10,85 @@ import {
   FaUserShield,
   FaUserTie,
   FaUser,
-  FaRobot
+  FaRobot,
+  FaHeadset,
+  FaClock,
+  FaArrowRight
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axiosClient from '../../api/axiosClient';
 import '../../styles/TCGStyles.css';
+
+// Helper: Giải mã an toàn trường product_context của từng tin nhắn
+const parseMessageContext = (rawContext) => {
+  if (!rawContext) return null;
+  try {
+    return typeof rawContext === 'string' ? JSON.parse(rawContext) : rawContext;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Helper: Tách hoàn toàn tin nhắn thành 2 tab 'Live Support' (Người thật) và 'AI Log' (Lịch sử hỏi AI)
+const splitRoomMessagesByChannel = (allMessages = []) => {
+  const liveSupportMessages = [];
+  const aiLogMessages = [];
+
+  for (let i = 0; i < allMessages.length; i++) {
+    const msg = allMessages[i];
+    const ctx = parseMessageContext(msg.product_context);
+
+    if (ctx?.channel === 'ai' || ctx?.is_ai === true || ctx?.is_ai_query === true) {
+      aiLogMessages.push(msg);
+      continue;
+    }
+
+    if (ctx?.channel === 'staff') {
+      liveSupportMessages.push(msg);
+      continue;
+    }
+
+    // Xử lý tương thích ngược cho tin nhắn cũ trước khi tách kênh
+    const isStaffSender =
+      msg.sender_is_admin === true ||
+      msg.sender_role === 'Admin' ||
+      msg.sender_role === 'Staff' ||
+      ctx?.sender_role === 'Admin' ||
+      ctx?.sender_role === 'Staff';
+
+    if (isStaffSender) {
+      liveSupportMessages.push(msg);
+      continue;
+    }
+
+    let followedByAi = false;
+    for (let j = i + 1; j < allMessages.length; j++) {
+      const nextMsg = allMessages[j];
+      const nextCtx = parseMessageContext(nextMsg.product_context);
+      if (nextCtx?.is_ai === true) {
+        followedByAi = true;
+        break;
+      }
+      const nextIsStaff =
+        nextMsg.sender_is_admin === true ||
+        nextMsg.sender_role === 'Admin' ||
+        nextMsg.sender_role === 'Staff' ||
+        nextCtx?.sender_role === 'Admin' ||
+        nextCtx?.sender_role === 'Staff';
+      if (nextIsStaff || nextCtx?.channel === 'staff') {
+        break;
+      }
+    }
+
+    if (followedByAi) {
+      aiLogMessages.push(msg);
+    } else {
+      liveSupportMessages.push(msg);
+    }
+  }
+
+  return { liveSupportMessages, aiLogMessages };
+};
 
 const StaffChat = () => {
   const navigate = useNavigate();
@@ -23,11 +97,12 @@ const StaffChat = () => {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterTab, setFilterTab] = useState('all'); // 'all' | 'customer' | 'internal'
+  const [filterTab, setFilterTab] = useState('all'); // 'all' | 'waiting' | 'customer' | 'internal'
+  const [channelTab, setChannelTab] = useState('staff'); // 'staff' (Live Support) | 'ai' (AI Log)
 
   const chatBodyRef = useRef(null);
 
-  // Thông tin tài khoản đang đăng nhập
+  // Thông tin tài khoản Staff / Admin đang đăng nhập
   const userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
   const staffId = userInfo.id ? Number(userInfo.id) : null;
   const myName = userInfo.name || 'Staff';
@@ -69,18 +144,18 @@ const StaffChat = () => {
     };
   };
 
-  // 1. Tải danh sách phòng chat (Loại bỏ hoàn toàn phòng của chính bản thân)
+  // 1. Tải danh sách phòng chat (Đã được Backend ưu tiên khách chờ trả lời lên đầu)
   const fetchRooms = async (isInitial = false) => {
     if (!staffId) return;
     try {
       const { data } = await axiosClient.get(`/chat/admin/rooms?viewerId=${staffId}`);
 
-      // Chốt chặn kép ở cả Frontend: Không bao giờ hiển thị phòng có user_id trùng với tài khoản đang đăng nhập
+      // Chốt chặn kép ở Frontend: Không bao giờ hiển thị phòng của chính mình
       const filtered = (Array.isArray(data) ? data : []).filter(
         (r) => Number(r.user_id) !== Number(staffId)
       );
 
-      // Khử trùng lặp theo user_id để mỗi người chỉ xuất hiện 1 dòng duy nhất
+      // Khử trùng lặp theo user_id
       const uniqueByUser = [];
       const seenUsers = new Set();
       for (const r of filtered) {
@@ -93,12 +168,19 @@ const StaffChat = () => {
 
       setRooms(uniqueByUser);
 
-      if (isInitial && uniqueByUser.length > 0) {
-        setActiveRoom((prev) => {
-          if (prev && Number(prev.user_id) !== Number(staffId)) return prev;
+      // Đồng bộ lại thông tin phòng đang mở (cập nhật trạng thái waiting_for_staff mới nhất)
+      setActiveRoom((prev) => {
+        if (prev && Number(prev.user_id) !== Number(staffId)) {
+          const updatedMatch = uniqueByUser.find(
+            (r) => Number(r.id) === Number(prev.id) && Number(r.user_id) === Number(prev.user_id)
+          );
+          return updatedMatch || prev;
+        }
+        if (isInitial && uniqueByUser.length > 0) {
           return uniqueByUser[0];
-        });
-      }
+        }
+        return prev;
+      });
     } catch (error) {
       console.error('Error loading chat room list:', error);
     }
@@ -111,7 +193,7 @@ const StaffChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [staffId]);
 
-  // Bảo vệ: Nếu activeRoom vô tình trùng với bản thân thì tự động chuyển sang phòng hợp lệ đầu tiên
+  // Bảo vệ: Nếu activeRoom vô tình trùng với bản thân thì tự chuyển sang phòng hợp lệ đầu tiên
   useEffect(() => {
     if (activeRoom && Number(activeRoom.user_id) === Number(staffId)) {
       const firstValid = rooms.find((r) => Number(r.user_id) !== Number(staffId)) || null;
@@ -119,12 +201,20 @@ const StaffChat = () => {
     }
   }, [activeRoom, rooms, staffId]);
 
+  const activeRoomId = activeRoom?.id;
+  const activeRoomUserId = activeRoom?.user_id;
+
+  // Mỗi khi đổi sang phòng khách hàng khác -> Mặc định mở tab 'Live Support' để Staff xử lý việc chính
+  useEffect(() => {
+    setChannelTab('staff');
+  }, [activeRoomId, activeRoomUserId]);
+
   // 2. Lấy lịch sử tin nhắn khi chọn phòng chat
   useEffect(() => {
-    if (activeRoom && Number(activeRoom.user_id) !== Number(staffId)) {
+    if (activeRoomId && Number(activeRoomUserId) !== Number(staffId)) {
       const fetchMessages = async () => {
         try {
-          const { data } = await axiosClient.get(`/chat/messages/${activeRoom.id}`);
+          const { data } = await axiosClient.get(`/chat/messages/${activeRoomId}`);
           setMessages(Array.isArray(data) ? data : []);
         } catch (error) {
           console.error('Error loading message history:', error);
@@ -137,16 +227,27 @@ const StaffChat = () => {
     } else {
       setMessages([]);
     }
-  }, [activeRoom, staffId]);
+  }, [activeRoomId, activeRoomUserId, staffId]);
 
-  // Tự động cuộn xuống cuối khi có tin nhắn mới
+  // Phân tách tin nhắn của phòng hiện tại thành 2 luồng riêng biệt
+  const { liveSupportMessages, aiLogMessages } = useMemo(() => {
+    if (activeRoom?.is_internal) {
+      return { liveSupportMessages: messages, aiLogMessages: [] };
+    }
+    return splitRoomMessagesByChannel(messages);
+  }, [messages, activeRoom?.is_internal]);
+
+  const activeMessageList =
+    !activeRoom?.is_internal && channelTab === 'ai' ? aiLogMessages : liveSupportMessages;
+
+  // Tự động cuộn xuống cuối khi có tin nhắn mới hoặc khi chuyển tab
   useEffect(() => {
     if (chatBodyRef.current) {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
     }
-  }, [messages.length, activeRoom?.id]);
+  }, [activeMessageList.length, activeRoom?.id, channelTab]);
 
-  // 3. Gửi tin nhắn
+  // 3. Gửi tin nhắn trả lời khách hàng (Luôn gắn nhãn channel: 'staff')
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim() || !activeRoom || !staffId) return;
@@ -165,6 +266,8 @@ const StaffChat = () => {
         sender_id: staffId,
         message_text: messageText,
         product_context: {
+          channel: 'staff',
+          is_ai: false,
           sender_name: myName,
           sender_role: myRole
         }
@@ -186,46 +289,16 @@ const StaffChat = () => {
     }
   };
 
-  // Phân tích thông tin người gửi của từng tin nhắn
-  const resolveMessageInfo = (msg) => {
-    let parsedContext = null;
-    if (msg.product_context) {
-      try {
-        parsedContext =
-          typeof msg.product_context === 'string'
-            ? JSON.parse(msg.product_context)
-            : msg.product_context;
-      } catch (e) {
-        parsedContext = null;
-      }
-    }
-
-    const isAiBot = Boolean(parsedContext?.is_ai);
+  // Phân tích thông tin người gửi cho tab Live Support (Người thật)
+  const resolveLiveMessageInfo = (msg) => {
+    const parsedContext = parseMessageContext(msg.product_context);
     const senderId = Number(msg.sender_id);
-    const isMe = !isAiBot && senderId === Number(staffId);
-
-    if (isAiBot) {
-      return {
-        isMe: false,
-        isAiBot: true,
-        senderName: 'AI Assistant TCG',
-        roleLabel: 'AI BOT',
-        badgeBg: 'info',
-        avatarBg: 'linear-gradient(135deg, #6f42c1, #432874)',
-        bubbleStyle: {
-          backgroundColor: '#f3f0ff',
-          color: '#2b1b54',
-          border: '1px solid #d0bfff',
-          borderBottomLeftRadius: '4px'
-        }
-      };
-    }
+    const isMe = senderId === Number(staffId);
 
     if (isMe) {
       const meta = getRoleMeta(myRole, myRole === 'Admin');
       return {
         isMe: true,
-        isAiBot: false,
         senderName: `You (${myName})`,
         roleLabel: meta.label,
         badgeBg: 'light',
@@ -240,7 +313,6 @@ const StaffChat = () => {
       };
     }
 
-    // Tin nhắn từ người khác (Khách hàng hoặc Đồng nghiệp Admin/Staff khác)
     const isRoomPartner = activeRoom && senderId === Number(activeRoom.user_id);
     const resolvedName =
       msg.sender_name ||
@@ -261,7 +333,6 @@ const StaffChat = () => {
 
     return {
       isMe: false,
-      isAiBot: false,
       senderName: resolvedName,
       roleLabel: meta.label,
       badgeBg: meta.badgeBg,
@@ -282,11 +353,19 @@ const StaffChat = () => {
     };
   };
 
+  // Đếm tổng số phòng khách đang chờ nhân viên trả lời
+  const waitingCount = useMemo(
+    () => rooms.filter((r) => Boolean(r.waiting_for_staff)).length,
+    [rooms]
+  );
+
   // Lọc danh sách phòng theo tab & từ khóa tìm kiếm
   const displayedRooms = rooms.filter((room) => {
-    const role = room.user_is_admin || room.user_role === 'Admin' ? 'Admin' : (room.user_role || 'Customer');
+    const role =
+      room.user_is_admin || room.user_role === 'Admin' ? 'Admin' : (room.user_role || 'Customer');
     const isInternal = role === 'Admin' || role === 'Staff' || room.is_internal;
 
+    if (filterTab === 'waiting' && !room.waiting_for_staff) return false;
     if (filterTab === 'customer' && isInternal) return false;
     if (filterTab === 'internal' && !isInternal) return false;
 
@@ -303,34 +382,47 @@ const StaffChat = () => {
 
   return (
     <Container className="main-layout py-4">
-      <Card className="border-0 shadow overflow-hidden" style={{ borderRadius: '14px', minHeight: '78vh' }}>
-        {/* HEADER TRUNG TÂM CHAT & THÔNG TIN ACCOUNT ĐANG ĐĂNG NHẬP */}
+      <Card className="border-0 shadow overflow-hidden" style={{ borderRadius: '14px', minHeight: '80vh' }}>
+        {/* HEADER TRUNG TÂM HỖ TRỢ KHÁCH HÀNG */}
         <div
           className="px-4 py-3 text-white d-flex flex-wrap justify-content-between align-items-center gap-3"
-          style={{ background: 'linear-gradient(90deg, #1a1d20 0%, #2b3035 100%)', borderBottom: '3px solid #dc3545' }}
+          style={{
+            background: 'linear-gradient(90deg, #1a1d20 0%, #2b3035 100%)',
+            borderBottom: '3px solid #dc3545'
+          }}
         >
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-3">
             <div
               className="d-flex align-items-center justify-content-center rounded-circle bg-danger text-white shadow-sm"
-              style={{ width: '40px', height: '40px' }}
+              style={{ width: '42px', height: '42px' }}
             >
-              <FaComments className="fs-5" />
+              <FaHeadset className="fs-5" />
             </div>
             <div>
-              <h5 className="m-0 fw-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>
-                AI ASSISTANT TCG
-              </h5>
+              <div className="d-flex align-items-center gap-2">
+                <h5 className="m-0 fw-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                  CUSTOMER SUPPORT & LIVE CHAT
+                </h5>
+                {waitingCount > 0 && (
+                  <Badge bg="warning" text="dark" className="px-2 py-1">
+                    {waitingCount} Waiting for Reply
+                  </Badge>
+                )}
+              </div>
               <div className="small text-white-50">
-                AI-powered customer support and real-time chat system
+                Separated human support queue and read-only AI assistant logs
               </div>
             </div>
           </div>
 
-          {/* Khung hiển thị rõ đang dùng Account nào */}
+          {/* Thông tin tài khoản Staff/Admin đang đăng nhập */}
           <div className="d-flex align-items-center gap-3">
             <div
               className="d-flex align-items-center gap-2 px-3 py-1 rounded-pill"
-              style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
             >
               <div
                 className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold small"
@@ -363,10 +455,10 @@ const StaffChat = () => {
           </div>
         </div>
 
-        <Row className="g-0" style={{ height: 'calc(78vh - 76px)' }}>
-          {/* CỘT TRÁI: DANH SÁCH NGƯỜI DÙNG (KHÔNG HIỆN BẢN THÂN) */}
+        <Row className="g-0" style={{ height: 'calc(80vh - 78px)' }}>
+          {/* CỘT TRÁI: HÀNG ĐỢI PHÒNG CHAT */}
           <Col md={4} className="border-end d-flex flex-column bg-white" style={{ height: '100%' }}>
-            {/* Thanh tìm kiếm & Bộ lọc */}
+            {/* Thanh tìm kiếm & Bộ lọc hàng đợi */}
             <div className="p-3 border-bottom bg-light">
               <div className="position-relative mb-2">
                 <FaSearch
@@ -376,7 +468,7 @@ const StaffChat = () => {
                 <Form.Control
                   type="text"
                   size="sm"
-                  placeholder="Search name or email..."
+                  placeholder="Search customer name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="ps-4 shadow-none bg-white"
@@ -384,45 +476,56 @@ const StaffChat = () => {
                 />
               </div>
 
-              <div className="d-flex gap-1">
+              <div className="d-flex flex-wrap gap-1">
                 <Button
                   size="sm"
                   variant={filterTab === 'all' ? 'danger' : 'outline-secondary'}
                   className="flex-fill fw-bold py-1"
-                  style={{ fontSize: '0.75rem', borderRadius: '6px' }}
+                  style={{ fontSize: '0.72rem', borderRadius: '6px' }}
                   onClick={() => setFilterTab('all')}
                 >
                   All ({rooms.length})
                 </Button>
                 <Button
                   size="sm"
+                  variant={filterTab === 'waiting' ? 'warning' : 'outline-secondary'}
+                  className="flex-fill fw-bold py-1"
+                  style={{ fontSize: '0.72rem', borderRadius: '6px' }}
+                  onClick={() => setFilterTab('waiting')}
+                >
+                  Waiting ({waitingCount})
+                </Button>
+                <Button
+                  size="sm"
                   variant={filterTab === 'customer' ? 'success' : 'outline-secondary'}
                   className="flex-fill fw-bold py-1"
-                  style={{ fontSize: '0.75rem', borderRadius: '6px' }}
+                  style={{ fontSize: '0.72rem', borderRadius: '6px' }}
                   onClick={() => setFilterTab('customer')}
                 >
-                  Customer
+                  Customers
                 </Button>
                 <Button
                   size="sm"
                   variant={filterTab === 'internal' ? 'primary' : 'outline-secondary'}
                   className="flex-fill fw-bold py-1"
-                  style={{ fontSize: '0.75rem', borderRadius: '6px' }}
+                  style={{ fontSize: '0.72rem', borderRadius: '6px' }}
                   onClick={() => setFilterTab('internal')}
                 >
-                  Internal (Staff/Admin)
+                  Internal
                 </Button>
               </div>
             </div>
 
-            {/* Danh sách cuộc trò chuyện */}
+            {/* Danh sách phòng chat */}
             <div className="flex-grow-1 overflow-auto">
               {displayedRooms.length === 0 ? (
                 <div className="text-center text-muted p-4 my-4">
                   <FaComments className="fs-2 mb-2 opacity-50" />
-                  <div className="small fw-bold">No conversations available</div>
+                  <div className="small fw-bold">No matching conversations</div>
                   <div style={{ fontSize: '0.78rem' }}>
-                    Your account ({myName}) has been hidden to prevent self-chatting.
+                    {filterTab === 'waiting'
+                      ? 'All customer inquiries have been answered!'
+                      : `Your own account (${myName}) is hidden from this list.`}
                   </div>
                 </div>
               ) : (
@@ -432,16 +535,29 @@ const StaffChat = () => {
                     Number(activeRoom.id) === Number(room.id) &&
                     Number(activeRoom.user_id) === Number(room.user_id);
                   const partnerMeta = getRoleMeta(room.user_role, room.user_is_admin);
+                  const isWaiting = Boolean(room.waiting_for_staff);
+                  const isAiOnly =
+                    !room.is_internal &&
+                    Number(room.staff_message_count || 0) === 0 &&
+                    Number(room.ai_message_count || 0) > 0;
 
                   return (
                     <div
                       key={`${room.id}-${room.user_id}`}
                       onClick={() => setActiveRoom(room)}
-                      className="p-3 border-bottom d-flex align-items-center gap-3 transition-all"
+                      className="p-3 border-bottom d-flex align-items-center gap-3"
                       style={{
                         cursor: 'pointer',
-                        backgroundColor: isSelected ? '#fff5f5' : '#ffffff',
-                        borderLeft: isSelected ? '4px solid #dc3545' : '4px solid transparent'
+                        backgroundColor: isSelected
+                          ? '#fff5f5'
+                          : isWaiting
+                          ? '#fffdf2'
+                          : '#ffffff',
+                        borderLeft: isSelected
+                          ? '4px solid #dc3545'
+                          : isWaiting
+                          ? '4px solid #ffc107'
+                          : '4px solid transparent'
                       }}
                     >
                       {/* Avatar */}
@@ -457,24 +573,66 @@ const StaffChat = () => {
                         {getInitials(room.user_name)}
                       </div>
 
-                      {/* Thông tin */}
+                      {/* Thông tin khách hàng & dòng xem trước tách bạch AI / Nhân viên */}
                       <div className="flex-grow-1 min-w-0">
-                        <div className="d-flex justify-content-between align-items-center mb-1">
-                          <span className="fw-bold text-dark text-truncate me-1" style={{ fontSize: '0.92rem' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-1 gap-1">
+                          <span
+                            className="fw-bold text-dark text-truncate"
+                            style={{ fontSize: '0.9rem' }}
+                          >
                             {room.user_name || `User #${room.user_id}`}
                           </span>
-                          <Badge bg={partnerMeta.badgeBg} style={{ fontSize: '0.65rem' }}>
-                            {partnerMeta.label}
-                          </Badge>
+                          <div className="d-flex align-items-center gap-1 flex-shrink-0">
+                            {isWaiting && (
+                              <Badge
+                                bg="warning"
+                                text="dark"
+                                className="d-flex align-items-center gap-1"
+                                style={{ fontSize: '0.62rem' }}
+                              >
+                                <FaClock size={9} /> WAITING
+                              </Badge>
+                            )}
+                            {isAiOnly && (
+                              <Badge
+                                style={{
+                                  backgroundColor: '#ede9fe',
+                                  color: '#5b21b6',
+                                  fontSize: '0.62rem'
+                                }}
+                              >
+                                🤖 AI ONLY
+                              </Badge>
+                            )}
+                            <Badge bg={partnerMeta.badgeBg} style={{ fontSize: '0.62rem' }}>
+                              {partnerMeta.label}
+                            </Badge>
+                          </div>
                         </div>
 
-                        <div className="text-muted text-truncate" style={{ fontSize: '0.76rem' }}>
+                        <div className="text-muted text-truncate" style={{ fontSize: '0.75rem' }}>
                           {room.user_email}
                         </div>
 
-                        {room.last_message && (
-                          <div className="text-secondary text-truncate mt-1" style={{ fontSize: '0.78rem' }}>
-                            💬 {room.last_message}
+                        {room.last_staff_message ? (
+                          <div
+                            className={`text-truncate mt-1 ${
+                              isWaiting ? 'fw-bold text-dark' : 'text-secondary'
+                            }`}
+                            style={{ fontSize: '0.78rem' }}
+                          >
+                            💬 {room.last_staff_message}
+                          </div>
+                        ) : room.last_ai_message ? (
+                          <div
+                            className="text-muted text-truncate mt-1 fst-italic"
+                            style={{ fontSize: '0.75rem' }}
+                          >
+                            🤖 [AI Log] {room.last_ai_message}
+                          </div>
+                        ) : (
+                          <div className="text-muted mt-1" style={{ fontSize: '0.74rem' }}>
+                            No messages yet
                           </div>
                         )}
                       </div>
@@ -485,15 +643,15 @@ const StaffChat = () => {
             </div>
           </Col>
 
-          {/* CỘT PHẢI: KHUNG HỘI THOẠI TRỰC TIẾP */}
+          {/* CỘT PHẢI: KHUNG HỘI THOẠI TRỰC TIẾP & TAB AI LOG */}
           <Col md={8} className="d-flex flex-column bg-light" style={{ height: '100%' }}>
             {activeRoom && Number(activeRoom.user_id) !== Number(staffId) ? (
               <>
-                {/* Header Người Đang Trò Chuyện Cùng */}
+                {/* Header thông tin đối phương */}
                 {(() => {
                   const partnerMeta = getRoleMeta(activeRoom.user_role, activeRoom.user_is_admin);
                   return (
-                    <div className="px-4 py-3 border-bottom bg-white d-flex align-items-center justify-content-between shadow-sm">
+                    <div className="px-4 py-3 border-bottom bg-white d-flex flex-wrap align-items-center justify-content-between gap-2 shadow-sm">
                       <div className="d-flex align-items-center gap-3">
                         <div
                           className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
@@ -507,7 +665,7 @@ const StaffChat = () => {
                           {getInitials(activeRoom.user_name)}
                         </div>
                         <div>
-                          <div className="d-flex align-items-center gap-2">
+                          <div className="d-flex align-items-center gap-2 flex-wrap">
                             <span className="fw-bold text-dark fs-6">
                               {activeRoom.user_name || `User #${activeRoom.user_id}`}
                             </span>
@@ -515,35 +673,196 @@ const StaffChat = () => {
                               {partnerMeta.icon} {partnerMeta.label}
                             </Badge>
                             <Badge bg="secondary" className="fw-normal">
-                              Phòng #{activeRoom.id}
+                              Room #{activeRoom.id}
                             </Badge>
+                            {activeRoom.waiting_for_staff && (
+                              <Badge bg="warning" text="dark">
+                                ● Waiting for Staff Reply
+                              </Badge>
+                            )}
                           </div>
                           <div className="small text-muted">{activeRoom.user_email}</div>
                         </div>
                       </div>
 
-                      <Badge bg="success" className="px-3 py-2 d-flex align-items-center gap-1 rounded-pill">
-                        <FaCircle style={{ fontSize: '8px' }} /> Connecting
+                      <Badge
+                        bg="success"
+                        className="px-3 py-2 d-flex align-items-center gap-1 rounded-pill"
+                      >
+                        <FaCircle style={{ fontSize: '8px' }} /> Active Session
                       </Badge>
                     </div>
                   );
                 })()}
 
-                {/* Danh sách tin nhắn */}
+                {/* THANH CHUYỂN 2 TAB TÁCH BIỆT CHO PHÒNG CỦA CUSTOMER: LIVE SUPPORT vs AI LOG */}
+                {!activeRoom.is_internal && (
+                  <div className="px-4 py-2 bg-white border-bottom d-flex align-items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setChannelTab('staff')}
+                      className={`btn btn-sm fw-bold px-3 py-2 d-flex align-items-center gap-2 ${
+                        channelTab === 'staff' ? 'btn-danger text-white shadow-sm' : 'btn-light text-secondary border'
+                      }`}
+                      style={{ borderRadius: '8px', fontSize: '0.82rem' }}
+                    >
+                      <FaHeadset />
+                      <span>Live Support ({liveSupportMessages.length})</span>
+                      {activeRoom.waiting_for_staff && (
+                        <Badge bg="warning" text="dark" pill>
+                          Reply Needed
+                        </Badge>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setChannelTab('ai')}
+                      className="btn btn-sm fw-bold px-3 py-2 d-flex align-items-center gap-2"
+                      style={{
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        backgroundColor: channelTab === 'ai' ? '#6d28d9' : '#f8f9fa',
+                        color: channelTab === 'ai' ? '#ffffff' : '#5b21b6',
+                        border: channelTab === 'ai' ? '1px solid #6d28d9' : '1px solid #d8b4fe'
+                      }}
+                    >
+                      <FaRobot />
+                      <span>AI Log ({aiLogMessages.length})</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Banner giải thích khi Staff đang xem tab AI Log */}
+                {!activeRoom.is_internal && channelTab === 'ai' && (
+                  <div
+                    className="px-4 py-2 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2"
+                    style={{ backgroundColor: '#f3e8ff', color: '#4c1d95', fontSize: '0.8rem' }}
+                  >
+                    <span>
+                      🤖 <strong>AI Conversation Log:</strong> Read-only history of questions{' '}
+                      <strong>{activeRoom.user_name}</strong> asked the AI Bot.
+                    </span>
+                    <span className="badge bg-white text-dark border">Read-Only</span>
+                  </div>
+                )}
+
+                {/* VÙNG HIỂN THỊ TIN NHẮN THEO TAB ĐANG CHỌN */}
                 <div
                   className="flex-grow-1 p-4 overflow-auto"
                   ref={chatBodyRef}
-                  style={{ backgroundColor: '#f4f6f9', maxHeight: 'calc(78vh - 215px)' }}
+                  style={{
+                    backgroundColor:
+                      !activeRoom.is_internal && channelTab === 'ai' ? '#f7f5ff' : '#f4f6f9'
+                  }}
                 >
-                  {messages.length === 0 ? (
+                  {activeMessageList.length === 0 ? (
                     <div className="text-center text-muted my-5 py-4">
-                      <FaComments className="fs-1 mb-2 opacity-25" />
-                      <p className="mb-0 fw-bold">No messages yet in this conversation</p>
-                      <small>Send the first message to {activeRoom.user_name}!</small>
+                      {!activeRoom.is_internal && channelTab === 'ai' ? (
+                        <>
+                          <FaRobot className="fs-1 mb-2 opacity-25" style={{ color: '#6d28d9' }} />
+                          <p className="mb-1 fw-bold text-dark">No AI Assistant History</p>
+                          <small>
+                            {activeRoom.user_name} has not asked the AI Assistant any questions yet.
+                          </small>
+                        </>
+                      ) : (
+                        <>
+                          <FaHeadset className="fs-1 mb-2 opacity-25 text-danger" />
+                          <p className="mb-1 fw-bold text-dark">
+                            No Live Support Messages Yet
+                          </p>
+                          <small>
+                            {aiLogMessages.length > 0
+                              ? `${activeRoom.user_name} has only used the AI Bot (${aiLogMessages.length} messages in AI Log). You can still message them directly below!`
+                              : `Send the first message to ${activeRoom.user_name} below!`}
+                          </small>
+                        </>
+                      )}
                     </div>
+                  ) : !activeRoom.is_internal && channelTab === 'ai' ? (
+                    /* HIỂN THỊ RÕ RÀNG CẶP HỎI - ĐÁP TRONG TAB AI LOG */
+                    aiLogMessages.map((msg, index) => {
+                      const ctx = parseMessageContext(msg.product_context);
+                      const isBotReply = Boolean(ctx?.is_ai);
+
+                      return (
+                        <div
+                          key={msg.id || index}
+                          className={`mb-3 d-flex align-items-end gap-2 ${
+                            isBotReply ? 'justify-content-start' : 'justify-content-end'
+                          }`}
+                        >
+                          {isBotReply && (
+                            <div
+                              className="rounded-circle d-flex align-items-center justify-content-center text-white shadow-sm flex-shrink-0"
+                              style={{
+                                width: '36px',
+                                height: '36px',
+                                background: 'linear-gradient(135deg, #6d28d9, #4c1d95)'
+                              }}
+                              title="TCG AI Bot"
+                            >
+                              <FaRobot />
+                            </div>
+                          )}
+
+                          <div
+                            className="p-3 shadow-sm"
+                            style={{
+                              maxWidth: '75%',
+                              borderRadius: '14px',
+                              wordBreak: 'break-word',
+                              backgroundColor: isBotReply ? '#ffffff' : '#ede9fe',
+                              color: isBotReply ? '#1f2937' : '#2e1065',
+                              border: isBotReply ? '1px solid #d8b4fe' : '1px solid #c4b5fd',
+                              borderLeft: isBotReply ? '4px solid #7c3aed' : '1px solid #c4b5fd',
+                              borderRight: isBotReply ? '1px solid #d8b4fe' : '4px solid #6d28d9'
+                            }}
+                          >
+                            <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
+                              <span className="fw-bold" style={{ fontSize: '0.78rem' }}>
+                                {isBotReply
+                                  ? '🤖 TCG AI Assistant'
+                                  : `👤 ${activeRoom.user_name || 'Customer'}`}
+                              </span>
+                              <Badge
+                                style={{
+                                  backgroundColor: isBotReply ? '#6d28d9' : '#4c1d95',
+                                  fontSize: '0.62rem'
+                                }}
+                              >
+                                {isBotReply ? 'AI BOT REPLY' : 'ASKED AI BOT'}
+                              </Badge>
+                            </div>
+
+                            <div
+                              style={{
+                                fontSize: '0.92rem',
+                                lineHeight: 1.45,
+                                whiteSpace: 'pre-line'
+                              }}
+                            >
+                              {msg.message_text || msg.text}
+                            </div>
+
+                            <div
+                              className="text-end mt-1"
+                              style={{ fontSize: '0.68rem', opacity: 0.65 }}
+                            >
+                              {new Date(msg.created_at || Date.now()).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
                   ) : (
-                    messages.map((msg, index) => {
-                      const info = resolveMessageInfo(msg);
+                    /* HIỂN THỊ TIN NHẮN NGƯỜI THẬT TRONG TAB LIVE SUPPORT / INTERNAL */
+                    liveSupportMessages.map((msg, index) => {
+                      const info = resolveLiveMessageInfo(msg);
 
                       return (
                         <div
@@ -552,7 +871,6 @@ const StaffChat = () => {
                             info.isMe ? 'justify-content-end' : 'justify-content-start'
                           }`}
                         >
-                          {/* Avatar bên trái cho tin nhắn của người khác */}
                           {!info.isMe && (
                             <div
                               className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0 shadow-sm"
@@ -564,11 +882,10 @@ const StaffChat = () => {
                               }}
                               title={info.senderName}
                             >
-                              {info.isAiBot ? <FaRobot /> : getInitials(info.senderName)}
+                              {getInitials(info.senderName)}
                             </div>
                           )}
 
-                          {/* Bong bóng tin nhắn */}
                           <div
                             className="p-3 shadow-sm"
                             style={{
@@ -578,7 +895,6 @@ const StaffChat = () => {
                               ...info.bubbleStyle
                             }}
                           >
-                            {/* Tên người gửi + Vai trò */}
                             <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
                               <span
                                 className="fw-bold"
@@ -598,12 +914,16 @@ const StaffChat = () => {
                               </Badge>
                             </div>
 
-                            {/* Nội dung tin nhắn */}
-                            <div style={{ fontSize: '0.93rem', lineHeight: 1.45, whiteSpace: 'pre-line' }}>
+                            <div
+                              style={{
+                                fontSize: '0.93rem',
+                                lineHeight: 1.45,
+                                whiteSpace: 'pre-line'
+                              }}
+                            >
                               {msg.message_text || msg.text}
                             </div>
 
-                            {/* Thời gian */}
                             <div
                               className="text-end mt-1"
                               style={{ fontSize: '0.68rem', opacity: info.isMe ? 0.8 : 0.6 }}
@@ -620,33 +940,52 @@ const StaffChat = () => {
                   )}
                 </div>
 
-                {/* Ô nhập tin nhắn trả lời */}
-                <Form onSubmit={handleSendMessage} className="p-3 border-top bg-white d-flex gap-2 align-items-center">
-                  <Form.Control
-                    type="text"
-                    placeholder={`Message ${activeRoom.user_name} as ${myName} (${myRole})...`}
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    className="shadow-none py-2 px-3"
-                    style={{ borderRadius: '10px', backgroundColor: '#f8f9fa' }}
-                  />
-                  <Button
-                    type="submit"
-                    variant="danger"
-                    disabled={!text.trim()}
-                    className="px-4 py-2 fw-bold d-flex align-items-center gap-2 tcg-btn"
-                    style={{ borderRadius: '10px' }}
+                {/* THANH NHẬP LIỆU DƯỚI CÙNG: Ở tab AI Log thì hiện nút chuyển sang Live Support để trả lời */}
+                {!activeRoom.is_internal && channelTab === 'ai' ? (
+                  <div className="p-3 border-top bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span className="text-muted small">
+                      Want to message <strong>{activeRoom.user_name}</strong> personally?
+                    </span>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="fw-bold px-3 py-2 d-flex align-items-center gap-2 tcg-btn"
+                      onClick={() => setChannelTab('staff')}
+                    >
+                      Switch to Live Support to Reply <FaArrowRight size={12} />
+                    </Button>
+                  </div>
+                ) : (
+                  <Form
+                    onSubmit={handleSendMessage}
+                    className="p-3 border-top bg-white d-flex gap-2 align-items-center"
                   >
-                    <FaPaperPlane /> SEND
-                  </Button>
-                </Form>
+                    <Form.Control
+                      type="text"
+                      placeholder={`Reply to ${activeRoom.user_name} in Live Support as ${myName} (${myRole})...`}
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      className="shadow-none py-2 px-3"
+                      style={{ borderRadius: '10px', backgroundColor: '#f8f9fa' }}
+                    />
+                    <Button
+                      type="submit"
+                      variant="danger"
+                      disabled={!text.trim()}
+                      className="px-4 py-2 fw-bold d-flex align-items-center gap-2 tcg-btn"
+                      style={{ borderRadius: '10px' }}
+                    >
+                      <FaPaperPlane /> SEND
+                    </Button>
+                  </Form>
+                )}
               </>
             ) : (
               <div className="text-center text-muted m-auto p-4">
                 <FaComments className="fs-1 text-secondary mb-3 opacity-50" />
-                <h5 className="fw-bold text-dark">Choose a user from the list on the left</h5>
+                <h5 className="fw-bold text-dark">Select a conversation on the left</h5>
                 <p className="small text-muted mb-0">
-                  The system has automatically hidden your account ({myName}) to prevent self-chatting.
+                  Customers waiting for a human reply are automatically prioritized at the top.
                 </p>
               </div>
             )}

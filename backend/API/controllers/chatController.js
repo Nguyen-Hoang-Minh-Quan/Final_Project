@@ -115,7 +115,81 @@ const saveMessage = async (req, res) => {
   }
 };
 
-// 4. Admin / Staff lấy danh sách tất cả các phòng chat đang hoạt động (Không bao giờ hiện phòng của chính mình)
+// Helper: Giải mã an toàn trường product_context từ JSON chuỗi hoặc Object
+const parseMessageContext = (rawContext) => {
+  if (!rawContext) return null;
+  try {
+    return typeof rawContext === 'string' ? JSON.parse(rawContext) : rawContext;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Helper: Phân loại danh sách tin nhắn trong 1 phòng thành 2 luồng 'ai' và 'staff' (hỗ trợ cả dữ liệu cũ)
+const classifyRoomMessages = (roomMessages = []) => {
+  const staffMessages = [];
+  const aiMessages = [];
+
+  for (let i = 0; i < roomMessages.length; i++) {
+    const msg = roomMessages[i];
+    const ctx = parseMessageContext(msg.product_context);
+
+    // 1. Nếu tin nhắn mới đã gắn nhãn channel rõ ràng hoặc là phản hồi từ AI Bot
+    if (ctx?.channel === 'ai' || ctx?.is_ai === true || ctx?.is_ai_query === true) {
+      aiMessages.push(msg);
+      continue;
+    }
+
+    if (ctx?.channel === 'staff') {
+      staffMessages.push(msg);
+      continue;
+    }
+
+    // 2. Xử lý tương thích ngược cho tin nhắn cũ chưa có trường channel:
+    // Nếu người gửi là Staff/Admin thì chắc chắn thuộc luồng hỗ trợ trực tiếp ('staff')
+    const isStaffSender =
+      msg.sender_is_admin === true ||
+      msg.sender_role === 'Admin' ||
+      msg.sender_role === 'Staff' ||
+      ctx?.sender_role === 'Admin' ||
+      ctx?.sender_role === 'Staff';
+
+    if (isStaffSender) {
+      staffMessages.push(msg);
+      continue;
+    }
+
+    // Nếu là tin nhắn cũ của khách hàng và ngay sau đó có câu trả lời của AI Bot -> xếp vào AI Log
+    let followedByAi = false;
+    for (let j = i + 1; j < roomMessages.length; j++) {
+      const nextMsg = roomMessages[j];
+      const nextCtx = parseMessageContext(nextMsg.product_context);
+      if (nextCtx?.is_ai === true) {
+        followedByAi = true;
+        break;
+      }
+      const nextIsStaff =
+        nextMsg.sender_is_admin === true ||
+        nextMsg.sender_role === 'Admin' ||
+        nextMsg.sender_role === 'Staff' ||
+        nextCtx?.sender_role === 'Admin' ||
+        nextCtx?.sender_role === 'Staff';
+      if (nextIsStaff || nextCtx?.channel === 'staff') {
+        break;
+      }
+    }
+
+    if (followedByAi) {
+      aiMessages.push(msg);
+    } else {
+      staffMessages.push(msg);
+    }
+  }
+
+  return { staffMessages, aiMessages };
+};
+
+// 4. Admin / Staff lấy danh sách tất cả các phòng chat (Ưu tiên khách chờ nhân viên, không để AI làm nhiễu)
 const getAllChatRooms = async (req, res) => {
   try {
     const viewerId = req.query.viewerId ? Number(req.query.viewerId) : null;
@@ -125,17 +199,80 @@ const getAllChatRooms = async (req, res) => {
               u.name as user_name, 
               u.email as user_email,
               u.role as user_role,
-              u."isAdmin" as user_is_admin,
-              (SELECT cm.message_text FROM chat_messages cm WHERE cm.room_id = cr.id ORDER BY cm.created_at DESC LIMIT 1) as last_message,
-              (SELECT cm.created_at FROM chat_messages cm WHERE cm.room_id = cr.id ORDER BY cm.created_at DESC LIMIT 1) as last_message_at
+              u."isAdmin" as user_is_admin
        FROM chat_rooms cr
        JOIN "Users" u ON cr.user_id = u.id
        ORDER BY cr.created_at DESC`,
       { type: QueryTypes.SELECT }
     );
 
+    // Lấy toàn bộ tin nhắn để tách chính xác luồng Live Support và AI Log cho từng phòng
+    const allMessages = await sequelize.query(
+      `SELECT cm.id,
+              cm.room_id,
+              cm.sender_id,
+              cm.message_text,
+              cm.product_context,
+              cm.created_at,
+              u.role as sender_role,
+              u."isAdmin" as sender_is_admin
+       FROM chat_messages cm
+       LEFT JOIN "Users" u ON cm.sender_id = u.id
+       ORDER BY cm.created_at ASC`,
+      { type: QueryTypes.SELECT }
+    );
+
+    const messagesByRoomId = new Map();
+    for (const msg of allMessages) {
+      const rId = Number(msg.room_id);
+      if (!messagesByRoomId.has(rId)) {
+        messagesByRoomId.set(rId, []);
+      }
+      messagesByRoomId.get(rId).push(msg);
+    }
+
+    // Gắn thống kê tin nhắn Live Support & AI Log vào từng phòng
+    const enrichRoomStats = (room, isInternalRoom = false) => {
+      const roomMsgs = messagesByRoomId.get(Number(room.id)) || [];
+      const { staffMessages, aiMessages } = classifyRoomMessages(roomMsgs);
+
+      const lastStaffMsg = staffMessages.length > 0 ? staffMessages[staffMessages.length - 1] : null;
+      const lastAiMsg = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1] : null;
+
+      // Chỉ bật cờ waiting_for_staff khi khách hàng nhắn ở kênh Live Support và chưa được Staff/Admin phản hồi
+      let waitingForStaff = false;
+      if (!isInternalRoom && lastStaffMsg) {
+        const lastCtx = parseMessageContext(lastStaffMsg.product_context);
+        const sentByStaff =
+          lastStaffMsg.sender_is_admin === true ||
+          lastStaffMsg.sender_role === 'Admin' ||
+          lastStaffMsg.sender_role === 'Staff' ||
+          lastCtx?.sender_role === 'Admin' ||
+          lastCtx?.sender_role === 'Staff';
+
+        waitingForStaff = !sentByStaff && Number(lastStaffMsg.sender_id) === Number(room.user_id);
+      }
+
+      return {
+        ...room,
+        staff_message_count: staffMessages.length,
+        ai_message_count: aiMessages.length,
+        last_staff_message: lastStaffMsg ? lastStaffMsg.message_text : null,
+        last_staff_message_at: lastStaffMsg ? lastStaffMsg.created_at : null,
+        last_ai_message: lastAiMsg ? lastAiMsg.message_text : null,
+        last_ai_message_at: lastAiMsg ? lastAiMsg.created_at : null,
+        last_message: lastStaffMsg
+          ? lastStaffMsg.message_text
+          : (lastAiMsg ? lastAiMsg.message_text : null),
+        last_message_at: lastStaffMsg
+          ? lastStaffMsg.created_at
+          : (lastAiMsg ? lastAiMsg.created_at : room.created_at),
+        waiting_for_staff: waitingForStaff
+      };
+    };
+
     if (!viewerId) {
-      return res.status(200).json(rawRooms);
+      return res.status(200).json(rawRooms.map((r) => enrichRoomStats(r, false)));
     }
 
     const isStaffOrAdminUser = (r) =>
@@ -144,11 +281,16 @@ const getAllChatRooms = async (req, res) => {
     // 1. Các phòng của Khách hàng (Customer) - loại bỏ nếu trùng viewerId
     const customerRooms = rawRooms
       .filter((r) => !isStaffOrAdminUser(r) && Number(r.user_id) !== viewerId)
-      .map((r) => ({
-        ...r,
-        user_role: 'Customer',
-        is_internal: false
-      }));
+      .map((r) =>
+        enrichRoomStats(
+          {
+            ...r,
+            user_role: 'Customer',
+            is_internal: false
+          },
+          false
+        )
+      );
 
     // 2. Các phòng trao đổi nội bộ với Admin/Staff khác (loại bỏ chính bản thân viewerId)
     // Dùng phòng chung canonical theo MAX(viewerId, colleague.user_id) để 2 bên luôn vào chung 1 phòng
@@ -163,21 +305,44 @@ const getAllChatRooms = async (req, res) => {
       const canonicalOwnerId = Math.max(viewerId, colleagueId);
       const canonicalRoom = roomByUserId.get(canonicalOwnerId) || colleague;
 
-      internalRooms.push({
-        ...canonicalRoom,
-        id: canonicalRoom.id,
-        user_id: colleagueId, // Đối phương đang chat cùng
-        user_name: colleague.user_name,
-        user_email: colleague.user_email,
-        user_role: colleague.user_is_admin ? 'Admin' : (colleague.user_role || 'Staff'),
-        user_is_admin: colleague.user_is_admin,
-        is_internal: true
-      });
+      internalRooms.push(
+        enrichRoomStats(
+          {
+            ...canonicalRoom,
+            id: canonicalRoom.id,
+            user_id: colleagueId, // Đối phương đang chat cùng
+            user_name: colleague.user_name,
+            user_email: colleague.user_email,
+            user_role: colleague.user_is_admin ? 'Admin' : (colleague.user_role || 'Staff'),
+            user_is_admin: colleague.user_is_admin,
+            is_internal: true
+          },
+          true
+        )
+      );
     }
 
+    // Sắp xếp ưu tiên:
+    // 1) Khách đang chờ nhân viên trả lời (waiting_for_staff = true) lên đầu tiên
+    // 2) Các phòng có tin nhắn trao đổi với người thật (theo last_staff_message_at mới nhất)
+    // 3) Các phòng chỉ mới hỏi AI hoặc chưa nhắn gì xếp dưới cùng để không làm nhiễu hàng đợi
     const finalRooms = [...customerRooms, ...internalRooms].sort((a, b) => {
-      const timeA = new Date(a.last_message_at || a.created_at || 0).getTime();
-      const timeB = new Date(b.last_message_at || b.created_at || 0).getTime();
+      if (Boolean(a.waiting_for_staff) !== Boolean(b.waiting_for_staff)) {
+        return a.waiting_for_staff ? -1 : 1;
+      }
+
+      const aHasHumanChat = a.staff_message_count > 0;
+      const bHasHumanChat = b.staff_message_count > 0;
+      if (aHasHumanChat !== bHasHumanChat) {
+        return aHasHumanChat ? -1 : 1;
+      }
+
+      const timeA = new Date(
+        (aHasHumanChat ? a.last_staff_message_at : a.created_at) || 0
+      ).getTime();
+      const timeB = new Date(
+        (bHasHumanChat ? b.last_staff_message_at : b.created_at) || 0
+      ).getTime();
       return timeB - timeA;
     });
 
@@ -193,7 +358,7 @@ const handleAIChat = async (req, res) => {
   try {
     const { message } = req.body;
     if (!message || !message.trim()) {
-      return res.status(400).json({ reply: 'Please enter your question / Vui lòng nhập câu hỏi của bạn!' });
+      return res.status(400).json({ reply: 'Please enter your question!' });
     }
 
     const lowerMsg = message.toLowerCase().trim();
