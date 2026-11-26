@@ -200,12 +200,12 @@ const AdminProductList = () => {
             <Row>
               <Col>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-bold">Price (x1.000 VNĐ - Nghìn đồng)</Form.Label>
+                  <Form.Label className="small fw-bold">Price (Thousand Dong)</Form.Label>
                   <Form.Control 
                     className="tcg-input" 
                     type="number" 
                     step="any"
-                    placeholder="VD: Nhập 1 = 1.000đ; 10 = 10.000đ"
+                    placeholder="Ex: 1 = 1.000đ"
                     value={form.price} 
                     onChange={e => setForm({...form, price: e.target.value})} 
                     required 
