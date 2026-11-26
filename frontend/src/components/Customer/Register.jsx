@@ -3,12 +3,14 @@ import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
-import { HiOutlineUser, HiOutlineEnvelope, HiOutlineLockClosed, HiOutlineCheckCircle, HiOutlineShieldCheck } from 'react-icons/hi2';
+import { HiOutlineUser, HiOutlineEnvelope, HiOutlineLockClosed, HiOutlineCheckCircle, HiOutlineShieldCheck, HiOutlineEye, HiOutlineEyeSlash } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -99,14 +101,27 @@ const Register = () => {
             <Form.Label className="small fw-bold text-secondary">
               <HiOutlineLockClosed className="me-1" /> Mật khẩu
             </Form.Label>
-            <Form.Control 
-              className="tcg-input" 
-              type="password" 
-              placeholder="Tối thiểu 6 ký tự, 1 in hoa, 1 ký tự đặc biệt"
-              onChange={e => setFormData({ ...formData, password: e.target.value })} 
-              required 
-              disabled={loading}
-            />
+            {/* Ô mật khẩu kèm nút ẩn/hiện */}
+            <div className="position-relative">
+              <Form.Control 
+                className="tcg-input pe-5" 
+                type={showPassword ? 'text' : 'password'} 
+                placeholder="Tối thiểu 6 ký tự, 1 in hoa, 1 ký tự đặc biệt"
+                onChange={e => setFormData({ ...formData, password: e.target.value })} 
+                required 
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="btn border-0 bg-transparent text-secondary position-absolute top-50 end-0 translate-middle-y me-1 p-2 shadow-none"
+                onClick={() => setShowPassword(prev => !prev)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                disabled={loading}
+              >
+                {showPassword ? <HiOutlineEyeSlash size={20} /> : <HiOutlineEye size={20} />}
+              </button>
+            </div>
             <Form.Text className="text-muted" style={{ fontSize: '11px' }}>
               🔒 Yêu cầu bảo mật: Có ít nhất 1 chữ in hoa và 1 ký tự đặc biệt (!@#$%^&*...)
             </Form.Text>
@@ -116,15 +131,28 @@ const Register = () => {
             <Form.Label className="small fw-bold text-secondary">
               <HiOutlineCheckCircle className="me-1" /> Xác nhận mật khẩu
             </Form.Label>
-            <Form.Control 
-              className="tcg-input" 
-              type="password" 
-              placeholder="Nhập lại mật khẩu..."
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)} 
-              required 
-              disabled={loading}
-            />
+            {/* Ô xác nhận mật khẩu kèm nút ẩn/hiện */}
+            <div className="position-relative">
+              <Form.Control 
+                className="tcg-input pe-5" 
+                type={showConfirmPassword ? 'text' : 'password'} 
+                placeholder="Nhập lại mật khẩu..."
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)} 
+                required 
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="btn border-0 bg-transparent text-secondary position-absolute top-50 end-0 translate-middle-y me-1 p-2 shadow-none"
+                onClick={() => setShowConfirmPassword(prev => !prev)}
+                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                title={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                disabled={loading}
+              >
+                {showConfirmPassword ? <HiOutlineEyeSlash size={20} /> : <HiOutlineEye size={20} />}
+              </button>
+            </div>
           </Form.Group>
 
           <Button 

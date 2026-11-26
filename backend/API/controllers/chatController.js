@@ -353,7 +353,7 @@ const getAllChatRooms = async (req, res) => {
   }
 };
 
-// 5. Thuật toán AI Chatbot nâng cấp (Join đúng bảng Categories & Rarities trên Neon + Nhận diện đa ngữ cảnh)
+// 5. Thuật toán AI Chatbot nâng cấp (Join bảng Categories & Rarities trên Neondb + nhận diện đa ngữ cảnh)
 const handleAIChat = async (req, res) => {
   try {
     const { message } = req.body;
@@ -406,8 +406,8 @@ const handleAIChat = async (req, res) => {
       );
     if (isShipping) {
       const reply = isVietnamese
-        ? `TCG Shop hỗ trợ giao hàng toàn quốc (miễn phí vận chuyển trên đơn đặt tại web). Thời gian giao dự kiến 1–2 ngày đối với nội thành và 2–4 ngày đối với các tỉnh thành khác!`
-        : `TCG Shop offers nationwide delivery (free shipping on website orders). Estimated delivery time is 1–2 business days for major cities and 2–4 days for other regions!`;
+        ? `TCG Shop hỗ trợ giao hàng toàn quốc (miễn phí vận chuyển trên đơn đặt tại web). Thời gian giao dự kiến 1-2 ngày đối với nội thành và 2-4 ngày đối với các tỉnh thành khác!`
+        : `TCG Shop offers nationwide delivery (free shipping on website orders). Estimated delivery time is 1-2 business days for major cities and 2-4 days for other regions!`;
       return res.status(200).json({ reply });
     }
 

@@ -40,6 +40,10 @@
 
 /* Form & Button */
 .tcg-input { border-radius: 8px !important; padding: 12px !important; border: 1px solid #ddd !important; }
+.tcg-input.pe-5 { padding-right: 44px !important; }
+/* Ẩn nút con mắt mặc định của trình duyệt Edge để không bị trùng lặp với icon Heroicons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear { display: none; }
 .tcg-btn { border-radius: 8px !important; font-weight: 700 !important; padding: 10px 20px !important; text-transform: uppercase; }
 
 /* Admin Dashboard */

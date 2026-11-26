@@ -3,7 +3,7 @@ import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
-import { HiOutlineEnvelope, HiOutlineKey, HiOutlineLockClosed, HiOutlineArrowLeft, HiOutlineCheckCircle } from 'react-icons/hi2';
+import { HiOutlineEnvelope, HiOutlineKey, HiOutlineLockClosed, HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlineEye, HiOutlineEyeSlash } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const ForgotPassword = () => {
@@ -12,6 +12,8 @@ const ForgotPassword = () => {
     const [otp, setOtp] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -173,30 +175,52 @@ const ForgotPassword = () => {
                             <Form.Label className="fw-bold small text-secondary">
                                 <HiOutlineLockClosed className="me-1" /> New Password
                             </Form.Label>
-                            <Form.Control 
-                                className="tcg-input" 
-                                type="password" 
-                                placeholder="At least 6 characters, 1 uppercase, 1 special character"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)} 
-                                required 
-                                disabled={loading}
-                            />
+                            <div className="position-relative">
+                                <Form.Control 
+                                    className="tcg-input pe-5" 
+                                    type={showPassword ? 'text' : 'password'} 
+                                    placeholder="At least 6 characters, 1 uppercase, 1 special character"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)} 
+                                    required 
+                                    disabled={loading}
+                                />
+                                <button
+                                    type="button"
+                                    className="btn border-0 bg-transparent text-secondary position-absolute top-50 end-0 translate-middle-y me-1 p-2 shadow-none"
+                                    onClick={() => setShowPassword(prev => !prev)}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    disabled={loading}
+                                >
+                                    {showPassword ? <HiOutlineEyeSlash size={20} /> : <HiOutlineEye size={20} />}
+                                </button>
+                            </div>
                         </Form.Group>
 
                         <Form.Group className="mb-4">
                             <Form.Label className="fw-bold small text-secondary">
                                 <HiOutlineCheckCircle className="me-1" /> Confirm New Password
                             </Form.Label>
-                            <Form.Control 
-                                className="tcg-input" 
-                                type="password" 
-                                placeholder="Re-enter new password..."
-                                value={confirmPassword}
-                                onChange={e => setConfirmPassword(e.target.value)} 
-                                required 
-                                disabled={loading}
-                            />
+                            <div className="position-relative">
+                                <Form.Control 
+                                    className="tcg-input pe-5" 
+                                    type={showConfirmPassword ? 'text' : 'password'} 
+                                    placeholder="Re-enter new password..."
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)} 
+                                    required 
+                                    disabled={loading}
+                                />
+                                <button
+                                    type="button"
+                                    className="btn border-0 bg-transparent text-secondary position-absolute top-50 end-0 translate-middle-y me-1 p-2 shadow-none"
+                                    onClick={() => setShowConfirmPassword(prev => !prev)}
+                                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                                    disabled={loading}
+                                >
+                                    {showConfirmPassword ? <HiOutlineEyeSlash size={20} /> : <HiOutlineEye size={20} />}
+                                </button>
+                            </div>
                         </Form.Group>
                         
                         <Button 

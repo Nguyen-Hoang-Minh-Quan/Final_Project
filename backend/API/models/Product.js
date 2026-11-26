@@ -33,7 +33,7 @@ const Product = sequelize.define('Product', {
         defaultValue: 'N/A'
     },
     price: {
-        type: DataTypes.DECIMAL(10, 2), // Lưu giá tiền chính xác, tránh lỗi sai số kiểu Number của NoSQL
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         defaultValue: 0.00
     },

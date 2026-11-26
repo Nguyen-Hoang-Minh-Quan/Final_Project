@@ -3,11 +3,13 @@ import { Container, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
+import { HiOutlineEye, HiOutlineEyeSlash } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const submitHandler = async (e) => {
@@ -57,13 +59,25 @@ const Login = () => {
                     
                     <Form.Group className="mb-4">
                         <Form.Label className="fw-bold">Password</Form.Label>
-                        <Form.Control 
-                            className="tcg-input" 
-                            type="password" 
-                            placeholder="Enter your password..."
-                            onChange={e => setPassword(e.target.value)} 
-                            required 
-                        />
+                        {/* Ô nhập mật khẩu kèm nút con mắt ẩn/hiện */}
+                        <div className="position-relative">
+                            <Form.Control 
+                                className="tcg-input pe-5" 
+                                type={showPassword ? 'text' : 'password'} 
+                                placeholder="Enter your password..."
+                                onChange={e => setPassword(e.target.value)} 
+                                required 
+                            />
+                            <button
+                                type="button"
+                                className="btn border-0 bg-transparent text-secondary position-absolute top-50 end-0 translate-middle-y me-1 p-2 shadow-none"
+                                onClick={() => setShowPassword(prev => !prev)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                title={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <HiOutlineEyeSlash size={20} /> : <HiOutlineEye size={20} />}
+                            </button>
+                        </div>
                     </Form.Group>
                     
                     <Button className="tcg-btn w-100" variant="danger" type="submit">

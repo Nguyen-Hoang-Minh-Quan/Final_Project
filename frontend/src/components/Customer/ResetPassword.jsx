@@ -3,11 +3,14 @@ import { Container, Card, Form, Button } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
+import { HiOutlineEye, HiOutlineEyeSlash } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const ResetPassword = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const { token } = useParams(); 
@@ -47,25 +50,46 @@ const ResetPassword = () => {
                 <Form onSubmit={submitHandler}>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">New Password</Form.Label>
-                        <Form.Control 
-                            className="tcg-input" 
-                            type="password" 
-                            placeholder="Enter new password..."
-                            value={password}
-                            onChange={e => setPassword(e.target.value)} 
-                            required 
-                        />
+                        <div className="position-relative">
+                            <Form.Control 
+                                className="tcg-input pe-5" 
+                                type={showPassword ? 'text' : 'password'} 
+                                placeholder="Enter new password..."
+                                value={password}
+                                onChange={e => setPassword(e.target.value)} 
+                                required 
+                            />
+                            <button
+                                type="button"
+                                className="btn border-0 bg-transparent text-secondary position-absolute top-50 end-0 translate-middle-y me-1 p-2 shadow-none"
+                                onClick={() => setShowPassword(prev => !prev)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <HiOutlineEyeSlash size={20} /> : <HiOutlineEye size={20} />}
+                            </button>
+                        </div>
                     </Form.Group>
 
                     <Form.Group className="mb-4">
                         <Form.Label className="fw-bold">Confirm Password</Form.Label>
-                        <Form.Control 
-                            type="password" 
-                            placeholder="Confirm new password..."
-                            value={confirmPassword}
-                            onChange={e => setConfirmPassword(e.target.value)} 
-                            required 
-                        />
+                        <div className="position-relative">
+                            <Form.Control 
+                                className="tcg-input pe-5" 
+                                type={showConfirmPassword ? 'text' : 'password'} 
+                                placeholder="Confirm new password..."
+                                value={confirmPassword}
+                                onChange={e => setConfirmPassword(e.target.value)} 
+                                required 
+                            />
+                            <button
+                                type="button"
+                                className="btn border-0 bg-transparent text-secondary position-absolute top-50 end-0 translate-middle-y me-1 p-2 shadow-none"
+                                onClick={() => setShowConfirmPassword(prev => !prev)}
+                                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                            >
+                                {showConfirmPassword ? <HiOutlineEyeSlash size={20} /> : <HiOutlineEye size={20} />}
+                            </button>
+                        </div>
                     </Form.Group>
                     
                     <Button className="tcg-btn w-100" variant="danger" type="submit" disabled={loading}>

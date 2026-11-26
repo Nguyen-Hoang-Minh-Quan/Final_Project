@@ -69,7 +69,7 @@ const AdminProductList = () => {
     setCurrentId(product.id);
     setForm({
       name: product.name,
-      price: product.price ? Number(product.price) / 1000 : 0, // Quy đổi về nghìn đồng khi sửa
+      price: product.price ? Number(product.price) / 1000 : 0,
       image: product.image,
       countInStock: product.countInStock || 0,
       categoryId: product.categoryId || '',
@@ -86,7 +86,7 @@ const AdminProductList = () => {
     try {
       const dataToSend = {
         ...form,
-        price: Math.round(Number(form.price) * 1000), // Quy đổi: 1 = 1.000đ, 10 = 10.000đ
+        price: Math.round(Number(form.price) * 1000), // Quy đổi: 1 = 1.000đ
         countInStock: Number(form.countInStock),
         categoryId: form.categoryId ? Number(form.categoryId) : null,
         rarityId: form.rarityId ? Number(form.rarityId) : null
