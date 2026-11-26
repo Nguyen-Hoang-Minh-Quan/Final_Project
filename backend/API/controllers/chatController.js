@@ -630,6 +630,7 @@ const handleAIChat = async (req, res) => {
     }
 
     // 11. TÁCH TỪ KHÓA TÌM KIẾM SẢN PHẨM / THẺ BÀI / SET CODE
+    // Chỉ loại bỏ các từ nối ngữ pháp, KHÔNG xóa từ khóa sản phẩm như box, booster, trainer, sleeve...
     const stopWords = new Set([
       // English
       'i', 'im', 'me', 'my', 'mine', 'we', 'us', 'our', 'you', 'your', 'he', 'she', 'it', 'they',
@@ -638,25 +639,56 @@ const handleAIChat = async (req, res) => {
       'a', 'an', 'the', 'any', 'some', 'is', 'are', 'was', 'were', 'be', 'been', 'do', 'does', 'did',
       'can', 'could', 'would', 'will', 'please', 'help', 'price', 'prices', 'cost', 'how', 'much', 'what', 'where',
       'at', 'in', 'on', 'to', 'of', 'about', 'shop', 'store', 'card', 'cards', 'stock', 'available', 'left',
-      'list', 'all', 'check', 'tell', 'give', 'with', 'rarity',
-      // Các từ khóa category đã được nhận diện riêng
-      'single', 'singles', 'booster', 'box', 'elite', 'trainer', 'etb', 'sleeve', 'sleeves', 'pack', 'packs', 'sar', 'sr',
+      'list', 'all', 'check', 'tell', 'give', 'with', 'rarity', 'item', 'items', 'product', 'products',
       // Vietnamese
       'tôi', 'toi', 'em', 'mình', 'minh', 'bạn', 'ban', 'muon', 'muốn', 'tim', 'tìm', 'kiem', 'kiếm',
       'co', 'có', 'khong', 'không', 'ko', 'k', 'bán', 'mua', 'gia', 'giá', 'bao', 'nhieu', 'nhiêu',
       'tien', 'tiền', 'ad', 'admin', 'cho', 'hoi', 'hỏi', 'xem', 'can', 'cần', 'voi', 'với',
       'la', 'là', 'gi', 'gì', 'nao', 'nào', 'ạ', 'nhe', 'nhé', 'oi', 'ơi', 'the', 'thẻ', 'bai', 'bài',
       'san', 'pham', 'sản', 'phẩm', 'chút', 'được', 'lá', 'còn', 'con', 'hàng', 'hang', 'tồn', 'ton', 'kho',
-      'lẻ', 'le', 'hộp', 'hop', 'bọc', 'boc', 'hiếm', 'hiem', 'độ', 'do'
+      'lẻ', 'le', 'hiếm', 'hiem', 'độ', 'do', 'cái', 'cai', 'nào'
     ]);
+
+    // Chuẩn hóa số nhiều & từ đồng nghĩa Tiếng Việt về từ khóa khớp dữ liệu Neon
+    const keywordAliasMap = {
+      boxes: 'box',
+      'hộp': 'box',
+      hop: 'box',
+      sleeves: 'sleeve',
+      'bọc': 'sleeve',
+      boc: 'sleeve',
+      packs: 'pack',
+      'gói': 'pack',
+      goi: 'pack',
+      singles: 'single',
+      trainers: 'trainer',
+      boosters: 'booster'
+    };
 
     const normalizedText = lowerMsg
       .replace(/[’']/g, '')
       .replace(/[^\w\s\u00C0-\u1EF9]/g, ' ');
 
-    const keywords = normalizedText
-      .split(/\s+/)
-      .filter((w) => w.length > 1 && !stopWords.has(w));
+    const keywords = Array.from(
+      new Set(
+        normalizedText
+          .split(/\s+/)
+          .filter((w) => w.length > 1 && !stopWords.has(w))
+          .map((w) => keywordAliasMap[w] || w)
+      )
+    );
+
+    // Các từ thuộc nhãn danh mục/độ hiếm chỉ được bỏ qua NẾU đã lọc bằng detectedCategoryId / detectedRarity
+    const matchedMetaWords = new Set();
+    if (detectedCategoryId === 1) ['single'].forEach((w) => matchedMetaWords.add(w));
+    if (detectedCategoryId === 2) ['elite', 'trainer', 'box', 'etb'].forEach((w) => matchedMetaWords.add(w));
+    if (detectedCategoryId === 3) ['booster', 'box'].forEach((w) => matchedMetaWords.add(w));
+    if (detectedCategoryId === 4) ['sleeve'].forEach((w) => matchedMetaWords.add(w));
+    if (detectedCategoryId === 5) ['pack'].forEach((w) => matchedMetaWords.add(w));
+    if (detectedCategoryId === 6) ['accessory', 'accessories', 'phụ', 'kiện'].forEach((w) => matchedMetaWords.add(w));
+    if (detectedRarity) matchedMetaWords.add(detectedRarity.toLowerCase());
+
+    const refinedKeywords = keywords.filter((w) => !matchedMetaWords.has(w));
 
     let products = [];
 
@@ -674,10 +706,10 @@ const handleAIChat = async (req, res) => {
       }
 
       // Thử khớp thêm từ khóa tên thẻ nếu khách có gõ (VD: "SAR Mega Greninja")
-      if (keywords.length > 0) {
+      if (refinedKeywords.length > 0) {
         const kwConds = [];
         const kwRepl = { ...baseRepl };
-        keywords.forEach((kw, idx) => {
+        refinedKeywords.forEach((kw, idx) => {
           kwConds.push(`LOWER(p.name) LIKE LOWER(:kw${idx})`);
           kwRepl[`kw${idx}`] = `%${kw}%`;
         });
@@ -704,7 +736,7 @@ const handleAIChat = async (req, res) => {
     }
 
     // 11.2. Tìm kiếm linh hoạt theo từ khóa trên tên sản phẩm, danh mục thật & độ hiếm thật
-    if ((!products || products.length === 0) && keywords.length > 0) {
+    if (!detectedCategoryId && (!products || products.length === 0) && keywords.length > 0) {
       const whereClauses = [];
       const replacements = {};
 
@@ -772,13 +804,13 @@ const handleAIChat = async (req, res) => {
       [
         detectedCategoryName,
         detectedRarity ? `Rarity ${detectedRarity}` : null,
-        keywords.length > 0 ? keywords.join(' ') : null
+        refinedKeywords.length > 0 ? refinedKeywords.join(' ') : null
       ]
         .filter(Boolean)
         .join(' - ') || rawMsg;
 
     // Nếu khách hỏi đúng một danh mục cụ thể (VD: Pack) nhưng danh mục đó hiện có 0 sản phẩm trong kho
-    const isEmptyCategoryQuery = Boolean(detectedCategoryName) && keywords.length === 0 && !detectedRarity;
+    const isEmptyCategoryQuery = Boolean(detectedCategoryName) && refinedKeywords.length === 0 && !detectedRarity;
 
     if (sampleProducts && sampleProducts.length > 0) {
       const reply = isEmptyCategoryQuery
