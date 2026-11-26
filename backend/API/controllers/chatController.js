@@ -353,7 +353,7 @@ const getAllChatRooms = async (req, res) => {
   }
 };
 
-// 5. Thuật toán AI Chatbot (Tokenization + Stop-word Removal + Smart Multi-Field & Category Matching)
+// 5. Thuật toán AI Chatbot nâng cấp (Join đúng bảng Categories & Rarities trên Neon + Nhận diện đa ngữ cảnh)
 const handleAIChat = async (req, res) => {
   try {
     const { message } = req.body;
@@ -361,179 +361,430 @@ const handleAIChat = async (req, res) => {
       return res.status(400).json({ reply: 'Please enter your question!' });
     }
 
-    const lowerMsg = message.toLowerCase().trim();
+    const rawMsg = message.trim();
+    const lowerMsg = rawMsg.toLowerCase();
 
     // 1. Nhận diện ngôn ngữ người dùng (Tiếng Việt hay Tiếng Anh)
-    const isVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(message) ||
-      /\b(tìm|thẻ|bài|giá|bao nhiêu|mua|bán|có|hộp|gói|bọc|không|ko|ạ|ơi|cho mình|hỏi|xem|cần)\b/i.test(lowerMsg);
+    const isVietnamese =
+      /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(rawMsg) ||
+      /\b(tìm|thẻ|bài|giá|bao nhiêu|mua|bán|có|hộp|gói|bọc|không|ko|ạ|ơi|cho mình|hỏi|xem|cần|rẻ|đắt|dưới|trên|chào|xin chào|thanh toán|giao hàng)\b/i.test(lowerMsg);
 
-    // 2. INTENT: Shipping / Delivery
-    const isShipping = /\b(ship|shipping|delivery|giao hàng|vận chuyển|van chuyen|phi ship|phí ship|bao lâu)\b/i.test(lowerMsg);
+    // Helper: Định dạng danh sách sản phẩm gọn đẹp kèm Category thật, Rarity thật & trạng thái tồn kho
+    const formatProductLines = (items) =>
+      items
+        .map((p) => {
+          const categoryLabel = p.cat_name || p.category || 'TCG';
+          const rarityLabel = p.rar_name ? ` | ${p.rar_name}` : '';
+          const priceStr = `${Number(p.price || 0).toLocaleString('en-US')}đ`;
+          const stockNum = Number(p.countInStock || 0);
+          const stockStr =
+            stockNum > 0
+              ? isVietnamese
+                ? `Còn ${stockNum}`
+                : `In stock: ${stockNum}`
+              : isVietnamese
+              ? 'Hết hàng'
+              : 'Out of stock';
+          return `• [${categoryLabel}${rarityLabel}] ${p.name}\n  → ${priceStr} (${stockStr})`;
+        })
+        .join('\n');
+
+    // Câu truy vấn SELECT chuẩn luôn JOIN đúng Categories và Rarities trên Neon
+    const baseProductSelect = `
+      SELECT p.id, p.name, p.price, p."countInStock", p."gameType",
+             COALESCE(c.name, CAST(p.category AS TEXT)) AS cat_name,
+             r.name AS rar_name
+      FROM "Products" p
+      LEFT JOIN "Categories" c ON p."categoryId" = c.id
+      LEFT JOIN "Rarities" r ON p."rarityId" = r.id
+    `;
+
+    // 2. INTENT: Giao hàng / Vận chuyển (Shipping & Delivery)
+    const isShipping =
+      /\b(ship|shipping|delivery|giao hàng|giao hang|vận chuyển|van chuyen|phi ship|phí ship|bao lâu|bao lau)\b/i.test(
+        lowerMsg
+      );
     if (isShipping) {
       const reply = isVietnamese
-        ? `TCG Shop hỗ trợ giao hàng toàn quốc qua J&T Express. Thời gian giao từ 1-2 ngày đối với nội thành và 2-4 ngày đối với các tỉnh thành khác!`
-        : `TCG Shop supports nationwide shipping via Express delivery. It takes 1-2 business days for inner cities and 2-4 days for other regions!`;
+        ? `TCG Shop hỗ trợ giao hàng toàn quốc (miễn phí vận chuyển trên đơn đặt tại web). Thời gian giao dự kiến 1–2 ngày đối với nội thành và 2–4 ngày đối với các tỉnh thành khác!`
+        : `TCG Shop offers nationwide delivery (free shipping on website orders). Estimated delivery time is 1–2 business days for major cities and 2–4 days for other regions!`;
       return res.status(200).json({ reply });
     }
 
-    // 3. INTENT: Authenticity / Genuine
-    const isAuthenticity = /\b(authentic|auth|genuine|original|real|fake|chính hãng|chinh hang|thật|that|uy tín|uy tin)\b/i.test(lowerMsg);
+    // 3. INTENT: Thanh toán (Payment Methods - đồng bộ với Checkout.jsx)
+    const isPayment =
+      /\b(payment|pay|momo|cod|bank|transfer|qr|vietqr|thanh toán|thanh toan|chuyển khoản|chuyen khoan|trả tiền|tra tien)\b/i.test(
+        lowerMsg
+      );
+    if (isPayment) {
+      const reply = isVietnamese
+        ? `TCG Shop hỗ trợ 3 phương thức thanh toán:\n• Thanh toán khi nhận hàng (COD)\n• Ví điện tử Momo (quét mã QR)\n• Chuyển khoản ngân hàng (VietQR)\n\nBạn có thể chọn phương thức mong muốn ngay tại trang Checkout nhé!`
+        : `TCG Shop supports 3 payment methods:\n• Cash on Delivery (COD)\n• Momo E-Wallet (QR Code)\n• Bank Transfer (VietQR)\n\nYou can select your preferred method directly at Checkout!`;
+      return res.status(200).json({ reply });
+    }
+
+    // 4. INTENT: Cam kết chính hãng (Authenticity)
+    const isAuthenticity =
+      /\b(authentic|auth|genuine|original|real|fake|reseal|chính hãng|chinh hang|thật|that|giả|gia|uy tín|uy tin)\b/i.test(
+        lowerMsg
+      );
     if (isAuthenticity) {
       const reply = isVietnamese
-        ? `Toàn bộ thẻ bài và sản phẩm tại TCG Shop cam kết 100% chính hãng (Authentic). Shop đền bù 200% nếu phát hiện hàng giả, hàng nhái!`
-        : `All cards and products at TCG Shop are 100% Authentic/Original with factory seals intact. We offer a 200% refund if any fake card is detected!`;
+        ? `100% thẻ bài và hộp sản phẩm tại TCG Shop đều là hàng chính hãng (Authentic), nguyên seal nhà sản xuất — nói không với hàng reseal/hàng giả. Shop cam kết hoàn tiền 200% nếu phát hiện hàng giả!`
+        : `100% of cards and sealed products at TCG Shop are Authentic with original factory seals — strictly no resealed or fake items. We guarantee a 200% refund if any counterfeit is found!`;
       return res.status(200).json({ reply });
     }
 
-    // 4. INTENT: Pure Greeting (Chỉ chào hỏi đơn thuần, không kèm tên thẻ bài)
-    const cleanedGreeting = lowerMsg.replace(/[’']/g, '').replace(/[^\w\s\u00C0-\u1EF9]/g, '').trim();
-    const isPureGreeting = /^(hi|hello|hey|yo|sup|greetings|good morning|good afternoon|good evening|chào|xin chào|chao|chào shop|hello shop|hi shop|alo|alo shop|shop ơi|shop oi)$/i.test(cleanedGreeting);
+    // 5. INTENT: Liên hệ / Gặp nhân viên / Hotline
+    const isContact =
+      /\b(hotline|contact|phone|address|email|địa chỉ|dia chi|số điện thoại|so dien thoai|liên hệ|lien he|nhân viên|nhan vien|support|staff|human)\b/i.test(
+        lowerMsg
+      );
+    if (isContact) {
+      const reply = isVietnamese
+        ? `Bạn có thể liên hệ đội ngũ TCG Shop qua:\n• Nút "Live Staff Support" (màu đỏ ở góc dưới bên phải) để chat trực tiếp với nhân viên\n• Hotline: 0703192208\n• Email: mquantcv@gmail.com`
+        : `You can reach our team directly via:\n• Click "Switch to Live Staff" below (or the red STAFF button) to chat with a real staff member\n• Hotline: 0703192208\n• Email: mquantcv@gmail.com`;
+      return res.status(200).json({ reply });
+    }
+
+    // 6. INTENT: Chào hỏi đơn thuần (Pure Greeting)
+    const cleanedGreeting = lowerMsg
+      .replace(/[’']/g, '')
+      .replace(/[^\w\s\u00C0-\u1EF9]/g, '')
+      .trim();
+    const isPureGreeting =
+      /^(hi|hello|hey|yo|sup|greetings|good morning|good afternoon|good evening|chào|xin chào|chao|chào shop|hello shop|hi shop|alo|alo shop|shop ơi|shop oi)$/i.test(
+        cleanedGreeting
+      );
     if (isPureGreeting) {
       const reply = isVietnamese
-        ? `Xin chào! Tôi là Trợ lý AI của TCG Shop. Tôi có thể hỗ trợ bạn tra cứu giá thẻ bài, kiểm tra tồn kho (Single Card, Booster Box, Sleeves, Pack...), hoặc giải đáp chính sách giao hàng. Bạn đang quan tâm đến sản phẩm nào ạ?`
-        : `Hello! I'm the TCG Shop AI Assistant. I can help you look up card prices, check stock, or view store policies. What card, set, or product are you looking for?`;
+        ? `Xin chào! Mình là Trợ lý AI của TCG Shop. Mình có thể giúp bạn:\n• Tra cứu giá & tồn kho theo tên thẻ / bộ bài (VD: "Mega Greninja", "Dawn", "ME04")\n• Lọc theo loại sản phẩm (Single Cards, Booster Box, ETB, Sleeves) hoặc độ hiếm (SR, SAR)\n• Tìm theo tầm giá (VD: "thẻ dưới 500k", "thẻ rẻ nhất")\n• Giải đáp chính sách giao hàng & thanh toán.\n\nBạn đang muốn tìm sản phẩm nào ạ?`
+        : `Hello! I'm the TCG Shop AI Assistant. I can help you:\n• Look up prices & real-time stock by card or set name (e.g., "Mega Greninja", "Dawn", "ME04")\n• Browse by category (Single Cards, Booster Box, ETB, Sleeves) or rarity (SR, SAR)\n• Filter by budget (e.g., "under 500k", "cheapest card")\n• Answer shipping, payment & authenticity questions.\n\nWhat are you looking for today?`;
       return res.status(200).json({ reply });
     }
 
-    // 5. INTENT: TẤT CẢ CÁC CÂU HỎI CÒN LẠI ĐỀU ĐƯỢC XỬ LÝ LÀ TÌM KIẾM SẢN PHẨM / THẺ BÀI
-    // (Bao gồm "I'm looking for a Dawn", "looking for Charizard", "Dawn", "thẻ pikachu", "giá pack 151"...)
+    // 7. INTENT: Hỏi tổng quan danh mục / Shop bán những gì
+    const isCatalogOverview =
+      /\b(categories|category|catalog|what do you sell|all products|danh mục|danh muc|bán gì|ban gi|có những gì|co nhung gi|sản phẩm nào|san pham nao)\b/i.test(
+        lowerMsg
+      );
+    if (isCatalogOverview) {
+      const catSummary = await sequelize.query(
+        `SELECT c.name,
+                COUNT(p.id) AS total_items,
+                COUNT(CASE WHEN p."countInStock" > 0 THEN 1 END) AS in_stock_items
+         FROM "Categories" c
+         LEFT JOIN "Products" p ON p."categoryId" = c.id
+         GROUP BY c.id, c.name
+         ORDER BY c.id ASC`,
+        { type: QueryTypes.SELECT }
+      );
+      const summaryStr = catSummary
+        .filter((c) => Number(c.total_items) > 0)
+        .map(
+          (c) =>
+            `• ${c.name}: ${c.total_items} ${isVietnamese ? 'sản phẩm' : 'items'} (${
+              isVietnamese ? 'còn hàng' : 'in stock'
+            }: ${c.in_stock_items})`
+        )
+        .join('\n');
 
-    // Stopwords tiếng Anh & tiếng Việt loại bỏ đại từ và từ phụ (giữ lại từ chỉ category: box, sleeves, pack, booster, single)
+      const reply = isVietnamese
+        ? `Hiện tại TCG Shop đang kinh doanh các danh mục sau:\n${summaryStr}\n\nBạn muốn mình liệt kê sản phẩm ở danh mục nào hoặc tìm theo tên thẻ/độ hiếm (SR, SAR) nào?`
+        : `Here are the product categories currently available at TCG Shop:\n${summaryStr}\n\nWhich category, card name, or rarity (SR, SAR) would you like me to check?`;
+      return res.status(200).json({ reply });
+    }
+
+    // 8. INTENT: Sản phẩm bán chạy (Best Sellers - lấy từ OrderItems + Orders Delivered)
+    const isBestSeller =
+      /\b(best sellers?|bestsellers?|best selling|top selling|popular|hot|bán chạy|ban chay|nổi bật|noi bat|mua nhiều|mua nhieu)\b/i.test(
+        lowerMsg
+      );
+    if (isBestSeller) {
+      const topSold = await sequelize.query(
+        `SELECT p.id, p.name, p.price, p."countInStock",
+                COALESCE(c.name, CAST(p.category AS TEXT)) AS cat_name,
+                r.name AS rar_name,
+                SUM(oi.qty) AS total_sold
+         FROM "OrderItems" oi
+         JOIN "Orders" o ON oi."orderId" = o.id AND o.status = 'Delivered'
+         JOIN "Products" p ON oi."productId" = p.id
+         LEFT JOIN "Categories" c ON p."categoryId" = c.id
+         LEFT JOIN "Rarities" r ON p."rarityId" = r.id
+         GROUP BY p.id, c.name, r.name
+         ORDER BY total_sold DESC
+         LIMIT 4`,
+        { type: QueryTypes.SELECT }
+      );
+
+      if (topSold.length > 0) {
+        const reply = isVietnamese
+          ? `Top sản phẩm bán chạy nhất tại TCG Shop hiện tại:\n${formatProductLines(topSold)}\n\nBạn có thể gõ tên sản phẩm lên thanh tìm kiếm để xem chi tiết và đặt mua ngay!`
+          : `Here are the current best-selling items at TCG Shop:\n${formatProductLines(topSold)}\n\nType any product name in the search bar above to view details!`;
+        return res.status(200).json({ reply });
+      }
+    }
+
+    // 9. INTENT: Rẻ nhất / Đắt nhất / Lọc theo tầm giá (VD: "under 500k", "dưới 1 triệu", "cheapest")
+    const isCheapest = /\b(cheapest|lowest price|budget|rẻ nhất|re nhat|giá rẻ|gia re)\b/i.test(lowerMsg);
+    const isMostExpensive = /\b(most expensive|highest price|priciest|đắt nhất|dat nhat|mắc nhất|mac nhat|cao nhất|cao nhat)\b/i.test(lowerMsg);
+
+    // Bắt hạn mức giá: VD "under 500k", "dưới 1tr", "dưới 200000", "below 1.5m"
+    let maxPrice = null;
+    const priceMatch = lowerMsg.match(
+      /(?:under|below|less than|<=|max|dưới|duoi|tầm|tam|khoảng|khoang)\s*(\d+(?:[.,]\d+)?)\s*(k|nghìn|nghin|tr|triệu|trieu|m|đ|d|vnd)?/i
+    );
+    if (priceMatch) {
+      let amount = parseFloat(priceMatch[1].replace(',', '.'));
+      const unit = (priceMatch[2] || '').toLowerCase();
+      if (unit === 'k' || unit === 'nghìn' || unit === 'nghin') {
+        amount *= 1000;
+      } else if (unit === 'tr' || unit === 'triệu' || unit === 'trieu' || unit === 'm') {
+        amount *= 1000000;
+      } else if (amount < 10000) {
+        // Nếu khách gõ "under 500" -> tự hiểu là 500.000đ
+        amount *= 1000;
+      }
+      if (!Number.isNaN(amount) && amount > 0) {
+        maxPrice = Math.round(amount);
+      }
+    }
+
+    // 10. NHẬN DIỆN DANH MỤC (Category) VÀ ĐỘ HIẾM (Rarity) CHÍNH XÁC THEO NEON
+    let detectedCategoryId = null;
+    let detectedCategoryName = null;
+    if (lowerMsg.includes('elite trainer') || /\betb\b/i.test(lowerMsg)) {
+      detectedCategoryId = 2;
+      detectedCategoryName = 'Elite Trainer Box';
+    } else if (lowerMsg.includes('booster box') || (lowerMsg.includes('booster') && lowerMsg.includes('box'))) {
+      detectedCategoryId = 3;
+      detectedCategoryName = 'Booster Box';
+    } else if (lowerMsg.includes('single') || lowerMsg.includes('thẻ lẻ') || lowerMsg.includes('the le') || lowerMsg.includes('card lẻ')) {
+      detectedCategoryId = 1;
+      detectedCategoryName = 'Single Cards';
+    } else if (lowerMsg.includes('sleeve') || lowerMsg.includes('bọc thẻ') || lowerMsg.includes('bọc bài') || lowerMsg.includes('boc the')) {
+      detectedCategoryId = 4;
+      detectedCategoryName = 'Sleeves Cards';
+    } else if (/\b(pack|packs|gói|goi)\b/i.test(lowerMsg)) {
+      detectedCategoryId = 5;
+      detectedCategoryName = 'Pack';
+    } else if (lowerMsg.includes('phụ kiện') || lowerMsg.includes('accessory') || lowerMsg.includes('accessories')) {
+      detectedCategoryId = 6;
+      detectedCategoryName = 'Other accessories';
+    }
+
+    // Nhận diện Rarity từ bảng Rarities (SAR, SR, R, U, C)
+    let detectedRarity = null;
+    if (/\bsar\b/i.test(lowerMsg)) {
+      detectedRarity = 'SAR';
+    } else if (/\bsr\b/i.test(lowerMsg)) {
+      detectedRarity = 'SR';
+    } else if (/\b(rarity r|rare card|thẻ r)\b/i.test(lowerMsg)) {
+      detectedRarity = 'R';
+    }
+
+    // Xử lý truy vấn theo giá (cheapest / most expensive / maxPrice)
+    if (isCheapest || isMostExpensive || maxPrice !== null) {
+      const conditions = [];
+      const replacements = {};
+
+      if (detectedCategoryId) {
+        conditions.push(`p."categoryId" = :catId`);
+        replacements.catId = detectedCategoryId;
+      }
+      if (detectedRarity) {
+        conditions.push(`UPPER(r.name) = :rarName`);
+        replacements.rarName = detectedRarity;
+      }
+      if (maxPrice !== null) {
+        conditions.push(`p.price <= :maxPrice`);
+        replacements.maxPrice = maxPrice;
+      }
+
+      const whereSql = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+      const orderSql = isMostExpensive
+        ? `ORDER BY p.price DESC`
+        : `ORDER BY (p."countInStock" > 0) DESC, p.price ASC`;
+
+      const priceProducts = await sequelize.query(
+        `${baseProductSelect} ${whereSql} ${orderSql} LIMIT 5`,
+        { replacements, type: QueryTypes.SELECT }
+      );
+
+      if (priceProducts.length > 0) {
+        const heading =
+          maxPrice !== null
+            ? isVietnamese
+              ? `Các sản phẩm có giá dưới ${maxPrice.toLocaleString('en-US')}đ tại TCG Shop:`
+              : `Products under ${maxPrice.toLocaleString('en-US')}đ at TCG Shop:`
+            : isMostExpensive
+            ? isVietnamese
+              ? `Top sản phẩm giá trị cao nhất tại TCG Shop:`
+              : `Most valuable / highest-priced items at TCG Shop:`
+            : isVietnamese
+            ? `Các sản phẩm giá mềm nhất đang có tại TCG Shop:`
+            : `Most affordable items available at TCG Shop:`;
+
+        return res.status(200).json({ reply: `${heading}\n${formatProductLines(priceProducts)}` });
+      }
+    }
+
+    // 11. TÁCH TỪ KHÓA TÌM KIẾM SẢN PHẨM / THẺ BÀI / SET CODE
     const stopWords = new Set([
       // English
       'i', 'im', 'me', 'my', 'mine', 'we', 'us', 'our', 'you', 'your', 'he', 'she', 'it', 'they',
       'want', 'wants', 'wanted', 'looking', 'look', 'looks', 'for', 'find', 'finds', 'finding',
       'search', 'searching', 'show', 'need', 'needs', 'get', 'getting', 'buy', 'buying', 'have', 'has', 'had',
       'a', 'an', 'the', 'any', 'some', 'is', 'are', 'was', 'were', 'be', 'been', 'do', 'does', 'did',
-      'can', 'could', 'would', 'will', 'please', 'help', 'price', 'cost', 'how', 'much', 'what', 'where',
-      'at', 'in', 'on', 'to', 'of', 'about', 'shop', 'store', 'card', 'cards',
+      'can', 'could', 'would', 'will', 'please', 'help', 'price', 'prices', 'cost', 'how', 'much', 'what', 'where',
+      'at', 'in', 'on', 'to', 'of', 'about', 'shop', 'store', 'card', 'cards', 'stock', 'available', 'left',
+      'list', 'all', 'check', 'tell', 'give', 'with', 'rarity',
+      // Các từ khóa category đã được nhận diện riêng
+      'single', 'singles', 'booster', 'box', 'elite', 'trainer', 'etb', 'sleeve', 'sleeves', 'pack', 'packs', 'sar', 'sr',
       // Vietnamese
-      'tôi', 'toi', 'em', 'mình', 'minh', 'bạn', 'ban', 'muon', 'muốn', 'tim', 'tìm', 'kiem', 'kiếm', 
-      'co', 'có', 'khong', 'không', 'ko', 'k', 'ban', 'bán', 'mua', 'gia', 'giá', 'bao', 'nhieu', 'nhiêu', 
-      'tien', 'tiền', 'shop', 'ad', 'admin', 'cho', 'hoi', 'hỏi', 'xem', 'can', 'cần', 'voi', 'với', 
-      'la', 'là', 'gi', 'gì', 'nao', 'nào', 'ạ', 'nhe', 'nhé', 'oi', 'ơi', 'the', 'thẻ', 'bai', 'bài', 
-      'san', 'pham', 'sản', 'phẩm', 'chút', 'được', 'lá', 'la'
+      'tôi', 'toi', 'em', 'mình', 'minh', 'bạn', 'ban', 'muon', 'muốn', 'tim', 'tìm', 'kiem', 'kiếm',
+      'co', 'có', 'khong', 'không', 'ko', 'k', 'bán', 'mua', 'gia', 'giá', 'bao', 'nhieu', 'nhiêu',
+      'tien', 'tiền', 'ad', 'admin', 'cho', 'hoi', 'hỏi', 'xem', 'can', 'cần', 'voi', 'với',
+      'la', 'là', 'gi', 'gì', 'nao', 'nào', 'ạ', 'nhe', 'nhé', 'oi', 'ơi', 'the', 'thẻ', 'bai', 'bài',
+      'san', 'pham', 'sản', 'phẩm', 'chút', 'được', 'lá', 'còn', 'con', 'hàng', 'hang', 'tồn', 'ton', 'kho',
+      'lẻ', 'le', 'hộp', 'hop', 'bọc', 'boc', 'hiếm', 'hiem', 'độ', 'do'
     ]);
 
-    // Nhận diện category cụ thể nếu câu hỏi có nhắc tới
-    let detectedCategory = null;
-    if (lowerMsg.includes('elite trainer') || lowerMsg.includes('etb')) {
-      detectedCategory = 'Elite Trainer Box';
-    } else if (lowerMsg.includes('booster box') || (lowerMsg.includes('booster') && lowerMsg.includes('box'))) {
-      detectedCategory = 'Booster Box';
-    } else if (lowerMsg.includes('single') || lowerMsg.includes('thẻ lẻ') || lowerMsg.includes('the le') || lowerMsg.includes('card lẻ')) {
-      detectedCategory = 'Single Card';
-    } else if (lowerMsg.includes('pack') || lowerMsg.includes('gói')) {
-      detectedCategory = 'Pack';
-    } else if (lowerMsg.includes('sleeve') || lowerMsg.includes('sleeves') || lowerMsg.includes('bọc thẻ') || lowerMsg.includes('bọc bài')) {
-      detectedCategory = 'Sleeves';
-    } else if (lowerMsg.includes('phụ kiện') || lowerMsg.includes('accessory') || lowerMsg.includes('accessories')) {
-      detectedCategory = 'Other accessories';
-    }
-
-    // Tách từ khóa sau khi chuẩn hóa dấu nháy (I’m -> im)
     const normalizedText = lowerMsg
       .replace(/[’']/g, '')
       .replace(/[^\w\s\u00C0-\u1EF9]/g, ' ');
 
     const keywords = normalizedText
       .split(/\s+/)
-      .filter(w => w.length > 1 && !stopWords.has(w));
+      .filter((w) => w.length > 1 && !stopWords.has(w));
 
     let products = [];
 
-    // 5.1. Nếu có nhận diện category cụ thể (vd: Single Card, Booster Box...)
-    if (detectedCategory) {
+    // 11.1. Nếu có Category hoặc Rarity -> lọc chuẩn theo categoryId & rarities.name trên Neon
+    if (detectedCategoryId || detectedRarity) {
+      const baseConds = [];
+      const baseRepl = {};
+      if (detectedCategoryId) {
+        baseConds.push(`p."categoryId" = :catId`);
+        baseRepl.catId = detectedCategoryId;
+      }
+      if (detectedRarity) {
+        baseConds.push(`UPPER(r.name) = :rarName`);
+        baseRepl.rarName = detectedRarity;
+      }
+
+      // Thử khớp thêm từ khóa tên thẻ nếu khách có gõ (VD: "SAR Mega Greninja")
       if (keywords.length > 0) {
-        let whereKw = [];
-        let replacements = { cat: `%${detectedCategory}%` };
-        keywords.forEach((kw, index) => {
-          whereKw.push(`LOWER(name) LIKE LOWER(:kw${index})`);
-          replacements[`kw${index}`] = `%${kw}%`;
+        const kwConds = [];
+        const kwRepl = { ...baseRepl };
+        keywords.forEach((kw, idx) => {
+          kwConds.push(`LOWER(p.name) LIKE LOWER(:kw${idx})`);
+          kwRepl[`kw${idx}`] = `%${kw}%`;
         });
 
         products = await sequelize.query(
-          `SELECT name, price, "countInStock", category FROM "Products" 
-           WHERE LOWER(CAST(category AS TEXT)) LIKE LOWER(:cat) AND (${whereKw.join(' OR ')}) 
-           LIMIT 4`,
-          { replacements, type: QueryTypes.SELECT }
+          `${baseProductSelect}
+           WHERE ${baseConds.join(' AND ')} AND (${kwConds.join(' OR ')})
+           ORDER BY (p."countInStock" > 0) DESC, p.price ASC
+           LIMIT 5`,
+          { replacements: kwRepl, type: QueryTypes.SELECT }
         );
       }
 
+      // Nếu không có từ khóa tên thẻ (VD: "Booster Box stock", "Single Card prices", "SAR") -> lấy toàn bộ nhóm đó
       if (!products || products.length === 0) {
         products = await sequelize.query(
-          `SELECT name, price, "countInStock", category FROM "Products" 
-           WHERE LOWER(CAST(category AS TEXT)) LIKE LOWER(:cat) 
-           LIMIT 4`,
-          { replacements: { cat: `%${detectedCategory}%` }, type: QueryTypes.SELECT }
+          `${baseProductSelect}
+           WHERE ${baseConds.join(' AND ')}
+           ORDER BY (p."countInStock" > 0) DESC, p.price ASC
+           LIMIT 5`,
+          { replacements: baseRepl, type: QueryTypes.SELECT }
         );
       }
     }
 
-    // 5.2. Tìm kiếm theo từ khóa linh hoạt trên cả name và category
+    // 11.2. Tìm kiếm linh hoạt theo từ khóa trên tên sản phẩm, danh mục thật & độ hiếm thật
     if ((!products || products.length === 0) && keywords.length > 0) {
-      let whereClauses = [];
-      let replacements = {};
+      const whereClauses = [];
+      const replacements = {};
 
-      keywords.forEach((kw, index) => {
-        whereClauses.push(`(LOWER(name) LIKE LOWER(:kw${index}) OR LOWER(CAST(category AS TEXT)) LIKE LOWER(:kw${index}))`);
-        replacements[`kw${index}`] = `%${kw}%`;
+      keywords.forEach((kw, idx) => {
+        whereClauses.push(
+          `(LOWER(p.name) LIKE LOWER(:kw${idx}) OR LOWER(COALESCE(c.name, '')) LIKE LOWER(:kw${idx}) OR LOWER(COALESCE(r.name, '')) LIKE LOWER(:kw${idx}))`
+        );
+        replacements[`kw${idx}`] = `%${kw}%`;
       });
 
-      // Thử tìm khớp tất cả từ khóa (AND)
+      // Ưu tiên khớp TẤT CẢ từ khóa (AND)
       products = await sequelize.query(
-        `SELECT name, price, "countInStock", category FROM "Products" WHERE ` + whereClauses.join(' AND ') + ` LIMIT 4`,
+        `${baseProductSelect}
+         WHERE ${whereClauses.join(' AND ')}
+         ORDER BY (p."countInStock" > 0) DESC, p.price ASC
+         LIMIT 5`,
         { replacements, type: QueryTypes.SELECT }
       );
 
-      // Nếu AND không có, thử tìm khớp từng từ khóa (OR)
+      // Nếu không khớp AND, nới lỏng sang OR
       if (!products || products.length === 0) {
         products = await sequelize.query(
-          `SELECT name, price, "countInStock", category FROM "Products" WHERE ` + whereClauses.join(' OR ') + ` LIMIT 4`,
+          `${baseProductSelect}
+           WHERE ${whereClauses.join(' OR ')}
+           ORDER BY (p."countInStock" > 0) DESC, p.price ASC
+           LIMIT 5`,
           { replacements, type: QueryTypes.SELECT }
         );
       }
     }
 
-    // 5.3. Trả về kết quả
+    // 11.3. Trả kết quả
     if (products && products.length > 0) {
-      const productListStr = products.map(p => 
-        `• [${p.category || 'TCG'}] ${p.name}: ${Number(p.price).toLocaleString('en-US')}đ (${isVietnamese ? 'Còn' : 'Stock'}: ${p.countInStock})`
-      ).join('\n');
+      const filterLabel = [detectedCategoryName, detectedRarity ? `Rarity ${detectedRarity}` : null]
+        .filter(Boolean)
+        .join(' • ');
 
-      const reply = isVietnamese
-        ? `Dưới đây là các sản phẩm phù hợp tại TCG Shop:\n${productListStr}\n\nBạn có thể gõ tên sản phẩm lên thanh tìm kiếm của shop để xem chi tiết nhé!`
-        : `Here are the matching products found at TCG Shop:\n${productListStr}\n\nYou can type the product name in the search bar above for more details!`;
+      const intro = filterLabel
+        ? isVietnamese
+          ? `Kết quả phù hợp (${filterLabel}) tại TCG Shop:`
+          : `Matching items (${filterLabel}) at TCG Shop:`
+        : isVietnamese
+        ? `Dưới đây là các sản phẩm phù hợp tại TCG Shop:`
+        : `Here are the matching products found at TCG Shop:`;
 
-      return res.status(200).json({ reply });
-    } else {
-      // Khi không tìm thấy sản phẩm trùng khớp: Lấy ngẫu nhiên các sản phẩm nổi bật
-      const sampleProducts = await sequelize.query(
-        `SELECT name, price, "countInStock", category FROM "Products" ORDER BY RANDOM() LIMIT 3`,
-        { type: QueryTypes.SELECT }
-      );
+      const footer = isVietnamese
+        ? `Bạn có thể gõ tên sản phẩm lên thanh tìm kiếm phía trên để xem ảnh chi tiết và thêm vào giỏ hàng nhé!`
+        : `Type the product name in the search bar above to view details and add to cart!`;
 
-      const searchedTerm = keywords.length > 0 ? keywords.join(' ') : message;
-
-      if (sampleProducts && sampleProducts.length > 0) {
-        const sampleStr = sampleProducts.map(p => 
-          `• [${p.category || 'TCG'}] ${p.name}: ${Number(p.price).toLocaleString('en-US')}đ (${isVietnamese ? 'Còn' : 'Stock'}: ${p.countInStock})`
-        ).join('\n');
-
-        const reply = isVietnamese
-          ? `Dạ hiện tại shop chưa tìm thấy sản phẩm "${searchedTerm}" trong kho. Bạn hãy tham khảo thử một số sản phẩm nổi bật đang có sẵn tại shop nhé:\n${sampleStr}`
-          : `Sorry, we currently couldn't find any products matching "${searchedTerm}" in stock. Here are some featured items available at TCG Shop:\n${sampleStr}`;
-
-        return res.status(200).json({ reply });
-      } else {
-        const reply = isVietnamese
-          ? `Dạ hiện tại sản phẩm này tạm hết hàng. Bạn có thể để lại tin nhắn để nhân viên hỗ trợ bạn sớm nhất nhé!`
-          : `Sorry, this item is currently out of stock. Please leave a message and our staff will assist you shortly!`;
-
-        return res.status(200).json({ reply });
-      }
+      return res.status(200).json({
+        reply: `${intro}\n${formatProductLines(products)}\n\n${footer}`
+      });
     }
 
+    // 11.4. Khi không tìm thấy -> Gợi ý 3 sản phẩm đang CÒN HÀNG ngẫu nhiên trên Neon
+    const sampleProducts = await sequelize.query(
+      `${baseProductSelect}
+       WHERE p."countInStock" > 0
+       ORDER BY RANDOM()
+       LIMIT 3`,
+      { type: QueryTypes.SELECT }
+    );
+
+    const searchedTerm = keywords.length > 0 ? keywords.join(' ') : rawMsg;
+
+    if (sampleProducts && sampleProducts.length > 0) {
+      const reply = isVietnamese
+        ? `Hiện tại shop chưa tìm thấy sản phẩm khớp với "${searchedTerm}". Bạn có thể tham khảo một số sản phẩm đang có sẵn tại TCG Shop nhé:\n${formatProductLines(
+            sampleProducts
+          )}\n\nHoặc bấm "Switch to Live Staff" bên dưới để nhân viên kiểm tra hỗ trợ đặt hàng giúp bạn!`
+        : `Sorry, we couldn't find any products matching "${searchedTerm}". Here are some in-stock items available right now:\n${formatProductLines(
+            sampleProducts
+          )}\n\nYou can also click "Switch to Live Staff" below if you want our team to check special requests!`;
+      return res.status(200).json({ reply });
+    }
+
+    const fallbackReply = isVietnamese
+      ? `Hiện tại sản phẩm này chưa có sẵn. Bạn hãy bấm "Switch to Live Staff" để nhân viên hỗ trợ trực tiếp nhé!`
+      : `This item is currently unavailable. Please click "Switch to Live Staff" to chat directly with our team!`;
+    return res.status(200).json({ reply: fallbackReply });
   } catch (error) {
     console.error('Detailed error in handleAIChat:', error);
     return res.status(500).json({ reply: 'AI system is currently busy, please try again later!' });
