@@ -759,7 +759,7 @@ const handleAIChat = async (req, res) => {
       });
     }
 
-    // 11.4. Khi không tìm thấy -> Gợi ý 3 sản phẩm đang CÒN HÀNG ngẫu nhiên trên Neon
+    // 11.4. Khi không tìm thấy -> Phân biệt rõ: danh mục đang trống hàng vs từ khóa không khớp
     const sampleProducts = await sequelize.query(
       `${baseProductSelect}
        WHERE p."countInStock" > 0
@@ -768,10 +768,28 @@ const handleAIChat = async (req, res) => {
       { type: QueryTypes.SELECT }
     );
 
-    const searchedTerm = keywords.length > 0 ? keywords.join(' ') : rawMsg;
+    const searchedTerm =
+      [
+        detectedCategoryName,
+        detectedRarity ? `Rarity ${detectedRarity}` : null,
+        keywords.length > 0 ? keywords.join(' ') : null
+      ]
+        .filter(Boolean)
+        .join(' - ') || rawMsg;
+
+    // Nếu khách hỏi đúng một danh mục cụ thể (VD: Pack) nhưng danh mục đó hiện có 0 sản phẩm trong kho
+    const isEmptyCategoryQuery = Boolean(detectedCategoryName) && keywords.length === 0 && !detectedRarity;
 
     if (sampleProducts && sampleProducts.length > 0) {
-      const reply = isVietnamese
+      const reply = isEmptyCategoryQuery
+        ? isVietnamese
+          ? `Hiện tại danh mục "${detectedCategoryName}" tạm thời chưa có sản phẩm nào trong kho. Bạn có thể tham khảo một số sản phẩm đang có sẵn tại TCG Shop nhé:\n${formatProductLines(
+              sampleProducts
+            )}\n\nHoặc bấm "Switch to Live Staff" bên dưới để nhân viên hỗ trợ đặt hàng giúp bạn!`
+          : `Currently, there are no items available in the "${detectedCategoryName}" category. Here are some in-stock products you might like:\n${formatProductLines(
+              sampleProducts
+            )}\n\nYou can also click "Switch to Live Staff" below if you want our team to check upcoming restocks!`
+        : isVietnamese
         ? `Hiện tại shop chưa tìm thấy sản phẩm khớp với "${searchedTerm}". Bạn có thể tham khảo một số sản phẩm đang có sẵn tại TCG Shop nhé:\n${formatProductLines(
             sampleProducts
           )}\n\nHoặc bấm "Switch to Live Staff" bên dưới để nhân viên kiểm tra hỗ trợ đặt hàng giúp bạn!`
