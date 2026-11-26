@@ -211,7 +211,7 @@ const AdminProductList = () => {
                     required 
                   />
                   <div className="text-muted small mt-1" style={{ fontSize: '11px' }}>
-                    💵 Giá hiển thị trên web: <strong className="text-danger">{(Number(form.price || 0) * 1000).toLocaleString('vi-VN')}đ</strong>
+                    Prices displayed on the web: <strong className="text-danger">{(Number(form.price || 0) * 1000).toLocaleString('vi-VN')}đ</strong>
                   </div>
                 </Form.Group>
               </Col>
