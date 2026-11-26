@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Card, Form, ListGroup } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { HiStar, HiOutlineStar, HiOutlineShoppingBag, HiOutlineArrowLeft, HiOutlineChatBubbleOvalLeftEllipsis } from 'react-icons/hi2';
+import { HiStar, HiOutlineStar, HiHeart, HiOutlineHeart, HiOutlineShoppingBag, HiOutlineArrowLeft, HiOutlineChatBubbleOvalLeftEllipsis } from 'react-icons/hi2';
 import axiosClient from '../../api/axiosClient'; 
 import ProductCardItem from './ProductCardItem';
 import QuickViewModal from './QuickViewModal';
@@ -191,7 +191,7 @@ const ProductDetail = () => {
               className="position-absolute top-0 end-0 m-3 z-1 bg-light border-0 rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2"
               style={{ width: '40px', height: '40px' }}
             >
-              {wishlistIds.includes(product.id) ? <HiStar className="text-danger" size={20} /> : <HiOutlineStar className="text-muted" size={20} />}
+              {wishlistIds.includes(product.id) ? <HiHeart className="text-danger" size={20} /> : <HiOutlineHeart className="text-muted" size={20} />}
             </button>
             
             <div className="detail-img-box" style={{ overflow: 'hidden', borderRadius: '8px' }}>
