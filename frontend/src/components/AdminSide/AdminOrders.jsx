@@ -7,7 +7,16 @@ import '../../styles/TCGStyles.css';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
+  // Lưu danh sách ID đơn hàng đang bấm mở rộng khi có nhiều hơn 2 sản phẩm
+  const [expandedOrderIds, setExpandedOrderIds] = useState({});
   const navigate = useNavigate();
+
+  const toggleExpandItems = (orderId) => {
+    setExpandedOrderIds((prev) => ({
+      ...prev,
+      [orderId]: !prev[orderId]
+    }));
+  };
 
   // --- HÀM LẤY DANH SÁCH ĐƠN HÀNG CÓ KÈM TOKEN ---
   const getOrders = async () => {
@@ -77,15 +86,21 @@ const AdminOrders = () => {
             <tr>
               <th>ORDER ID</th>
               <th>CUSTOMER</th>
+              <th style={{ minWidth: '280px' }}>PRODUCTS</th>
               <th className="text-center">TOTAL</th>
               <th className="text-center"><HiOutlineBanknotes className="me-1"/>PAYMENT METHOD</th>
               <th className="text-center">STATUS</th>
-              <th className="text-end" style={{ width: '200px' }}>ACTIONS</th>
+              <th className="text-end" style={{ width: '185px' }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
             {orders.map(o => {
               const orderId = o.id || o._id;
+              const items = Array.isArray(o.orderItems) ? o.orderItems : [];
+              const isExpanded = Boolean(expandedOrderIds[orderId]);
+              const visibleItems = isExpanded ? items : items.slice(0, 2);
+              const hiddenCount = items.length - visibleItems.length;
+
               return (
                 <tr key={orderId}>
                   <td className="fw-bold">#{String(orderId).slice(-6).toUpperCase()}</td>
@@ -95,6 +110,62 @@ const AdminOrders = () => {
                       {o.UserData?.name || o.User?.name || o.user?.name || o.userName || "Customer"}
                     </div>
                     <small className="text-muted">{o.phone}</small>
+                  </td>
+                  <td>
+                    {/* Hiển thị ảnh và tên các sản phẩm khách hàng đã đặt */}
+                    {items.length === 0 ? (
+                      <span className="text-muted small fst-italic">No product details</span>
+                    ) : (
+                      <div className="d-flex flex-column gap-2">
+                        {visibleItems.map((item, idx) => (
+                          <div key={item.id || idx} className="d-flex align-items-center gap-2">
+                            <img
+                              src={item.image || 'https://via.placeholder.com/42'}
+                              alt={item.name}
+                              className="rounded border bg-white flex-shrink-0"
+                              style={{ width: '42px', height: '42px', objectFit: 'contain', padding: '2px' }}
+                            />
+                            <div className="min-w-0">
+                              <div
+                                className="fw-semibold text-dark small text-truncate"
+                                style={{ maxWidth: '240px' }}
+                                title={item.name}
+                              >
+                                {item.name}
+                              </div>
+                              <div className="d-flex align-items-center gap-2" style={{ fontSize: '0.75rem' }}>
+                                <Badge bg="light" text="dark" className="border">
+                                  x{item.qty}
+                                </Badge>
+                                <span className="text-muted">
+                                  {Number(item.price || 0).toLocaleString()}đ
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {hiddenCount > 0 && (
+                          <button
+                            type="button"
+                            className="btn btn-link btn-sm p-0 text-start text-danger fw-bold text-decoration-none"
+                            style={{ fontSize: '0.75rem' }}
+                            onClick={() => toggleExpandItems(orderId)}
+                          >
+                            + {hiddenCount} more item{hiddenCount > 1 ? 's' : ''}
+                          </button>
+                        )}
+                        {isExpanded && items.length > 2 && (
+                          <button
+                            type="button"
+                            className="btn btn-link btn-sm p-0 text-start text-secondary fw-bold text-decoration-none"
+                            style={{ fontSize: '0.75rem' }}
+                            onClick={() => toggleExpandItems(orderId)}
+                          >
+                            Show less
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="text-center fw-bold text-danger">
                     {Number(o.totalPrice || o.total_price || 0).toLocaleString()}đ

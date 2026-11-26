@@ -223,6 +223,7 @@ const AdminProductList = () => {
                     type="number" 
                     value={form.countInStock} 
                     onChange={e => setForm({...form, countInStock: e.target.value})} 
+                    min="0"
                     required 
                   />
                 </Form.Group>

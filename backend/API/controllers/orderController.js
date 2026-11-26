@@ -119,12 +119,17 @@ const getMyOrders = async (req, res) => {
 const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.findAll({
-            // Join với bảng User qua alias 'UserData' (đã khai báo trong server.js) để lấy tên tài khoản
+            // Join bảng User (lấy tên khách) và bảng OrderItems (lấy ảnh, tên, số lượng sản phẩm đã đặt)
             include: [
                 {
                     model: User,
                     as: 'UserData',
                     attributes: ['id', 'name', 'email']
+                },
+                {
+                    model: OrderItem,
+                    as: 'orderItems',
+                    attributes: ['id', 'productId', 'name', 'qty', 'image', 'price']
                 }
             ],
             order: [['createdAt', 'DESC']]
