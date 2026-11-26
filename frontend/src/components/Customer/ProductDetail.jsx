@@ -21,6 +21,7 @@ const ProductDetail = () => {
 
   // State phục vụ việc gửi Review mới
   const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
 
@@ -287,18 +288,39 @@ const ProductDetail = () => {
             {userInfo ? (
               <Form onSubmit={submitReviewHandler}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-bold">Select Rating:</Form.Label>
-                  <Form.Select 
-                    className="tcg-input w-25" 
-                    value={rating} 
-                    onChange={(e) => setRating(e.target.value)}
-                  >
-                    <option value="5">5 Stars ⭐⭐⭐⭐⭐</option>
-                    <option value="4">4 Stars ⭐⭐⭐⭐</option>
-                    <option value="3">3 Stars ⭐⭐⭐</option>
-                    <option value="2">2 Stars ⭐⭐</option>
-                    <option value="1">1 Star ⭐</option>
-                  </Form.Select>
+                  <Form.Label className="small fw-bold d-block">Select Rating:</Form.Label>
+                  {/* Thanh chọn số sao trực tiếp bằng Heroicons thay cho dropdown emoji */}
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      className="d-flex align-items-center gap-1"
+                      onMouseLeave={() => setHoverRating(0)}
+                    >
+                      {[1, 2, 3, 4, 5].map((starValue) => {
+                        const activeValue = hoverRating || Number(rating);
+                        const isFilled = starValue <= activeValue;
+                        return (
+                          <button
+                            key={starValue}
+                            type="button"
+                            className="btn p-0 border-0 bg-transparent shadow-none"
+                            onClick={() => setRating(starValue)}
+                            onMouseEnter={() => setHoverRating(starValue)}
+                            aria-label={`Rate ${starValue} star${starValue > 1 ? 's' : ''}`}
+                            style={{ lineHeight: 1 }}
+                          >
+                            {isFilled ? (
+                              <HiStar className="text-warning" size={28} />
+                            ) : (
+                              <HiOutlineStar className="text-secondary" size={28} />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <span className="small fw-bold text-secondary">
+                      {hoverRating || rating} {(hoverRating || rating) > 1 ? 'Stars' : 'Star'}
+                    </span>
+                  </div>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
