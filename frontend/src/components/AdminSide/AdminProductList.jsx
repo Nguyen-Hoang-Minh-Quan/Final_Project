@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Table, Button, Modal, Form, Card, Row, Col } from 'react-bootstrap';
 import axiosClient from '../../api/axiosClient'; 
-import { FaPlus, FaTrash, FaEdit, FaBox, FaChevronLeft } from 'react-icons/fa';
+import { HiOutlinePlus, HiOutlineTrash, HiOutlinePencilSquare, HiOutlineCube, HiOutlineChevronLeft } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const AdminProductList = () => {
@@ -121,14 +121,14 @@ const AdminProductList = () => {
       <Card className="border-0 shadow-sm p-4">
         <Row className="align-items-center mb-4">
           <Col>
-            <h2 className="fw-bold mb-2"><FaBox className="text-danger me-2"/>PRODUCT INVENTORY</h2>
+            <h2 className="fw-bold mb-2"><HiOutlineCube className="text-danger me-2"/>PRODUCT INVENTORY</h2>
             <Button variant="outline-secondary" size="sm" className="me-3 border-0 tcg-btn" onClick={() => navigate('/admin')}>
-              <FaChevronLeft className="me-1"/> GO BACK
+              <HiOutlineChevronLeft className="me-1"/> GO BACK
             </Button>
           </Col>
           <Col className="text-end">
             <Button className="tcg-btn px-4" variant="danger" onClick={handleAdd}>
-              <FaPlus className="me-2"/> ADD NEW PRODUCT
+              <HiOutlinePlus className="me-2"/> ADD NEW PRODUCT
             </Button>
           </Col>
         </Row>
@@ -169,10 +169,10 @@ const AdminProductList = () => {
                 </td>
                 <td className="text-end">
                   <Button variant="outline-primary" size="sm" className="me-2 border-0" onClick={() => handleEdit(p)}>
-                    <FaEdit />
+                    <HiOutlinePencilSquare />
                   </Button>
                   <Button variant="outline-danger" size="sm" className="border-0" onClick={() => deleteProduct(p.id)}>
-                    <FaTrash />
+                    <HiOutlineTrash />
                   </Button>
                 </td>
               </tr>

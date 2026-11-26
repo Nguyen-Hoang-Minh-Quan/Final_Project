@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Table, Button, Modal, Form, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FaNewspaper, FaPlus, FaTrash, FaChevronLeft } from 'react-icons/fa';
+import { HiOutlineNewspaper, HiOutlinePlus, HiOutlineTrash, HiOutlineChevronLeft } from 'react-icons/hi2';
 import { toast } from 'react-toastify';
 import axiosClient from '../../api/axiosClient';
 import '../../styles/TCGStyles.css';
@@ -53,14 +53,14 @@ const AdminBlogManagement = () => {
       <Card className="border-0 shadow-sm p-4">
         <Row className="align-items-center mb-4">
           <Col>
-            <h2 className="fw-bold mb-2"><FaNewspaper className="text-danger me-2" />BLOG MANAGEMENT</h2>
+            <h2 className="fw-bold mb-2"><HiOutlineNewspaper className="text-danger me-2" />BLOG MANAGEMENT</h2>
             <Button variant="outline-secondary" size="sm" className="border-0 tcg-btn" onClick={() => navigate('/admin')}>
-              <FaChevronLeft className="me-1" /> GO BACK
+              <HiOutlineChevronLeft className="me-1" /> GO BACK
             </Button>
           </Col>
           <Col className="text-end">
             <Button variant="danger" className="tcg-btn px-4" onClick={() => setShow(true)}>
-              <FaPlus className="me-2" /> CREATE NEW POST
+              <HiOutlinePlus className="me-2" /> CREATE NEW POST
             </Button>
           </Col>
         </Row>
@@ -86,7 +86,7 @@ const AdminBlogManagement = () => {
                 <td className="fw-bold">{b.AuthorData?.name || 'Staff'}</td>
                 <td className="small text-muted">{new Date(b.createdAt).toLocaleDateString('vi-VN')}</td>
                 <td className="text-end">
-                  <Button variant="outline-danger" size="sm" onClick={() => handleDelete(b.id)}><FaTrash /></Button>
+                  <Button variant="outline-danger" size="sm" onClick={() => handleDelete(b.id)}><HiOutlineTrash /></Button>
                 </td>
               </tr>
             ))}

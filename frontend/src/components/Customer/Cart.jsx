@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Button, Card } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
+import { HiOutlineTrash, HiOutlinePlus, HiOutlineMinus } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const Cart = () => {
@@ -67,12 +67,12 @@ const Cart = () => {
                       </div>
                     </td>
                     <td className="text-center">
-                      <Button variant="light" size="sm" onClick={() => updateQty(item.id, item.qty - 1, item.countInStock)}><FaMinus/></Button>
+                      <Button variant="light" size="sm" onClick={() => updateQty(item.id, item.qty - 1, item.countInStock)}><HiOutlineMinus/></Button>
                       <b className="mx-2">{item.qty}</b>
-                      <Button variant="light" size="sm" onClick={() => updateQty(item.id, item.qty + 1, item.countInStock)}><FaPlus/></Button>
+                      <Button variant="light" size="sm" onClick={() => updateQty(item.id, item.qty + 1, item.countInStock)}><HiOutlinePlus/></Button>
                     </td>
                     <td className="text-end fw-bold text-danger">{(item.price * item.qty).toLocaleString()}đ</td>
-                    <td className="text-center"><Button variant="link" className="text-danger" onClick={() => removeItem(item.id)}><FaTrash/></Button></td>
+                    <td className="text-center"><Button variant="link" className="text-danger" onClick={() => removeItem(item.id)}><HiOutlineTrash/></Button></td>
                   </tr>
                 ))}
               </tbody>

@@ -2,19 +2,18 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaComments,
-  FaPaperPlane,
-  FaChevronLeft,
-  FaCircle,
-  FaSearch,
-  FaUserShield,
-  FaUserTie,
-  FaUser,
-  FaRobot,
-  FaHeadset,
-  FaClock,
-  FaArrowRight
-} from 'react-icons/fa';
+  HiOutlineChatBubbleLeftRight,
+  HiOutlinePaperAirplane,
+  HiOutlineChevronLeft,
+  HiOutlineMagnifyingGlass,
+  HiOutlineShieldCheck,
+  HiOutlineBriefcase,
+  HiOutlineUser,
+  HiOutlineCpuChip,
+  HiOutlineLifebuoy,
+  HiOutlineClock,
+  HiOutlineArrowRight
+} from 'react-icons/hi2';
 import { toast } from 'react-toastify';
 import axiosClient from '../../api/axiosClient';
 import '../../styles/TCGStyles.css';
@@ -125,7 +124,7 @@ const StaffChat = () => {
         label: 'ADMIN',
         badgeBg: 'danger',
         avatarBg: 'linear-gradient(135deg, #dc3545, #9b1c28)',
-        icon: <FaUserShield className="me-1" />
+        icon: <HiOutlineShieldCheck className="me-1" />
       };
     }
     if (normalized === 'Staff') {
@@ -133,14 +132,14 @@ const StaffChat = () => {
         label: 'STAFF',
         badgeBg: 'primary',
         avatarBg: 'linear-gradient(135deg, #0d6efd, #084298)',
-        icon: <FaUserTie className="me-1" />
+        icon: <HiOutlineBriefcase className="me-1" />
       };
     }
     return {
       label: 'CUSTOMER',
       badgeBg: 'success',
       avatarBg: 'linear-gradient(135deg, #198754, #0f5132)',
-      icon: <FaUser className="me-1" />
+      icon: <HiOutlineUser className="me-1" />
     };
   };
 
@@ -396,7 +395,7 @@ const StaffChat = () => {
               className="d-flex align-items-center justify-content-center rounded-circle bg-danger text-white shadow-sm"
               style={{ width: '42px', height: '42px' }}
             >
-              <FaHeadset className="fs-5" />
+              <HiOutlineLifebuoy className="fs-5" />
             </div>
             <div>
               <div className="d-flex align-items-center gap-2">
@@ -450,7 +449,7 @@ const StaffChat = () => {
               onClick={() => navigate('/admin')}
               style={{ borderRadius: '8px' }}
             >
-              <FaChevronLeft /> DASHBOARD
+              <HiOutlineChevronLeft /> DASHBOARD
             </Button>
           </div>
         </div>
@@ -461,7 +460,7 @@ const StaffChat = () => {
             {/* Thanh tìm kiếm & Bộ lọc hàng đợi */}
             <div className="p-3 border-bottom bg-light">
               <div className="position-relative mb-2">
-                <FaSearch
+                <HiOutlineMagnifyingGlass
                   className="position-absolute text-muted"
                   style={{ top: '50%', left: '12px', transform: 'translateY(-50%)', fontSize: '0.85rem' }}
                 />
@@ -520,7 +519,7 @@ const StaffChat = () => {
             <div className="flex-grow-1 overflow-auto">
               {displayedRooms.length === 0 ? (
                 <div className="text-center text-muted p-4 my-4">
-                  <FaComments className="fs-2 mb-2 opacity-50" />
+                  <HiOutlineChatBubbleLeftRight className="fs-2 mb-2 opacity-50" />
                   <div className="small fw-bold">No matching conversations</div>
                   <div style={{ fontSize: '0.78rem' }}>
                     {filterTab === 'waiting'
@@ -590,7 +589,7 @@ const StaffChat = () => {
                                 className="d-flex align-items-center gap-1"
                                 style={{ fontSize: '0.62rem' }}
                               >
-                                <FaClock size={9} /> WAITING
+                                <HiOutlineClock size={9} /> WAITING
                               </Badge>
                             )}
                             {isAiOnly && (
@@ -689,7 +688,7 @@ const StaffChat = () => {
                         bg="success"
                         className="px-3 py-2 d-flex align-items-center gap-1 rounded-pill"
                       >
-                        <FaCircle style={{ fontSize: '8px' }} /> Active Session
+                        <span className="dot-online" /> Active Session
                       </Badge>
                     </div>
                   );
@@ -706,7 +705,7 @@ const StaffChat = () => {
                       }`}
                       style={{ borderRadius: '8px', fontSize: '0.82rem' }}
                     >
-                      <FaHeadset />
+                      <HiOutlineLifebuoy />
                       <span>Live Support ({liveSupportMessages.length})</span>
                       {activeRoom.waiting_for_staff && (
                         <Badge bg="warning" text="dark" pill>
@@ -727,7 +726,7 @@ const StaffChat = () => {
                         border: channelTab === 'ai' ? '1px solid #6d28d9' : '1px solid #d8b4fe'
                       }}
                     >
-                      <FaRobot />
+                      <HiOutlineCpuChip />
                       <span>AI Log ({aiLogMessages.length})</span>
                     </button>
                   </div>
@@ -760,7 +759,7 @@ const StaffChat = () => {
                     <div className="text-center text-muted my-5 py-4">
                       {!activeRoom.is_internal && channelTab === 'ai' ? (
                         <>
-                          <FaRobot className="fs-1 mb-2 opacity-25" style={{ color: '#6d28d9' }} />
+                          <HiOutlineCpuChip className="fs-1 mb-2 opacity-25" style={{ color: '#6d28d9' }} />
                           <p className="mb-1 fw-bold text-dark">No AI Assistant History</p>
                           <small>
                             {activeRoom.user_name} has not asked the AI Assistant any questions yet.
@@ -768,7 +767,7 @@ const StaffChat = () => {
                         </>
                       ) : (
                         <>
-                          <FaHeadset className="fs-1 mb-2 opacity-25 text-danger" />
+                          <HiOutlineLifebuoy className="fs-1 mb-2 opacity-25 text-danger" />
                           <p className="mb-1 fw-bold text-dark">
                             No Live Support Messages Yet
                           </p>
@@ -803,7 +802,7 @@ const StaffChat = () => {
                               }}
                               title="TCG AI Bot"
                             >
-                              <FaRobot />
+                              <HiOutlineCpuChip />
                             </div>
                           )}
 
@@ -952,7 +951,7 @@ const StaffChat = () => {
                       className="fw-bold px-3 py-2 d-flex align-items-center gap-2 tcg-btn"
                       onClick={() => setChannelTab('staff')}
                     >
-                      Switch to Live Support to Reply <FaArrowRight size={12} />
+                      Switch to Live Support to Reply <HiOutlineArrowRight size={12} />
                     </Button>
                   </div>
                 ) : (
@@ -975,14 +974,14 @@ const StaffChat = () => {
                       className="px-4 py-2 fw-bold d-flex align-items-center gap-2 tcg-btn"
                       style={{ borderRadius: '10px' }}
                     >
-                      <FaPaperPlane /> SEND
+                      <HiOutlinePaperAirplane /> SEND
                     </Button>
                   </Form>
                 )}
               </>
             ) : (
               <div className="text-center text-muted m-auto p-4">
-                <FaComments className="fs-1 text-secondary mb-3 opacity-50" />
+                <HiOutlineChatBubbleLeftRight className="fs-1 text-secondary mb-3 opacity-50" />
                 <h5 className="fw-bold text-dark">Select a conversation on the left</h5>
                 <p className="small text-muted mb-0">
                   Customers waiting for a human reply are automatically prioritized at the top.

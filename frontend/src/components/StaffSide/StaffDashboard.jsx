@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaBoxOpen, FaTools, FaComment, FaNewspaper, FaComments, FaExclamationTriangle, FaHourglassHalf } from 'react-icons/fa';
+import {
+  HiOutlineArchiveBox,
+  HiOutlineWrenchScrewdriver,
+  HiOutlineChatBubbleLeft,
+  HiOutlineNewspaper,
+  HiOutlineChatBubbleLeftRight,
+  HiOutlineExclamationTriangle,
+  HiOutlineClock
+} from 'react-icons/hi2';
 import axiosClient from '../../api/axiosClient';
 import '../../styles/TCGStyles.css';
 
@@ -37,11 +45,11 @@ const StaffDashboard = () => {
   }, []);
 
   const staffActions = [
-    { title: "PROCESS ORDERS", icon: <FaBoxOpen />, color: "bg-primary", link: "/admin/orders", badge: pendingOrdersCount > 0 ? `${pendingOrdersCount} new orders` : null },
-    { title: "MANAGE INVENTORY", icon: <FaTools />, color: "bg-danger", link: "/admin/products", badge: lowStockCount > 0 ? `${lowStockCount} items running low` : null },
-    { title: "POST NEWS", icon: <FaNewspaper />, color: "bg-secondary", link: "/admin/blogs" },
-    { title: "MANAGE REVIEWS", icon: <FaComment />, color: "bg-info", link: "/admin/reviews" },
-    { title: "SUPPORT CHAT", icon: <FaComments />, color: "bg-warning", link: "/admin/chat" }
+    { title: "PROCESS ORDERS", icon: <HiOutlineArchiveBox />, color: "bg-primary", link: "/admin/orders", badge: pendingOrdersCount > 0 ? `${pendingOrdersCount} new orders` : null },
+    { title: "MANAGE INVENTORY", icon: <HiOutlineWrenchScrewdriver />, color: "bg-danger", link: "/admin/products", badge: lowStockCount > 0 ? `${lowStockCount} items running low` : null },
+    { title: "POST NEWS", icon: <HiOutlineNewspaper />, color: "bg-secondary", link: "/admin/blogs" },
+    { title: "MANAGE REVIEWS", icon: <HiOutlineChatBubbleLeft />, color: "bg-info", link: "/admin/reviews" },
+    { title: "SUPPORT CHAT", icon: <HiOutlineChatBubbleLeftRight />, color: "bg-warning", link: "/admin/chat" }
   ];
 
   return (
@@ -61,7 +69,7 @@ const StaffDashboard = () => {
         <Col md={6}>
           <Card className="border-0 shadow-sm bg-warning bg-opacity-10 border-start border-warning border-4">
             <Card.Body className="d-flex align-items-center">
-              <FaHourglassHalf className="fs-1 text-warning me-3" />
+              <HiOutlineClock className="fs-1 text-warning me-3" />
               <div>
                 <h6 className="fw-bold mb-1">Pending Orders</h6>
                 <div className="fs-5 fw-bold text-dark">{pendingOrdersCount} orders pending processing</div>
@@ -72,7 +80,7 @@ const StaffDashboard = () => {
         <Col md={6}>
           <Card className="border-0 shadow-sm bg-danger bg-opacity-10 border-start border-danger border-4">
             <Card.Body className="d-flex align-items-center">
-              <FaExclamationTriangle className="fs-1 text-danger me-3" />
+              <HiOutlineExclamationTriangle className="fs-1 text-danger me-3" />
               <div>
                 <h6 className="fw-bold mb-1">Inventory Warning</h6>
                 <div className="fs-5 fw-bold text-dark">{lowStockCount} items running low</div>

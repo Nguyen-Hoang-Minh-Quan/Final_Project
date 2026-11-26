@@ -3,7 +3,7 @@ import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
-import { FaUser, FaEnvelope, FaLock, FaCheckCircle, FaShieldAlt } from 'react-icons/fa';
+import { HiOutlineUser, HiOutlineEnvelope, HiOutlineLockClosed, HiOutlineCheckCircle, HiOutlineShieldCheck } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const Register = () => {
@@ -62,7 +62,7 @@ const Register = () => {
 
         {error && (
           <Alert variant="danger" className="py-2 small d-flex align-items-center">
-            <FaShieldAlt className="me-2 flex-shrink-0" />
+            <HiOutlineShieldCheck className="me-2 flex-shrink-0" />
             <span>{error}</span>
           </Alert>
         )}
@@ -70,7 +70,7 @@ const Register = () => {
         <Form onSubmit={handleRegister}>
           <Form.Group className="mb-3">
             <Form.Label className="small fw-bold text-secondary">
-              <FaUser className="me-1" /> Tên hiển thị
+              <HiOutlineUser className="me-1" /> Tên hiển thị
             </Form.Label>
             <Form.Control 
               className="tcg-input" 
@@ -83,7 +83,7 @@ const Register = () => {
 
           <Form.Group className="mb-3">
             <Form.Label className="small fw-bold text-secondary">
-              <FaEnvelope className="me-1" /> Địa chỉ Email
+              <HiOutlineEnvelope className="me-1" /> Địa chỉ Email
             </Form.Label>
             <Form.Control 
               className="tcg-input" 
@@ -97,7 +97,7 @@ const Register = () => {
 
           <Form.Group className="mb-3">
             <Form.Label className="small fw-bold text-secondary">
-              <FaLock className="me-1" /> Mật khẩu
+              <HiOutlineLockClosed className="me-1" /> Mật khẩu
             </Form.Label>
             <Form.Control 
               className="tcg-input" 
@@ -114,7 +114,7 @@ const Register = () => {
 
           <Form.Group className="mb-4">
             <Form.Label className="small fw-bold text-secondary">
-              <FaCheckCircle className="me-1" /> Xác nhận mật khẩu
+              <HiOutlineCheckCircle className="me-1" /> Xác nhận mật khẩu
             </Form.Label>
             <Form.Control 
               className="tcg-input" 

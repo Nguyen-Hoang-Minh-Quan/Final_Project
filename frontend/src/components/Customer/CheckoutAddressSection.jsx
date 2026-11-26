@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Row, Col, Modal } from 'react-bootstrap';
-import { FaMapMarkerAlt, FaPlus, FaTrash } from 'react-icons/fa';
+import { HiOutlineMapPin, HiOutlinePlus, HiOutlineTrash } from 'react-icons/hi2';
 import { toast } from 'react-toastify';
 import axiosClient from '../../api/axiosClient';
 
@@ -94,7 +94,7 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
       <Card.Body p={4}>
         <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
           <h5 className="fw-bold text-dark m-0 d-flex align-items-center gap-2" style={{fontSize: '1.1rem'}}>
-            <FaMapMarkerAlt className="text-danger" /> SHIPPING ADDRESS BOOK
+            <HiOutlineMapPin className="text-danger" /> SHIPPING ADDRESS BOOK
           </h5>
           <Button 
             variant="outline-danger" 
@@ -103,7 +103,7 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
             onClick={() => setShowModal(true)}
             style={{ borderRadius: '6px', fontSize: '0.8rem' }}
           >
-            <FaPlus /> ADD NEW ADDRESS
+            <HiOutlinePlus /> ADD NEW ADDRESS
           </Button>
         </div>
 
@@ -152,7 +152,7 @@ const CheckoutAddressSection = ({ onAddressSelect }) => {
                     onClick={(e) => handleDeleteAddress(addr.id, e)}
                     style={{ transition: 'color 0.2s' }}
                   >
-                    <FaTrash size={14}/>
+                    <HiOutlineTrash size={14}/>
                   </button>
                 )}
               </div>

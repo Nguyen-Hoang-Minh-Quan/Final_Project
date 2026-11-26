@@ -3,7 +3,7 @@ import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
-import { FaEnvelope, FaKey, FaLock, FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
+import { HiOutlineEnvelope, HiOutlineKey, HiOutlineLockClosed, HiOutlineArrowLeft, HiOutlineCheckCircle } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const ForgotPassword = () => {
@@ -118,7 +118,7 @@ const ForgotPassword = () => {
                     <Form onSubmit={handleSendOtp}>
                         <Form.Group className="mb-4">
                             <Form.Label className="fw-bold small text-secondary">
-                                <FaEnvelope className="me-1" /> Email Address
+                                <HiOutlineEnvelope className="me-1" /> Email Address
                             </Form.Label>
                             <Form.Control 
                                 className="tcg-input" 
@@ -142,7 +142,7 @@ const ForgotPassword = () => {
                         
                         <div className="pt-3 text-center small">
                             <Link to="/login" style={{ color: '#6c757d', textDecoration: 'none', fontWeight: 'bold' }}>
-                                <FaArrowLeft className="me-1" /> Back to Login
+                                <HiOutlineArrowLeft className="me-1" /> Back to Login
                             </Link>
                         </div>
                     </Form>
@@ -151,7 +151,7 @@ const ForgotPassword = () => {
                     <Form onSubmit={handleResetWithOtp}>
                         <Form.Group className="mb-3">
                             <Form.Label className="fw-bold small text-secondary">
-                                <FaKey className="me-1 text-warning" /> OTP Verification Code (6 digits)
+                                <HiOutlineKey className="me-1 text-warning" /> OTP Verification Code (6 digits)
                             </Form.Label>
                             <Form.Control 
                                 className="tcg-input text-center fw-bold fs-5" 
@@ -171,7 +171,7 @@ const ForgotPassword = () => {
 
                         <Form.Group className="mb-3">
                             <Form.Label className="fw-bold small text-secondary">
-                                <FaLock className="me-1" /> New Password
+                                <HiOutlineLockClosed className="me-1" /> New Password
                             </Form.Label>
                             <Form.Control 
                                 className="tcg-input" 
@@ -186,7 +186,7 @@ const ForgotPassword = () => {
 
                         <Form.Group className="mb-4">
                             <Form.Label className="fw-bold small text-secondary">
-                                <FaCheckCircle className="me-1" /> Confirm New Password
+                                <HiOutlineCheckCircle className="me-1" /> Confirm New Password
                             </Form.Label>
                             <Form.Control 
                                 className="tcg-input" 
@@ -215,7 +215,7 @@ const ForgotPassword = () => {
                                 onClick={() => { setStep(1); setMessage(''); setError(''); }}
                                 disabled={loading}
                             >
-                                <FaArrowLeft className="me-1" /> Change Email
+                                <HiOutlineArrowLeft className="me-1" /> Change Email
                             </button>
                             <button
                                 type="button"

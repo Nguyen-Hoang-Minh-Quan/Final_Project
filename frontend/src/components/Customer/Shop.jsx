@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Form, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaFilter } from 'react-icons/fa';
+import { HiOutlineFunnel } from 'react-icons/hi2';
 import axiosClient from '../../api/axiosClient';
 import '../../styles/TCGStyles.css';
 
@@ -138,7 +138,7 @@ const Shop = () => {
         <Col lg={3} md={4} className="mb-4">
           <Card className="p-3 border-0 shadow-sm bg-light">
             <h5 className="fw-bold mb-3 d-flex align-items-center">
-              <FaFilter className="me-2 text-danger" size={16} /> PRODUCT FILTERS
+              <HiOutlineFunnel className="me-2 text-danger" size={16} /> PRODUCT FILTERS
             </h5>
             
             <Form.Group className="mb-4">

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Row, Col, Button, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaShoppingBag, FaEye } from 'react-icons/fa';
+import { HiOutlineShoppingBag, HiOutlineEye } from 'react-icons/hi2';
 
 const QuickViewModal = ({ show, handleClose, product, addToCart }) => {
   if (!product) return null;
@@ -42,10 +42,10 @@ const QuickViewModal = ({ show, handleClose, product, addToCart }) => {
                   handleClose();
                 }}
               >
-                <FaShoppingBag className="me-2" /> Add to cart
+                <HiOutlineShoppingBag className="me-2" /> Add to cart
               </Button>
               <Button as={Link} to={`/product/${product.id}`} variant="outline-danger" className="fw-bold" onClick={handleClose}>
-                <FaEye className="me-1"/> View details
+                <HiOutlineEye className="me-1"/> View details
               </Button>
             </div>
           </Col>

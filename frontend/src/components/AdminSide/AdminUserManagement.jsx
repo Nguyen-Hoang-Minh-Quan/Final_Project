@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Table, Form, Badge, Button, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FaUserShield, FaChevronLeft } from 'react-icons/fa';
+import { HiOutlineShieldCheck, HiOutlineChevronLeft } from 'react-icons/hi2';
 import { toast } from 'react-toastify';
 import axiosClient from '../../api/axiosClient';
 import '../../styles/TCGStyles.css';
@@ -45,7 +45,7 @@ const AdminUserManagement = () => {
         <Row className="align-items-center mb-4">
           <Col>
             <h2 className="fw-bold mb-2">
-              <FaUserShield className="text-danger me-2" />
+              <HiOutlineShieldCheck className="text-danger me-2" />
               USER MANAGEMENT & ROLE ASSIGNMENT
             </h2>
             <Button 
@@ -54,7 +54,7 @@ const AdminUserManagement = () => {
               className="border-0 tcg-btn" 
               onClick={() => navigate('/admin')}
             >
-              <FaChevronLeft className="me-1" /> BACK TO DASHBOARD
+              <HiOutlineChevronLeft className="me-1" /> BACK TO DASHBOARD
             </Button>
           </Col>
         </Row>

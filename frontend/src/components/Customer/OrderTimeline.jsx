@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaClipboardList, FaBoxOpen, FaTruck, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { HiOutlineClipboardDocumentList, HiOutlineArchiveBox, HiOutlineTruck, HiOutlineCheckCircle, HiOutlineXCircle } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const OrderTimeline = ({ order }) => {
@@ -21,16 +21,16 @@ const OrderTimeline = ({ order }) => {
 
   // Khai báo các bước (Giữ nguyên logic hiển thị dựa trên statusId)
   const steps = [
-    { id: 1, title: "Placed Order", icon: <FaClipboardList />, active: true, time: order.createdAt },
-    { id: 2, title: "Confirmed", icon: <FaBoxOpen />, active: statusId === 1 || statusId === 2, time: order.paidAt || order.createdAt },
-    { id: 3, title: "In Transit", icon: <FaTruck />, active: statusId === 1 || statusId === 2, time: order.deliveredAt },
-    { id: 4, title: "Delivered", icon: <FaCheckCircle />, active: statusId === 2, time: order.updatedAt || order.deliveredAt }
+    { id: 1, title: "Placed Order", icon: <HiOutlineClipboardDocumentList />, active: true, time: order.createdAt },
+    { id: 2, title: "Confirmed", icon: <HiOutlineArchiveBox />, active: statusId === 1 || statusId === 2, time: order.paidAt || order.createdAt },
+    { id: 3, title: "In Transit", icon: <HiOutlineTruck />, active: statusId === 1 || statusId === 2, time: order.deliveredAt },
+    { id: 4, title: "Delivered", icon: <HiOutlineCheckCircle />, active: statusId === 2, time: order.updatedAt || order.deliveredAt }
   ];
 
   if (statusId === 3) {
     return (
       <div className="d-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger p-3 rounded-3 mb-4 fw-bold border border-danger border-opacity-25 gap-2" style={{borderRadius: '12px'}}>
-        <FaTimesCircle size={20}/> ORDER HAS BEEN CANCELLED BY THE USER OR ADMIN
+        <HiOutlineXCircle size={20}/> ORDER HAS BEEN CANCELLED BY THE USER OR ADMIN
       </div>
     );
   }

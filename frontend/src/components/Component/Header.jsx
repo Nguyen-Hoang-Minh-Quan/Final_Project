@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Form, FormControl, Button, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaUserShield, FaHistory, FaUserCircle, FaSignOutAlt, FaSearch, FaShoppingCart, FaHeart, FaUserCog } from 'react-icons/fa';
+import {
+  HiOutlineShieldCheck,
+  HiOutlineClock,
+  HiOutlineUserCircle,
+  HiOutlineArrowLeftOnRectangle,
+  HiOutlineMagnifyingGlass,
+  HiOutlineShoppingCart,
+  HiHeart,
+  HiOutlineCog6Tooth
+} from 'react-icons/hi2';
 import { toast } from 'react-toastify';
 import '../../styles/TCGStyles.css';
 
@@ -87,7 +96,7 @@ const Header = () => {
               onChange={(e) => setKeyword(e.target.value)} 
             />
             <Button type="submit" variant="danger" className="tcg-btn">
-              <FaSearch />
+              <HiOutlineMagnifyingGlass />
             </Button>
           </Form>
 
@@ -96,7 +105,7 @@ const Header = () => {
             {!isStaffOrAdmin && (
               <>
                 <Nav.Link as={Link} to="/wishlist" className="position-relative me-3">
-                  <FaHeart className="fs-4 text-danger" />
+                  <HiHeart className="fs-4 text-danger" />
                   {wishlistCount > 0 && (
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark fw-bold">
                       {wishlistCount}
@@ -104,7 +113,7 @@ const Header = () => {
                   )}
                 </Nav.Link>
                 <Nav.Link as={Link} to="/cart" className="position-relative me-3">
-                  <FaShoppingCart className="fs-4 text-light" />
+                  <HiOutlineShoppingCart className="fs-4 text-light" />
                   {cartCount > 0 && (
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                       {cartCount}
@@ -118,33 +127,33 @@ const Header = () => {
               <NavDropdown 
                 title={
                   <span className="fw-bold text-danger">
-                    <FaUserCircle className="me-1"/>{user.name}
+                    <HiOutlineUserCircle className="me-1"/>{user.name}
                   </span>
                 } 
               >
                 <NavDropdown.Item as={Link} to="/profile">
-                  <FaUserCircle className="me-2 text-primary"/>Profile
+                  <HiOutlineUserCircle className="me-2 text-primary"/>Profile
                 </NavDropdown.Item>
 
                 {/* KIỂM TRA QUYỀN ADMIN / STAFF ĐỂ HIỆN NÚT TRUY CẬP TRANG QUẢN TRỊ */}
                 {isStaffOrAdmin ? (
                   <NavDropdown.Item as={Link} to="/admin" className="fw-bold text-danger">
                     {userRole === 'Staff' ? (
-                      <><FaUserCog className="me-2 text-warning"/>Staff Dashboard</>
+                      <><HiOutlineCog6Tooth className="me-2 text-warning"/>Staff Dashboard</>
                     ) : (
-                      <><FaUserShield className="me-2 text-danger"/>System Administration</>
+                      <><HiOutlineShieldCheck className="me-2 text-danger"/>System Administration</>
                     )}
                   </NavDropdown.Item>
                 ) : (
                   <NavDropdown.Item as={Link} to="/order-history">
-                    <FaHistory className="me-2 text-success"/>Order History
+                    <HiOutlineClock className="me-2 text-success"/>Order History
                   </NavDropdown.Item>
                 )}
 
                 <NavDropdown.Divider />
                 
                 <NavDropdown.Item onClick={logoutHandler} className="text-danger">
-                  <FaSignOutAlt className="me-2"/>Log Out
+                  <HiOutlineArrowLeftOnRectangle className="me-2"/>Log Out
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (

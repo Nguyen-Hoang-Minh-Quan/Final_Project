@@ -1,22 +1,23 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import { FaFacebook, FaInstagram, FaTiktok, FaYoutube, FaPhoneAlt } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaTiktok, FaYoutube } from 'react-icons/fa';
+import { HiOutlineTruck, HiOutlineGift, HiOutlineCheckCircle, HiOutlinePhone } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const Footer = () => (
   <footer className="custom-footer pt-5 pb-3 mt-5">
     <Container>
       <Row className="mb-4 text-center border-bottom border-secondary pb-4">
-        <Col md={3}>🚚 EXPRESS DELIVERY</Col>
-        <Col md={3}>🎁 SPECIAL OFFERS</Col>
-        <Col md={3}>✅ 100% AUTHENTIC</Col>
-        <Col md={3}>📞 24/7 SUPPORT</Col>
+        <Col md={3} className="d-flex align-items-center justify-content-center gap-2"><HiOutlineTruck className="fs-5" /> EXPRESS DELIVERY</Col>
+        <Col md={3} className="d-flex align-items-center justify-content-center gap-2"><HiOutlineGift className="fs-5" /> SPECIAL OFFERS</Col>
+        <Col md={3} className="d-flex align-items-center justify-content-center gap-2"><HiOutlineCheckCircle className="fs-5" /> 100% AUTHENTIC</Col>
+        <Col md={3} className="d-flex align-items-center justify-content-center gap-2"><HiOutlinePhone className="fs-5" /> 24/7 SUPPORT</Col>
       </Row>
       <Row>
         <Col md={4} className="mb-4">
           <h5 className="text-warning fw-bold mb-3">TCG SHOP</h5>
           <p className="text-secondary small">Specializing in authentic Pokémon trading cards and accessories in Vietnam.</p>
-          <p className="small"><FaPhoneAlt className="me-2"/>Hotline: 0703192208</p>
+          <p className="small"><HiOutlinePhone className="me-2"/>Hotline: 0703192208</p>
           <p className="small">Email: mquantcv@gmail.com</p>
           <p className="small">Address: 55/45/36 Hoa Ha Street, Lien Dong Ward, Long Xuan City, Vietnam</p>
         </Col>

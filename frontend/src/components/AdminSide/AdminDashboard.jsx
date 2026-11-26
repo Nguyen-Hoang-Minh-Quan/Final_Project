@@ -1,7 +1,16 @@
 import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaBoxOpen, FaTools, FaChartLine, FaComment, FaClipboardList, FaNewspaper, FaComments, FaUserShield } from 'react-icons/fa';
+import {
+  HiOutlineArchiveBox,
+  HiOutlineWrenchScrewdriver,
+  HiOutlineArrowTrendingUp,
+  HiOutlineChatBubbleLeft,
+  HiOutlineClipboardDocumentList,
+  HiOutlineNewspaper,
+  HiOutlineChatBubbleLeftRight,
+  HiOutlineShieldCheck
+} from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const AdminDashboard = () => {
@@ -9,14 +18,14 @@ const AdminDashboard = () => {
   const userRole = userInfo.role || (userInfo.isAdmin ? 'Admin' : 'Customer');
 
   const allActions = [
-    { title: "ORDER MANAGEMENT", icon: <FaBoxOpen />, color: "bg-primary", link: "/admin/orders", roles: ['Admin', 'Staff'] },
-    { title: "PRODUCT MANAGEMENT", icon: <FaTools />, color: "bg-danger", link: "/admin/products", roles: ['Admin', 'Staff'] },
-    { title: "REVIEW MANAGEMENT", icon: <FaComment />, color: "bg-info", link: "/admin/reviews", roles: ['Admin', 'Staff'] },
-    { title: "SUPPORT CHAT", icon: <FaComments />, color: "bg-warning", link: "/admin/chat", roles: ['Admin', 'Staff'] },
-    { title: "BLOG MANAGEMENT", icon: <FaNewspaper />, color: "bg-secondary", link: "/admin/blogs", roles: ['Admin', 'Staff'] },
-    { title: "USER MANAGEMENT", icon: <FaUserShield />, color: "bg-danger", link: "/admin/users", roles: ['Admin'] },
-    { title: "REVENUE STATISTICS", icon: <FaChartLine />, color: "bg-success", link: "/admin/stats", roles: ['Admin'] },
-    { title: "STAFF ACTIVITY LOG", icon: <FaClipboardList />, color: "bg-dark", link: "/admin/staff-logs", roles: ['Admin'] }
+    { title: "ORDER MANAGEMENT", icon: <HiOutlineArchiveBox />, color: "bg-primary", link: "/admin/orders", roles: ['Admin', 'Staff'] },
+    { title: "PRODUCT MANAGEMENT", icon: <HiOutlineWrenchScrewdriver />, color: "bg-danger", link: "/admin/products", roles: ['Admin', 'Staff'] },
+    { title: "REVIEW MANAGEMENT", icon: <HiOutlineChatBubbleLeft />, color: "bg-info", link: "/admin/reviews", roles: ['Admin', 'Staff'] },
+    { title: "SUPPORT CHAT", icon: <HiOutlineChatBubbleLeftRight />, color: "bg-warning", link: "/admin/chat", roles: ['Admin', 'Staff'] },
+    { title: "BLOG MANAGEMENT", icon: <HiOutlineNewspaper />, color: "bg-secondary", link: "/admin/blogs", roles: ['Admin', 'Staff'] },
+    { title: "USER MANAGEMENT", icon: <HiOutlineShieldCheck />, color: "bg-danger", link: "/admin/users", roles: ['Admin'] },
+    { title: "REVENUE STATISTICS", icon: <HiOutlineArrowTrendingUp />, color: "bg-success", link: "/admin/stats", roles: ['Admin'] },
+    { title: "STAFF ACTIVITY LOG", icon: <HiOutlineClipboardDocumentList />, color: "bg-dark", link: "/admin/staff-logs", roles: ['Admin'] }
   ];
 
   const allowedActions = allActions.filter(action => action.roles.includes(userRole));

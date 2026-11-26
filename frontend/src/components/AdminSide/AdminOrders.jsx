@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Table, Badge, Form, Card, Row, Col, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient'; 
-import { FaChevronLeft, FaClipboardList, FaRegMoneyBillAlt } from 'react-icons/fa';
+import { HiOutlineChevronLeft, HiOutlineClipboardDocumentList, HiOutlineBanknotes } from 'react-icons/hi2';
 import '../../styles/TCGStyles.css';
 
 const AdminOrders = () => {
@@ -60,11 +60,11 @@ const AdminOrders = () => {
                 className="me-3 border-0 tcg-btn" 
                 onClick={() => navigate('/admin')}
               >
-                <FaChevronLeft className="me-1"/> GO BACK
+                <HiOutlineChevronLeft className="me-1"/> GO BACK
               </Button>
               <div>
                 <h2 className="fw-bold mb-0">
-                  <FaClipboardList className="text-danger me-2"/>ORDER MANAGEMENT
+                  <HiOutlineClipboardDocumentList className="text-danger me-2"/>ORDER MANAGEMENT
                 </h2>
                 <small className="text-muted">Track and update shipping status</small>
               </div>
@@ -78,7 +78,7 @@ const AdminOrders = () => {
               <th>ORDER ID</th>
               <th>CUSTOMER</th>
               <th className="text-center">TOTAL</th>
-              <th className="text-center"><FaRegMoneyBillAlt className="me-1"/>PAYMENT METHOD</th>
+              <th className="text-center"><HiOutlineBanknotes className="me-1"/>PAYMENT METHOD</th>
               <th className="text-center">STATUS</th>
               <th className="text-end" style={{ width: '200px' }}>ACTIONS</th>
             </tr>

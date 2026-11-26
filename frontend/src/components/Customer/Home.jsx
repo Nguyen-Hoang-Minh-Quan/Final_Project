@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button, Carousel, Badge, Spinner } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaFire, FaRegClock, FaLayerGroup } from 'react-icons/fa';
+import { HiOutlineFire, HiOutlineClock, HiOutlineSquares2X2 } from 'react-icons/hi2';
 import axiosClient from '../../api/axiosClient'; 
 import '../../styles/TCGStyles.css';
 
@@ -136,7 +136,7 @@ const Home = ({ customData }) => {
           <div className="mb-5 bg-white p-4 rounded shadow-sm">
             <div className="border-bottom pb-2 mb-4">
               <h3 className="m-0 fw-bold fs-5 text-dark text-uppercase d-flex align-items-center">
-                <FaLayerGroup className="me-2 text-warning" /> Product Categories
+                <HiOutlineSquares2X2 className="me-2 text-warning" /> Product Categories
               </h3>
             </div>
             <Row className="g-3 justify-content-center">
@@ -185,7 +185,7 @@ const Home = ({ customData }) => {
             <div className="mb-5">
               <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
                 <h3 className="m-0 fw-bold fs-4 text-dark text-uppercase">
-                  <FaRegClock className="me-2 text-primary" /> Latest products
+                  <HiOutlineClock className="me-2 text-primary" /> Latest products
                 </h3>
                 <Link to="/shop" className="text-decoration-none text-muted small fw-bold hover-danger">View All</Link>
               </div>
@@ -201,7 +201,7 @@ const Home = ({ customData }) => {
             <div className="mb-4">
               <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
                 <h3 className="m-0 fw-bold fs-4 text-dark text-uppercase">
-                  <FaFire className="me-2 text-danger" /> Best Selling Products
+                  <HiOutlineFire className="me-2 text-danger" /> Best Selling Products
                 </h3>
                 <Link to="/shop" className="text-decoration-none text-muted small fw-bold hover-danger">View All</Link>
               </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Card, ListGroup, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
-import { FaTruck, FaQrcode, FaCreditCard, FaTicketAlt } from 'react-icons/fa';
+import { HiOutlineTruck, HiOutlineQrCode, HiOutlineCreditCard } from 'react-icons/hi2';
 import CheckoutAddressSection from './CheckoutAddressSection';
 import '../../styles/TCGStyles.css';
 
@@ -77,7 +77,7 @@ const Checkout = () => {
     return (
         <Container className="main-layout py-5">
             <h2 className="section-title text-uppercase mb-4">
-                <FaTruck className="me-2 text-danger"/> Checkout
+                <HiOutlineTruck className="me-2 text-danger"/> Checkout
             </h2>
 
             {error && <Alert variant="danger">{error}</Alert>}
@@ -114,7 +114,7 @@ const Checkout = () => {
                         </Row>
 
                         <h5 className="fw-bold mt-4 mb-3">
-                            <FaCreditCard className="me-2 text-warning"/> PAYMENT METHOD
+                            <HiOutlineCreditCard className="me-2 text-warning"/> PAYMENT METHOD
                         </h5>
                         <div className="bg-light p-3 rounded">
                             {['COD', 'Momo' , 'Ngân hàng'].map(m => (
@@ -133,7 +133,7 @@ const Checkout = () => {
 
                         {method === 'Momo' && (
                             <div className="text-center bg-white p-3 rounded mt-3 border border-danger shadow-sm">
-                                <h6 className="fw-bold text-danger"><FaQrcode className="me-2"/>SCAN MOMO QR CODE</h6>
+                                <h6 className="fw-bold text-danger"><HiOutlineQrCode className="me-2"/>SCAN MOMO QR CODE</h6>
                                 <img 
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=PAY_ORDER_${total}`} 
                                     alt="QR Code Payment" 
@@ -145,7 +145,7 @@ const Checkout = () => {
 
                         {method === 'Ngân hàng' && (
                             <div className="text-center bg-white p-3 rounded mt-3 border border-danger shadow-sm">
-                                <h6 className="fw-bold text-danger"><FaCreditCard className="me-2"/>PAYMENT INFORMATION</h6>
+                                <h6 className="fw-bold text-danger"><HiOutlineCreditCard className="me-2"/>PAYMENT INFORMATION</h6>
                                 <img 
                                     src={`https://img.vietqr.io/image/vcb-777666999-compact2.jpg?amount=${total}&addInfo=THANH_TOAN_DON_HANG`} 
                                     alt="Vietcombank QR Code"

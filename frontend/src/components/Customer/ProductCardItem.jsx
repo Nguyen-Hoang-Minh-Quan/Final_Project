@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Button, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaHeart, FaRegHeart, FaEye } from 'react-icons/fa';
+import { HiHeart, HiOutlineHeart, HiOutlineEye } from 'react-icons/hi2';
 
 const ProductCardItem = ({ card, addToCart, onQuickView, isWishlist, onToggleWishlist, isNew, isHot }) => {
   return (
@@ -19,7 +19,7 @@ const ProductCardItem = ({ card, addToCart, onQuickView, isWishlist, onToggleWis
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
-        {isWishlist ? <FaHeart className="text-danger" size={18} /> : <FaRegHeart className="text-muted" size={18} />}
+        {isWishlist ? <HiHeart className="text-danger" size={18} /> : <HiOutlineHeart className="text-muted" size={18} />}
       </button>
 
       {/* Khung ảnh */}
@@ -36,7 +36,7 @@ const ProductCardItem = ({ card, addToCart, onQuickView, isWishlist, onToggleWis
         {/* NÚT QUICK VIEW HIỆN KHI HOVER (Hoặc định vị ẩn/hiện bằng CSS) */}
         <div className="quick-view-overlay position-absolute start-50 top-50 translate-middle w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 item-hover-show" style={{ transition: '0.3s' }}>
           <Button variant="light" size="sm" className="fw-bold shadow d-flex align-items-center gap-1 py-2 px-3" onClick={() => onQuickView(card)}>
-            <FaEye /> Quick view
+            <HiOutlineEye /> Quick view
           </Button>
         </div>
       </div>

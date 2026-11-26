@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient'; 
-import { FaChevronLeft, FaMoneyBillWave, FaCheckCircle, FaFire } from 'react-icons/fa';
+import { HiOutlineChevronLeft, HiOutlineBanknotes, HiOutlineCheckCircle, HiOutlineFire } from 'react-icons/hi2';
 import { 
   XAxis, 
   YAxis, 
@@ -70,7 +70,7 @@ const AdminStats = () => {
     <Container className="main-layout">
       <div className="d-flex align-items-center mb-4">
         <Button variant="outline-secondary" className="border-0 me-3 tcg-btn" onClick={() => navigate('/admin')}>
-          <FaChevronLeft /> GO BACK
+          <HiOutlineChevronLeft /> GO BACK
         </Button>
         <h2 className="fw-bold mb-0">REVENUE STATISTICS</h2>
       </div>
@@ -85,7 +85,7 @@ const AdminStats = () => {
                   {stats.totalRevenue ? Number(stats.totalRevenue).toLocaleString() : 0} VNĐ
                 </h2>
               </div>
-              <FaMoneyBillWave size={40} className="opacity-50" />
+              <HiOutlineBanknotes size={40} className="opacity-50" />
             </div>
           </Card>
         </Col>
@@ -97,7 +97,7 @@ const AdminStats = () => {
                 <h6 className="text-uppercase opacity-75">Successful Orders</h6>
                 <h2 className="fw-bold mb-0">{stats.orderCount || 0} Orders</h2>
               </div>
-              <FaCheckCircle size={40} className="opacity-50" />
+              <HiOutlineCheckCircle size={40} className="opacity-50" />
             </div>
           </Card>
         </Col>
@@ -149,7 +149,7 @@ const AdminStats = () => {
       {/* BẢNG TOP 5 SẢN PHẨM BÁN CHẠY NHẤT */}
       <Card className="tcg-card p-4 mt-4 border-0 shadow-sm mb-5">
         <div className="d-flex align-items-center justify-content-center mb-4">
-          <FaFire className="text-warning me-2" size={24} />
+          <HiOutlineFire className="text-warning me-2" size={24} />
           <h4 className="fw-bold mb-0 text-uppercase text-dark">Top 5 Products Most Sold</h4>
         </div>
         <div className="table-responsive">

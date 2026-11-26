@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Card, Row, Col, Form } from 'react-bootstrap';
 import axiosClient from '../../api/axiosClient'; 
-import { FaTrash, FaStar, FaRegStar, FaComments, FaFilter, FaArrowLeft } from 'react-icons/fa';
+import { HiOutlineTrash, HiStar, HiOutlineStar, HiOutlineChatBubbleLeftRight, HiOutlineFunnel, HiOutlineArrowLeft } from 'react-icons/hi2';
 import { useNavigate } from 'react-router-dom'; 
 import { toast } from 'react-toastify';
 import '../../styles/TCGStyles.css';
@@ -58,7 +58,7 @@ const AdminReviewList = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        i <= num ? <FaStar key={i} className="text-warning me-1" /> : <FaRegStar key={i} className="text-secondary me-1" />
+        i <= num ? <HiStar key={i} className="text-warning me-1" /> : <HiOutlineStar key={i} className="text-secondary me-1" />
       );
     }
     return stars;
@@ -77,9 +77,9 @@ const AdminReviewList = () => {
         <Row className="align-items-center mb-4">
           <Col>
             <h2 className="fw-bold mb-0 text-info">
-              <FaComments className="me-2"/>SYSTEM EVALUATION MANAGEMENT
+              <HiOutlineChatBubbleLeftRight className="me-2"/>SYSTEM EVALUATION MANAGEMENT
                       <Button variant="outline-secondary" className="border-0" onClick={() => navigate('/admin/')}>
-                       <FaArrowLeft className="me-2"/> GO BACK
+                       <HiOutlineArrowLeft className="me-2"/> GO BACK
                       </Button>
             </h2>
             <small className="text-muted">View, filter, and manage customer reviews</small>
@@ -90,7 +90,7 @@ const AdminReviewList = () => {
         <Card className="bg-light border-0 p-3 mb-4 rounded-3 shadow-sm">
           <Row className="align-items-center">
             <Col md={1} className="d-flex align-items-center text-muted fw-bold mb-2 mb-md-0">
-              <FaFilter className="me-2"/> FILTER:
+              <HiOutlineFunnel className="me-2"/> FILTER:
             </Col>
             
             <Col md={5} className="mb-2 mb-md-0">
@@ -170,7 +170,7 @@ const AdminReviewList = () => {
                       className="border-0" 
                       onClick={() => deleteReviewHandler(review.id)}
                     >
-                      <FaTrash />
+                      <HiOutlineTrash />
                     </Button>
                   </td>
                 </tr>

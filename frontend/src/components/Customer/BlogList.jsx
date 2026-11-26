@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaNewspaper, FaCalendarAlt, FaUserEdit } from 'react-icons/fa';
+import { HiOutlineNewspaper, HiOutlineCalendarDays, HiOutlinePencilSquare } from 'react-icons/hi2';
 import axiosClient from '../../api/axiosClient';
 import '../../styles/TCGStyles.css';
 
@@ -34,7 +34,7 @@ const BlogList = () => {
   return (
     <Container className="main-layout py-4">
       <h2 className="section-title text-uppercase mb-4">
-        <FaNewspaper className="me-2 text-danger" /> News & TCG Guides
+        <HiOutlineNewspaper className="me-2 text-danger" /> News & TCG Guides
       </h2>
 
       {blogs.length === 0 ? (
@@ -67,13 +67,13 @@ const BlogList = () => {
                 <Card.Body className="d-flex flex-column p-3">
                   <div className="d-flex align-items-center justify-content-between text-muted small mb-2">
                     <span>
-                      <FaCalendarAlt className="me-1" />
+                      <HiOutlineCalendarDays className="me-1" />
                       {new Date(blog.createdAt).toLocaleDateString('vi-VN')}
                     </span>
                     {/* Lấy tên tác giả chuẩn từ AuthorData của backend */}
                     {blog.AuthorData?.name && (
                       <Badge bg="secondary" className="fw-normal">
-                        <FaUserEdit className="me-1" /> {blog.AuthorData.name}
+                        <HiOutlinePencilSquare className="me-1" /> {blog.AuthorData.name}
                       </Badge>
                     )}
                   </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Table, Button, Modal, Form, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FaComment, FaReply, FaStar, FaChevronLeft } from 'react-icons/fa';
+import { HiOutlineChatBubbleLeft, HiOutlineArrowUturnLeft, HiStar, HiOutlineChevronLeft } from 'react-icons/hi2';
 import { toast } from 'react-toastify';
 import axiosClient from '../../api/axiosClient';
 import '../../styles/TCGStyles.css';
@@ -49,9 +49,9 @@ const StaffReviewList = () => {
       <Card className="border-0 shadow-sm p-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h2 className="fw-bold mb-1"><FaComment className="text-info me-2" />MANAGE CUSTOMER REVIEWS</h2>
+            <h2 className="fw-bold mb-1"><HiOutlineChatBubbleLeft className="text-info me-2" />MANAGE CUSTOMER REVIEWS</h2>
             <Button variant="outline-secondary" size="sm" className="border-0 tcg-btn" onClick={() => navigate('/admin')}>
-              <FaChevronLeft className="me-1" /> BACK TO DASHBOARD
+              <HiOutlineChevronLeft className="me-1" /> BACK TO DASHBOARD
             </Button>
           </div>
         </div>
@@ -74,7 +74,7 @@ const StaffReviewList = () => {
                 <td>{r.ProductData?.name || `Product #${r.productId}`}</td>
                 <td>
                   <Badge bg="warning" text="dark">
-                    {r.rating} <FaStar className="ms-1" />
+                    {r.rating} <HiStar className="ms-1" />
                   </Badge>
                 </td>
                 <td>{r.comment}</td>
@@ -87,7 +87,7 @@ const StaffReviewList = () => {
                 </td>
                 <td className="text-end">
                   <Button variant="outline-primary" size="sm" onClick={() => handleOpenReply(r)}>
-                    <FaReply className="me-1" /> Reply
+                    <HiOutlineArrowUturnLeft className="me-1" /> Reply
                   </Button>
                 </td>
               </tr>

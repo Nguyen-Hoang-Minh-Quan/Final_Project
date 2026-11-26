@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Table, Badge, Card, Button, Row, Col } from 'react-bootstrap';
 import axiosClient from '../../api/axiosClient';
-import { FaHistory, FaBoxOpen, FaTrashAlt, FaReceipt, FaCalendarAlt, FaMoneyBillWave } from 'react-icons/fa';
+import { HiOutlineClock, HiOutlineArchiveBox, HiOutlineTrash, HiOutlineDocumentText, HiOutlineCalendarDays, HiOutlineBanknotes } from 'react-icons/hi2';
 import OrderTimeline from './OrderTimeline';
 import '../../styles/TCGStyles.css';
 
@@ -118,13 +118,13 @@ const OrderHistory = () => {
   return (
     <Container className="main-layout py-4">
       <h2 className="section-title text-uppercase mb-4">
-        <FaHistory className="me-2 text-danger" /> Purchase history
+        <HiOutlineClock className="me-2 text-danger" /> Purchase history
       </h2>
 
       {orders.length === 0 ? (
         <Card className="tcg-card text-center py-5 border-0 shadow-sm bg-white">
           <Card.Body>
-            <FaReceipt className="text-muted mb-3" size={48} />
+            <HiOutlineDocumentText className="text-muted mb-3" size={48} />
             <p className="text-muted fw-bold">You have no orders in the system!</p>
             <Button href="/shop" variant="danger" className="tcg-btn btn-sm px-4">BUY NOW</Button>
           </Card.Body>
@@ -160,7 +160,7 @@ const OrderHistory = () => {
                     </div>
                     <div className="d-flex justify-content-between text-secondary small mb-1">
                       <span>
-                        <FaCalendarAlt className="me-1" size={12}/> 
+                        <HiOutlineCalendarDays className="me-1" size={12}/> 
                         {o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : '---'}
                       </span>
                       <span className="fw-bold text-danger fs-6">
@@ -199,7 +199,7 @@ const OrderHistory = () => {
                         style={{ fontSize: '0.75rem', borderRadius: '4px' }}
                         onClick={() => cancelOrderHandler(activeTrackOrder.id)}
                       >
-                        <FaTrashAlt className="me-1" size={10} /> CANCEL ORDER
+                        <HiOutlineTrash className="me-1" size={10} /> CANCEL ORDER
                       </Button>
                     )}
                   </Card.Header>
@@ -210,7 +210,7 @@ const OrderHistory = () => {
                     </div>
 
                     <h6 className="fw-bold text-dark mb-3 d-flex align-items-center border-bottom pb-2">
-                      <FaBoxOpen className="me-2 text-danger" /> Items in the order
+                      <HiOutlineArchiveBox className="me-2 text-danger" /> Items in the order
                     </h6>
                     
                     {loadingDetail ? (
@@ -262,7 +262,7 @@ const OrderHistory = () => {
 
                     <div className="d-flex justify-content-end align-items-center mt-3 pt-3 border-top">
                       <div className="text-end">
-                        <span className="text-secondary small me-2"><FaMoneyBillWave className="me-1"/>Total amount to pay:</span>
+                        <span className="text-secondary small me-2"><HiOutlineBanknotes className="me-1"/>Total amount to pay:</span>
                         <span className="fw-bold text-danger fs-5">
                           {activeTrackOrder.totalPrice ? Number(activeTrackOrder.totalPrice).toLocaleString() : 0}đ
                         </span>

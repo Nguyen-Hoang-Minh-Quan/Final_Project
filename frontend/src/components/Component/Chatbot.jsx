@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  FaPaperPlane,
-  FaTimes,
-  FaRobot,
-  FaHeadset,
-  FaArrowRight,
-  FaSignInAlt
-} from 'react-icons/fa';
+  HiOutlinePaperAirplane,
+  HiOutlineXMark,
+  HiOutlineCpuChip,
+  HiOutlineLifebuoy,
+  HiOutlineArrowRight,
+  HiOutlineArrowRightOnRectangle
+} from 'react-icons/hi2';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
 
@@ -344,7 +344,7 @@ const Chatbot = () => {
                 className="rounded-circle d-flex align-items-center justify-content-center"
                 style={{ width: '34px', height: '34px', background: 'rgba(255,255,255,0.18)' }}
               >
-                <FaRobot className="fs-5" />
+                <HiOutlineCpuChip className="fs-5" />
               </div>
               <div className="lh-sm">
                 <div className="fw-bold" style={{ fontSize: '0.92rem' }}>
@@ -361,7 +361,7 @@ const Chatbot = () => {
               onClick={() => setActiveWidget(null)}
               title="Close AI Assistant"
             >
-              <FaTimes />
+              <HiOutlineXMark />
             </button>
           </div>
 
@@ -388,7 +388,7 @@ const Chatbot = () => {
 
             {displayedAiMessages.length === 0 ? (
               <div className="text-center text-muted my-auto p-3" style={{ fontSize: '0.84rem' }}>
-                <FaRobot className="fs-2 mb-2" style={{ color: '#6d28d9', opacity: 0.75 }} />
+                <HiOutlineCpuChip className="fs-2 mb-2" style={{ color: '#6d28d9', opacity: 0.75 }} />
                 <div className="fw-bold text-dark mb-1">Ask TCG AI Anything!</div>
                 <div>
                   Look up card prices, check real-time stock, or ask about shipping & authenticity in
@@ -437,7 +437,7 @@ const Chatbot = () => {
               style={{ color: '#dc3545', fontSize: '0.75rem' }}
               onClick={() => setActiveWidget('staff')}
             >
-              Switch to Live Staff <FaArrowRight size={10} />
+              Switch to Live Staff <HiOutlineArrowRight size={10} />
             </button>
           </div>
 
@@ -456,7 +456,7 @@ const Chatbot = () => {
               style={{ backgroundColor: '#6d28d9' }}
               disabled={!aiInput.trim() || loadingAI}
             >
-              <FaPaperPlane />
+              <HiOutlinePaperAirplane />
             </button>
           </form>
         </div>
@@ -471,7 +471,7 @@ const Chatbot = () => {
                 className="rounded-circle d-flex align-items-center justify-content-center"
                 style={{ width: '34px', height: '34px', background: 'rgba(255,255,255,0.18)' }}
               >
-                <FaHeadset className="fs-5" />
+                <HiOutlineLifebuoy className="fs-5" />
               </div>
               <div className="lh-sm">
                 <div className="fw-bold d-flex align-items-center gap-2" style={{ fontSize: '0.92rem' }}>
@@ -489,14 +489,14 @@ const Chatbot = () => {
               onClick={() => setActiveWidget(null)}
               title="Close Live Support"
             >
-              <FaTimes />
+              <HiOutlineXMark />
             </button>
           </div>
 
           <div className="chat-body" ref={staffBodyRef}>
             {!userId ? (
               <div className="text-center my-auto p-3">
-                <FaHeadset className="fs-1 text-danger mb-2 opacity-75" />
+                <HiOutlineLifebuoy className="fs-1 text-danger mb-2 opacity-75" />
                 <h6 className="fw-bold text-dark">Sign In Required for Live Support</h6>
                 <p className="text-muted mb-3" style={{ fontSize: '0.83rem' }}>
                   Please sign in so our staff can verify your account and assist with your orders.
@@ -509,7 +509,7 @@ const Chatbot = () => {
                     navigate('/login');
                   }}
                 >
-                  <FaSignInAlt /> SIGN IN TO CHAT
+                  <HiOutlineArrowRightOnRectangle /> SIGN IN TO CHAT
                 </button>
                 <button
                   type="button"
@@ -522,7 +522,7 @@ const Chatbot = () => {
               </div>
             ) : staffMessages.length === 0 ? (
               <div className="text-center text-muted my-auto p-3" style={{ fontSize: '0.84rem' }}>
-                <FaHeadset className="fs-2 text-danger mb-2 opacity-75" />
+                <HiOutlineLifebuoy className="fs-2 text-danger mb-2 opacity-75" />
                 <div className="fw-bold text-dark mb-1">Chat with Real Support Staff</div>
                 <div>
                   Send us a message regarding your orders, payment, or special requests. A staff
@@ -574,7 +574,7 @@ const Chatbot = () => {
                 className="btn btn-danger tcg-btn d-flex align-items-center justify-content-center px-3"
                 disabled={!staffInput.trim() || sendingStaff}
               >
-                <FaPaperPlane />
+                <HiOutlinePaperAirplane />
               </button>
             </form>
           )}
@@ -592,7 +592,7 @@ const Chatbot = () => {
             onClick={() => setActiveWidget((prev) => (prev === 'ai' ? null : 'ai'))}
             title="TCG AI Assistant (Instant Lookup)"
           >
-            <FaRobot />
+            <HiOutlineCpuChip />
             <span className="chat-trigger-pill ai-pill">AI</span>
           </button>
         </div>
@@ -608,7 +608,7 @@ const Chatbot = () => {
             onClick={() => setActiveWidget((prev) => (prev === 'staff' ? null : 'staff'))}
             title="Live Support (Chat with Staff)"
           >
-            <FaHeadset />
+            <HiOutlineLifebuoy />
             <span className="chat-trigger-pill staff-pill">STAFF</span>
             {hasStaffReply && activeWidget !== 'staff' && (
               <span className="chat-unread-dot" title="Staff replied to your message" />

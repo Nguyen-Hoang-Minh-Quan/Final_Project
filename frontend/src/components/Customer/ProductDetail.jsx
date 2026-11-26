@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Card, Form, ListGroup } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaStar, FaRegStar, FaShoppingBag, FaArrowLeft, FaCommentDots } from 'react-icons/fa';
+import { HiStar, HiOutlineStar, HiOutlineShoppingBag, HiOutlineArrowLeft, HiOutlineChatBubbleOvalLeftEllipsis } from 'react-icons/hi2';
 import axiosClient from '../../api/axiosClient'; 
 import ProductCardItem from './ProductCardItem';
 import QuickViewModal from './QuickViewModal';
@@ -155,7 +155,7 @@ const ProductDetail = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        i <= num ? <FaStar key={i} className="text-warning me-1" /> : <FaRegStar key={i} className="text-secondary me-1" />
+        i <= num ? <HiStar key={i} className="text-warning me-1" /> : <HiOutlineStar key={i} className="text-secondary me-1" />
       );
     }
     return stars;
@@ -169,7 +169,7 @@ const ProductDetail = () => {
     return (
       <Container className="main-layout text-center py-5">
         <p className="text-muted">Product does not exist or has been deleted.</p>
-        <Button as={Link} to="/shop" variant="danger" className="tcg-btn"><FaArrowLeft className="me-2"/> RETURN TO PRODUCT PAGE</Button>
+        <Button as={Link} to="/shop" variant="danger" className="tcg-btn"><HiOutlineArrowLeft className="me-2"/> RETURN TO PRODUCT PAGE</Button>
       </Container>
     );
   }
@@ -178,7 +178,7 @@ const ProductDetail = () => {
     <Container className="main-layout style-detail" style={{ marginTop: '20px' }}>
       {/* Nút quay lại */}
       <Link to="/shop" className="btn btn-light border mb-4 bg-white shadow-sm fw-bold btn-sm">
-        <FaArrowLeft className="me-2" /> RETURN TO PRODUCT PAGE
+        <HiOutlineArrowLeft className="me-2" /> RETURN TO PRODUCT PAGE
       </Link>
 
       <Row className="mb-5">
@@ -191,7 +191,7 @@ const ProductDetail = () => {
               className="position-absolute top-0 end-0 m-3 z-1 bg-light border-0 rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2"
               style={{ width: '40px', height: '40px' }}
             >
-              {wishlistIds.includes(product.id) ? <FaStar className="text-danger" size={20} /> : <FaRegStar className="text-muted" size={20} />}
+              {wishlistIds.includes(product.id) ? <HiStar className="text-danger" size={20} /> : <HiOutlineStar className="text-muted" size={20} />}
             </button>
             
             <div className="detail-img-box" style={{ overflow: 'hidden', borderRadius: '8px' }}>
@@ -248,7 +248,7 @@ const ProductDetail = () => {
               disabled={product.countInStock <= 0}
               onClick={addToCart}
             >
-              <FaShoppingBag className="me-2" /> {product.countInStock > 0 ? "ADD TO CART NOW" : "TEMPORARILY OUT OF STOCK"}
+              <HiOutlineShoppingBag className="me-2" /> {product.countInStock > 0 ? "ADD TO CART NOW" : "TEMPORARILY OUT OF STOCK"}
             </Button>
           </div>
         </Col>
@@ -278,7 +278,7 @@ const ProductDetail = () => {
       <Row className="mt-5 pt-3">
         <Col lg={8} className="mx-auto">
           <h3 className="fw-bold border-bottom pb-3 mb-4 text-dark">
-            <FaCommentDots className="text-danger me-2"/>CUSTOMER REVIEWS
+            <HiOutlineChatBubbleOvalLeftEllipsis className="text-danger me-2"/>CUSTOMER REVIEWS
           </h3>
 
           {/* Form để viết Đánh giá mới */}
