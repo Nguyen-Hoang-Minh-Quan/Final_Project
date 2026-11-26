@@ -2,6 +2,7 @@ const { Order, OrderItem } = require('../models/Order');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const { sequelize } = require('../config/db');
+const { QueryTypes } = require('sequelize');
 
 // @desc    Tạo đơn hàng mới + Tự động tính tiền + Tự động trừ kho (Inventory Control)
 // @route   POST /api/orders
@@ -254,40 +255,35 @@ const getOrderStats = async (req, res) => {
     }
 };
 
+// @desc    Lấy Top 5 sản phẩm bán chạy nhất (Gom nhóm chuẩn theo productId, chỉ tính đơn Delivered)
+// @route   GET /api/orders/top-products
 const getTopProducts = async (req, res) => {
     try {
-        const topProducts = await OrderItem.findAll({
-            attributes: [
-                'productId',
-                'name',
-                'image',
-                'price',
-                [sequelize.fn('SUM', sequelize.col('qty')), 'totalSold']
-            ],
-            include: [{
-                model: Order,
-                as: 'Order', 
-                where: { status: 'Delivered' }, 
-                attributes: [] 
-            }],
-            group: [
-                'productId', 
-                'OrderItem.id', 
-                'OrderItem.name', 
-                'OrderItem.image', 
-                'OrderItem.price'
-            ],
-            order: [[sequelize.fn('SUM', sequelize.col('qty')), 'DESC']],
-            limit: 5,
-            raw: true
-        });
+        // Dùng SQL thuần để gom nhóm chính xác theo productId (bỏ OrderItem.id ra khỏi GROUP BY)
+        const topProducts = await sequelize.query(
+            `SELECT oi."productId" AS "productId",
+                    COALESCE(p.name, MAX(oi.name)) AS name,
+                    COALESCE(p.image, MAX(oi.image)) AS image,
+                    COALESCE(p.price, MAX(oi.price)) AS price,
+                    SUM(oi.qty) AS "totalSold",
+                    SUM(oi.qty * oi.price) AS "totalRevenue"
+             FROM "OrderItems" oi
+             JOIN "Orders" o ON oi."orderId" = o.id
+             LEFT JOIN "Products" p ON oi."productId" = p.id
+             WHERE o.status = 'Delivered'
+             GROUP BY oi."productId", p.id, p.name, p.image, p.price
+             ORDER BY SUM(oi.qty) DESC, SUM(oi.qty * oi.price) DESC
+             LIMIT 5`,
+            { type: QueryTypes.SELECT }
+        );
 
         const formattedProducts = topProducts.map(item => ({
             productId: item.productId,
             name: item.name,
             image: item.image,
-            price: item.price,
-            totalSold: parseInt(item.totalSold || 0, 10)
+            price: Number(item.price || 0),
+            totalSold: parseInt(item.totalSold || 0, 10),
+            totalRevenue: Number(item.totalRevenue || 0)
         }));
 
         res.json(formattedProducts);

@@ -156,42 +156,62 @@ const AdminStats = () => {
           <table className="table table-hover align-middle mb-0">
             <thead className="table-dark">
               <tr>
-                <th scope="col" className="text-center" style={{ width: '100px' }}>Image</th>
+                <th scope="col" className="text-center" style={{ width: '70px' }}>Rank</th>
+                <th scope="col" className="text-center" style={{ width: '90px' }}>Image</th>
                 <th scope="col">Product Name</th>
-                <th scope="col" className="text-end" style={{ width: '180px' }}>Price</th>
-                <th scope="col" className="text-center" style={{ width: '150px' }}>Quantity Sold</th>
+                <th scope="col" className="text-end" style={{ width: '150px' }}>Unit Price</th>
+                <th scope="col" className="text-center" style={{ width: '130px' }}>Quantity Sold</th>
+                <th scope="col" className="text-end" style={{ width: '160px' }}>Revenue</th>
               </tr>
             </thead>
             <tbody>
               {topProducts && topProducts.length > 0 ? (
-                topProducts.map((product, index) => (
-                  <tr key={product.productId || index}>
-                    <td className="text-center">
-                      <img 
-                        src={product.image || 'https://via.placeholder.com/55x75'} 
-                        alt={product.name} 
-                        className="rounded border shadow-sm" 
-                        style={{ width: '55px', height: '75px', objectFit: 'cover' }} 
-                      />
-                    </td>
-                    <td>
-                      <span className="fw-bold text-dark d-block">{product.name}</span>
-                      <small className="text-muted">Product ID: #{product.productId}</small>
-                    </td>
-                    <td className="text-end text-danger fw-bold fs-6">
-                      {Number(product.price || 0).toLocaleString()}đ
-                    </td>
-                    <td className="text-center">
-                      <span className="badge bg-success px-3 py-2 fs-6 rounded-pill">
-                        {product.totalSold || product.total_sold || 0}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                topProducts.map((product, index) => {
+                  const soldQty = Number(product.totalSold || product.total_sold || 0);
+                  const unitPrice = Number(product.price || 0);
+                  const revenue = Number(product.totalRevenue || soldQty * unitPrice);
+                  const rankBadgeBg =
+                    index === 0 ? 'bg-warning text-dark' :
+                    index === 1 ? 'bg-secondary text-white' :
+                    index === 2 ? 'bg-danger text-white' : 'bg-light text-dark border';
+
+                  return (
+                    <tr key={product.productId || index}>
+                      <td className="text-center">
+                        <span className={`badge ${rankBadgeBg} px-2 py-1 fw-bold`}>
+                          #{index + 1}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <img 
+                          src={product.image || 'https://via.placeholder.com/55x75'} 
+                          alt={product.name} 
+                          className="rounded border shadow-sm bg-white p-1" 
+                          style={{ width: '55px', height: '72px', objectFit: 'contain' }} 
+                        />
+                      </td>
+                      <td>
+                        <span className="fw-bold text-dark d-block">{product.name}</span>
+                        <small className="text-muted">Product ID: #{product.productId}</small>
+                      </td>
+                      <td className="text-end text-secondary fw-semibold">
+                        {unitPrice.toLocaleString()}đ
+                      </td>
+                      <td className="text-center">
+                        <span className="badge bg-success px-3 py-2 fs-6 rounded-pill">
+                          {soldQty}
+                        </span>
+                      </td>
+                      <td className="text-end text-danger fw-bold fs-6">
+                        {revenue.toLocaleString()}đ
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="4" className="text-center text-muted py-4">
-                    No sales data available or API endpoint not implemented.
+                  <td colSpan="6" className="text-center text-muted py-4">
+                    No sales data available.
                   </td>
                 </tr>
               )}
